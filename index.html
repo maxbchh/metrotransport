@@ -1,0 +1,298 @@
+<!DOCTYPE html>
+<html lang="ru">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <title>УЖД PHOTO — База данных Trainz 12</title>
+    <style>
+        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; }
+        
+        /* Шапка сайта */
+        header { background-color: #2c5e3b; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1e4228; }
+        header .logo { font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
+        header .logo span { font-size: 13px; opacity: 0.8; font-weight: normal; }
+        
+        /* Навигация */
+        nav { background-color: #38764c; padding: 10px 20px; display: flex; gap: 10px; flex-wrap: wrap; }
+        nav button { background: none; border: none; color: white; cursor: pointer; font-size: 15px; padding: 6px 12px; border-radius: 4px; transition: 0.2s; }
+        nav button:hover, nav button.active { background-color: #2c5e3b; font-weight: bold; }
+        
+        .container { padding: 20px; max-width: 1250px; margin: 0 auto; }
+        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 20px; }
+        
+        /* Фильтры и кнопки */
+        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
+        select, input, button.btn { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
+        button.btn { background-color: #2c5e3b; color: white; cursor: pointer; border: none; transition: 0.2s; }
+        button.btn:hover { background-color: #1e4228; }
+        button.btn-danger { background-color: #dc3545; }
+        button.btn-danger:hover { background-color: #bd2130; }
+
+        /* Таблица подвижного состава */
+        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
+        th, td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; }
+        th { background-color: #f5f5f5; color: #555; }
+        tr:nth-child(even) { background-color: #fafafa; }
+        
+        /* Оформление статусов */
+        .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; }
+        .st-in_use { background-color: #d4edda; color: #155724; }
+        .st-line_work { background-color: #cce5ff; color: #004085; }
+        .st-shunting { background-color: #e2e3e5; color: #383d41; }
+        .st-depot_idle { background-color: #fff3cd; color: #856404; }
+        .st-repair { background-color: #ffeba2; color: #855d00; }
+        .st-waiting { background-color: #e2d6f8; color: #381470; }
+        .st-scrapped { background-color: #f8d7da; color: #721c24; }
+
+        /* Форма добавления */
+        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
+        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+    </style>
+</head>
+<body>
+
+<header>
+    <div class="logo">
+        🛤️ УЖД PHOTO <span>База данных Trainz 12 (750 мм)</span>
+    </div>
+    <div>Всего техники в базе: <b id="total-count">0</b></div>
+</header>
+
+<nav>
+    <button class="tab-btn active" onclick="setCategory('all')">📋 Весь список</button>
+    <button class="tab-btn" onclick="setCategory('loco')">🚂 Локомотивы (ТУ2, ТУ7...)</button>
+    <button class="tab-btn" onclick="setCategory('pass')">🚃 Пассажирские вагоны</button>
+    <button class="tab-btn" style="margin-left: auto; background-color: #1e4228;" onclick="toggleAddForm()">➕ Добавить технику</button>
+</nav>
+
+<div class="container">
+    
+    <!-- Панель управления администратора (Форма добавления) -->
+    <div id="add-form-card" class="card" style="display: none; border: 2px solid #2c5e3b;">
+        <h3 style="margin-top:0;">➕ Панель администратора: Добавление ТС</h3>
+        <form id="train-form" onsubmit="addVehicle(event)"><div class="form-grid">
+                <div class="form-group">
+                    <label>Категория:</label>
+                    <select id="add-category" required>
+                        <option value="loco">🚂 Локомотив / Мотовоз</option>
+                        <option value="pass">🚃 Пассажирский вагон</option>
+                        <option value="other">ПО Грузовой / Спецвагон</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Серия / Модель:</label>
+                    <input type="text" id="add-model" placeholder="Например: ТУ2, ПВ40, ТУ7A" required>
+                </div>
+                <div class="form-group">
+                    <label>Бортовой / Бортовой номер:</label>
+                    <input type="text" id="add-number" placeholder="Например: 001 или №12" required>
+                </div>
+                <div class="form-group">
+                    <label>Станция / Депо приписки:</label>
+                    <input type="text" id="add-depot" placeholder="Например: ТЧУ Южная" required>
+                </div>
+                <div class="form-group">
+                    <label>Статус техники:</label>
+                    <select id="add-status" required>
+                        <option value="in_use">В эксплуатации</option>
+                        <option value="line_work">В поездной работе</option>
+                        <option value="shunting">В маневровой работе</option>
+                        <option value="depot_idle">В отстое в депо</option>
+                        <option value="repair">В ремонте</option>
+                        <option value="waiting">Ожидание</option>
+                        <option value="scrapped">Списан</option>
+                    </select>
+                </div>
+                <div class="form-group">
+                    <label>Год постройки / Ввода:</label>
+                    <input type="text" id="add-year" placeholder="1958">
+                </div>
+            </div>
+            <div class="form-group" style="margin-top: 10px;">
+                <label>Примечание:</label>
+                <input type="text" id="add-note" placeholder="Особые приметы, примечание в Trainz 12">
+            </div>
+            <button type="submit" class="btn" style="font-weight: bold;">Сохранить в базу</button>
+            <button type="button" class="btn btn-danger" onclick="toggleAddForm()">Отмена</button>
+        </form>
+    </div>
+
+    <!-- Основная таблица -->
+    <div class="card">
+        <div class="controls">
+            <label><b>Фильтр по статусу:</b></label>
+            <select id="status-filter" onchange="applyFilters()">
+                <option value="all">Все статусы</option>
+                <option value="in_use">В эксплуатации</option>
+                <option value="line_work">В поездной работе</option>
+                <option value="shunting">В маневровой работе</option>
+                <option value="depot_idle">В отстое в депо</option>
+                <option value="repair">В ремонте</option>
+                <option value="waiting">Ожидание</option>
+                <option value="scrapped">Списан</option>
+            </select>
+
+            <input type="text" id="search-input" placeholder="Поиск по номеру или серии..." oninput="applyFilters()" style="width: 250px;">
+        </div>
+
+        <table>
+            <thead>
+                <tr>
+                    <th>Тип</th>
+                    <th>Серия / Модель</th>
+                    <th>Борт. №</th>
+                    <th>Приписка (Депо / Станция)</th>
+                    <th>Построен</th>
+                    <th>Текущий статус</th>
+                    <th>Примечание</th>
+                    <th>Действия (Админ)</th>
+                </tr>
+            </thead>
+            <tbody id="table-body">
+                <!-- Заполняется динамически -->
+            </tbody>
+        </table>
+    </div>
+
+</div>
+
+<script>
+    // Словарь статусов для отображения
+    const statusMap = {'in_use': { text: 'В эксплуатации', class: 'st-in_use' },
+        'line_work': { text: 'В поездной работе', class: 'st-line_work' },
+        'shunting': { text: 'В маневровой работе', class: 'st-shunting' },
+        'depot_idle': { text: 'В отстое в депо', class: 'st-depot_idle' },
+        'repair': { text: 'В ремонте', class: 'st-repair' },
+        'waiting': { text: 'Ожидание', class: 'st-waiting' },
+        'scrapped': { text: 'Списан', class: 'st-scrapped' }
+    };
+
+    // Начальные данные для базы (для карты Trainz 12)
+    const defaultData = [
+        { id: 1, category: 'loco', model: 'ТУ2', number: '001', depot: 'ТЧУ Центральная', year: '1956', status: 'line_work', note: 'Основной локомотив пассажирского поезда' },
+        { id: 2, category: 'loco', model: 'ТУ2', number: '124', depot: 'ТЧУ Центральная', year: '1957', status: 'repair', note: 'Замена дизеля 1D12' },
+        { id: 3, category: 'loco', model: 'ТУ2', number: '241', depot: 'Депо Лесное', year: '1959', status: 'shunting', note: 'Маневры по станции Лесная' },
+        { id: 4, category: 'pass', model: 'ПВ40', number: '001-01', depot: 'ЛВЧД-1', year: '1982', status: 'line_work', note: 'Состав поезда №1' },
+        { id: 5, category: 'pass', model: 'ПВ40', number: '001-02', depot: 'ЛВЧД-1', year: '1982', status: 'depot_idle', note: 'В резерве' },
+        { id: 6, category: 'pass', model: 'ВП750', number: '12', depot: 'Депо Лесное', year: '1975', status: 'scrapped', statusText: 'Кузов под склад' }
+    ];
+
+    let currentCategory = 'all';
+
+    // Загрузка данных из LocalStorage браузера
+    function getStoredVehicles() {
+        const data = localStorage.getItem('uzhd_database');
+        if (!data) {
+            localStorage.setItem('uzhd_database', JSON.stringify(defaultData));
+            return defaultData;
+        }
+        return JSON.parse(data);
+    }
+
+    // Сохранение обновленной базы
+    function saveVehicles(data) {
+        localStorage.setItem('uzhd_database', JSON.stringify(data));
+        applyFilters();
+    }
+
+    // Отрисовка таблицы
+    function renderTable(vehicles) {
+        const tbody = document.getElementById('table-body');
+        tbody.innerHTML = '';
+
+        document.getElementById('total-count').innerText = vehicles.length;
+
+        if (vehicles.length === 0) {
+            tbody.innerHTML = <tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">В базе нет техники по заданным фильтрам</td></tr>;
+            return;
+        }
+
+        vehicles.forEach(item => {
+            const st = statusMap[item.status] || { text: item.status, class: '' };
+            const icon = item.category === 'loco' ? '🚂' : (item.category === 'pass' ? '🚃' : '📦');
+            
+            let tr = document.createElement('tr');
+            tr.innerHTML = `
+                <td style="text-align:center; font-size:18px;">${icon}</td>
+                <td><b>${item.model}</b></td>
+                <td><b>${item.number}</b></td>
+                <td>${item.depot}</td>
+                <td>${item.year || '—'}</td>
+                <td><span class="status-badge ${st.class}">${st.text}</span></td>
+                <td>${item.note || '—'}</td>
+                <td>
+                    <button class="btn btn-danger" style="padding: 3px 8px; font-size:12px;" onclick="deleteVehicle(${item.id})">🗑️ Удалить</button>
+                </td>
+            `;
+            tbody.appendChild(tr);
+        });
+    }
+
+    // Применение фильтров
+    function applyFilters() {
+        const vehicles = getStoredVehicles();
+        const statusFilter = document.getElementById('status-filter').value;
+        const searchQuery = document.getElementById('search-input').value.toLowerCase();
+
+        const filtered = vehicles.filter(item => {
+            const matchCategory = (currentCategory === 'all') || (item.category === currentCategory);
+            const matchStatus = (statusFilter === 'all') || (item.status === statusFilter);
+            const matchSearch = item.model.toLowerCase().includes(searchQuery) || item.number.toLowerCase().includes(searchQuery);return matchCategory && matchStatus && matchSearch;
+        });
+
+        renderTable(filtered);
+    }
+
+    // Переключение вкладок категорий
+    function setCategory(cat) {
+        currentCategory = cat;
+        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
+        event.currentTarget.classList.add('active');
+        applyFilters();
+    }
+
+    // Показать/скрыть форму добавления
+    function toggleAddForm() {
+        const card = document.getElementById('add-form-card');
+        card.style.display = card.style.display === 'none' ? 'block' : 'none';
+    }
+
+    // Добавление новой техники (Админ)
+    function addVehicle(e) {
+        e.preventDefault();
+        const vehicles = getStoredVehicles();
+        
+        const newVehicle = {
+            id: Date.now(), // Уникальный ID
+            category: document.getElementById('add-category').value,
+            model: document.getElementById('add-model').value,
+            number: document.getElementById('add-number').value,
+            depot: document.getElementById('add-depot').value,
+            status: document.getElementById('add-status').value,
+            year: document.getElementById('add-year').value,
+            note: document.getElementById('add-note').value
+        };
+
+        vehicles.push(newVehicle);
+        saveVehicles(vehicles);
+        
+        document.getElementById('train-form').reset();
+        toggleAddForm();
+        alert('Подвижной состав успешно добавлен в базу!');
+    }
+
+    // Удаление техники (Админ)
+    function deleteVehicle(id) {
+        if (confirm('Вы уверены, что хотите удалить эту единицу ПС из базы?')) {
+            let vehicles = getStoredVehicles();
+            vehicles = vehicles.filter(v => v.id !== id);
+            saveVehicles(vehicles);
+        }
+    }
+
+    // Первый запуск
+    applyFilters();
+</script>
+
+</body>
+</html>
