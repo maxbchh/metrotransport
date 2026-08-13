@@ -3,296 +3,779 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УЖД PHOTO — База данных Trainz 12</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>RAILPHOTO — База данных подвижного состава</title>
     <style>
-        body { font-family: 'Segoe UI', Tahoma, Geneva, Verdana, sans-serif; margin: 0; padding: 0; background-color: #f0f2f5; color: #333; }
-        
-        /* Шапка сайта */
-        header { background-color: #2c5e3b; color: white; padding: 15px 20px; display: flex; justify-content: space-between; align-items: center; border-bottom: 4px solid #1e4228; }
-        header .logo { font-size: 22px; font-weight: bold; display: flex; align-items: center; gap: 10px; }
-        header .logo span { font-size: 13px; opacity: 0.8; font-weight: normal; }
-        
-        /* Навигация */
-        nav { background-color: #38764c; padding: 10px 20px; display: flex; gap: 10px; flex-wrap: wrap; }
-        nav button { background: none; border: none; color: white; cursor: pointer; font-size: 15px; padding: 6px 12px; border-radius: 4px; transition: 0.2s; }
-        nav button:hover, nav button.active { background-color: #2c5e3b; font-weight: bold; }
-        
-        .container { padding: 20px; max-width: 1250px; margin: 0 auto; }
-        .card { background: white; padding: 20px; border-radius: 8px; box-shadow: 0 2px 6px rgba(0,0,0,0.08); margin-bottom: 20px; }
-        
-        /* Фильтры и кнопки */
-        .controls { display: flex; gap: 10px; flex-wrap: wrap; margin-bottom: 15px; align-items: center; }
-        select, input, button.btn { padding: 8px 12px; border: 1px solid #ccc; border-radius: 4px; font-size: 14px; outline: none; }
-        button.btn { background-color: #2c5e3b; color: white; cursor: pointer; border: none; transition: 0.2s; }
-        button.btn:hover { background-color: #1e4228; }
-        button.btn-danger { background-color: #dc3545; }
-        button.btn-danger:hover { background-color: #bd2130; }
+        :root {
+            --bp-header-bg: #102a43;
+            --bp-bg-main: #12181f;
+            --bp-card-bg: #1b222c;
+            --bp-border: #2c3848;
+            --bp-table-header: #243040;
+            --bp-text: #e0e6ed;
+            --bp-link: #4895ef;
+            --bp-input-bg: #0f141c;
+        }
 
-        /* Таблица подвижного состава */
-        table { width: 100%; border-collapse: collapse; margin-top: 10px; font-size: 14px; }
-        th, td { border: 1px solid #e0e0e0; padding: 10px; text-align: left; }
-        th { background-color: #f5f5f5; color: #555; }
-        tr:nth-child(even) { background-color: #fafafa; }
-        
-        /* Оформление статусов */
-        .status-badge { padding: 3px 8px; border-radius: 12px; font-size: 12px; font-weight: bold; display: inline-block; }
-        .st-in_use { background-color: #d4edda; color: #155724; }
-        .st-line_work { background-color: #cce5ff; color: #004085; }
-        .st-shunting { background-color: #e2e3e5; color: #383d41; }
-        .st-depot_idle { background-color: #fff3cd; color: #856404; }
-        .st-repair { background-color: #ffeba2; color: #855d00; }
-        .st-waiting { background-color: #e2d6f8; color: #381470; }
-        .st-scrapped { background-color: #f8d7da; color: #721c24; }
+        body.light-theme {
+            --bp-header-bg: #1e3a8a;
+            --bp-bg-main: #f1f5f9;
+            --bp-card-bg: #ffffff;
+            --bp-border: #cbd5e1;
+            --bp-table-header: #e2e8f0;
+            --bp-text: #0f172a;
+            --bp-link: #2563eb;
+            --bp-input-bg: #ffffff;
+        }
 
-        /* Форма добавления */
-        .form-group { margin-bottom: 15px; display: flex; flex-direction: column; gap: 5px; }
-        .form-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(200px, 1fr)); gap: 15px; }
+        .st-active { background-color: rgba(43, 43, 43, 0.4); }
+        .st-not-operated { background-color: #2e5c2e !important; color: #ffffff !important; }
+        .st-inactive { background-color: #6b6b00 !important; color: #ffffff !important; }
+        .st-out { background-color: #696969 !important; color: #ffffff !important; }
+        .st-decomm { background-color: #8b0000 !important; color: #ffffff !important; }
+        .st-unknown { background-color: #5c4033 !important; color: #ffffff !important; }
+        .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }
+        .st-trans-city { background-color: #1e3f66 !important; color: #ffffff !important; }
+        .st-trans-other { background-color: #512e5f !important; color: #ffffff !important; }
+        .st-plate-change { background-color: #117a65 !important; color: #ffffff !important; }
+
+        body.light-theme .st-active { background-color: #ffffff; }
+
+        body {
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bp-bg-main);
+            color: var(--bp-text);
+            font-size: 12px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        a { color: var(--bp-link); text-decoration: none; cursor: pointer; }
+        a:hover { text-decoration: underline; }
+
+        header {
+            background-color: var(--bp-header-bg);
+            color: #ffffff;
+            padding: 10px 20px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            border-bottom: 2px solid #081726;
+        }
+
+        .logo-box {
+            background: #2563eb;
+            color: #ffffff;
+            font-weight: bold;
+            font-size: 18px;
+            padding: 4px 10px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            display: inline-block;
+        }
+
+        .header-controls {
+            display: flex;
+            align-items: center;
+            gap: 15px;
+        }
+
+        .theme-toggle-btn {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .theme-toggle-btn:hover { background: rgba(0,0,0,0.5); }
+
+        .main-wrapper { padding: 12px 18px; }
+        
+        .page-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--bp-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
+        .action-buttons {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
+        }
+
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+            border: 1px solid var(--bp-border);
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-secondary:hover { background: #444; }
+
+        .filter-panel {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 10px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-panel input, .filter-panel select {
+            padding: 6px 8px;
+            border: 1px solid var(--bp-border);
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            font-size: 11px;
+            border-radius: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+        }
+
+        table.bp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        table.bp-table th {
+            background-color: var(--bp-table-header);
+            color: var(--bp-text);
+            padding: 7px 8px;
+            text-align: left;
+            border: 1px solid var(--bp-border);
+            font-weight: bold;
+        }
+
+        table.bp-table td {
+            padding: 6px 8px;
+            border: 1px solid var(--bp-border);
+            vertical-align: middle;
+        }
+
+        table.bp-table tbody tr { cursor: pointer; }
+        table.bp-table tbody tr:hover { outline: 1px solid var(--bp-link); }
+
+        .table-thumb {
+            width: 45px;
+            height: 30px;
+            background: #111;
+            border: 1px solid var(--bp-border);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #777;
+            overflow: hidden;
+            cursor: pointer;
+        }
+        .table-thumb:hover { border-color: var(--bp-link); }
+
+        .legend-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            background: var(--bp-card-bg);
+            padding: 10px;
+            border: 1px solid var(--bp-border);
+            font-size: 10px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 15px;
+            overflow-y: auto;
+        }
+
+        .modal-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            width: 94%;
+            max-width: 900px;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+            background: rgba(0,0,0,0.1);
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        .modal-close:hover { color: #fff; background: #e02424; }
+
+        .vehicle-title { font-size: 18px; font-weight: bold; color: var(--bp-link); margin-bottom: 2px; }
+        .vehicle-subtitle { font-size: 11px; color: #888; margin-bottom: 12px; border-bottom: 1px solid var(--bp-border); padding-bottom: 6px; }
+
+        .form-grid {
+            display: grid;
+            grid-template-columns: 1fr 1fr;
+            gap: 10px;
+        }
+        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .form-group input, .form-group select {
+            padding: 6px;
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+        }
+
+        .photo-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
+        }
+
+        .busphoto-thumb {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
+        }
+        .busphoto-thumb:hover {
+            border-color: var(--bp-link);
+            transform: translateY(-2px);
+        }
+        .thumb-img-wrapper {
+            height: 95px;
+            background: #111;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #555;
+            font-size: 10px;
+        }
+        .thumb-caption {
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+            color: var(--bp-text);
+            background: var(--bp-card-bg);
+            border-top: 1px solid var(--bp-border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
+        }
+
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        .specs-table td { padding: 5px 8px; border-bottom: 1px solid var(--bp-border); }
+        .specs-table td.label { font-weight: bold; width: 28%; background: var(--bp-table-header); }
     </style>
 </head>
-<body>
+<body class="light-theme">
 
-<header>
-    <div class="logo">
-        🛤️ УЖД PHOTO <span>База данных Trainz 12 (750 мм)</span>
-    </div>
-    <div>Всего техники в базе: <b id="total-count">0</b></div>
-</header>
+    <header>
+        <div>
+            <span class="logo-box">RAILPHOTO</span>
+            <span style="font-size:15px; font-weight:bold; margin-left:8px;">База данных ПС</span>
+        </div>
+        <div class="header-controls">
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Сменить тему</button>
+            <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
+        </div>
+    </header>
 
-<nav>
-    <button class="tab-btn active" onclick="setCategory('all')">📋 Весь список</button>
-    <button class="tab-btn" onclick="setCategory('loco')">🚂 Локомотивы (ТУ2, ТУ7...)</button>
-    <button class="tab-btn" onclick="setCategory('pass')">🚃 Пассажирские вагоны</button>
-    <button class="tab-btn" style="margin-left: auto; background-color: #1e4228;" onclick="toggleAddForm()">➕ Добавить технику</button>
-</nav>
-
-<div class="container">
-    
-    <!-- Панель управления администратора (Форма добавления) -->
-    <div id="add-form-card" class="card" style="display: none; border: 2px solid #2c5e3b;">
-        <h3 style="margin-top:0;">➕ Панель администратора: Добавление ТС</h3>
-        <form id="train-form" onsubmit="addVehicle(event)"><div class="form-grid">
-                <div class="form-group">
-                    <label>Категория:</label>
-                    <select id="add-category" required>
-                        <option value="loco">🚂 Локомотив / Мотовоз</option>
-                        <option value="pass">🚃 Пассажирский вагон</option>
-                        <option value="other">ПО Грузовой / Спецвагон</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Серия / Модель:</label>
-                    <input type="text" id="add-model" placeholder="Например: ТУ2, ПВ40, ТУ7A" required>
-                </div>
-                <div class="form-group">
-                    <label>Бортовой / Бортовой номер:</label>
-                    <input type="text" id="add-number" placeholder="Например: 001 или №12" required>
-                </div>
-                <div class="form-group">
-                    <label>Станция / Депо приписки:</label>
-                    <input type="text" id="add-depot" placeholder="Например: ТЧУ Южная" required>
-                </div>
-                <div class="form-group">
-                    <label>Статус техники:</label>
-                    <select id="add-status" required>
-                        <option value="in_use">В эксплуатации</option>
-                        <option value="line_work">В поездной работе</option>
-                        <option value="shunting">В маневровой работе</option>
-                        <option value="depot_idle">В отстое в депо</option>
-                        <option value="repair">В ремонте</option>
-                        <option value="waiting">Ожидание</option>
-                        <option value="scrapped">Списан</option>
-                    </select>
-                </div>
-                <div class="form-group">
-                    <label>Год постройки / Ввода:</label>
-                    <input type="text" id="add-year" placeholder="1958">
-                </div>
+    <div class="main-wrapper">
+        <div class="page-header">
+            <span>Белорусская железная дорога — Подвижной состав</span>
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="exportDatabase()">💾 Экспорт БД</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📂 Импорт БД</button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importDatabase(event)">
+                <button class="btn-primary" onclick="openAddModal()">➕ Добавить ПС</button>
             </div>
-            <div class="form-group" style="margin-top: 10px;">
-                <label>Примечание:</label>
-                <input type="text" id="add-note" placeholder="Особые приметы, примечание в Trainz 12">
-            </div>
-            <button type="submit" class="btn" style="font-weight: bold;">Сохранить в базу</button>
-            <button type="button" class="btn btn-danger" onclick="toggleAddForm()">Отмена</button>
-        </form>
-    </div>
-
-    <!-- Основная таблица -->
-    <div class="card">
-        <div class="controls">
-            <label><b>Фильтр по статусу:</b></label>
-            <select id="status-filter" onchange="applyFilters()">
-                <option value="all">Все статусы</option>
-                <option value="in_use">В эксплуатации</option>
-                <option value="line_work">В поездной работе</option>
-                <option value="shunting">В маневровой работе</option>
-                <option value="depot_idle">В отстое в депо</option>
-                <option value="repair">В ремонте</option>
-                <option value="waiting">Ожидание</option>
-                <option value="scrapped">Списан</option>
-            </select>
-
-            <input type="text" id="search-input" placeholder="Поиск по номеру или серии..." oninput="applyFilters()" style="width: 250px;">
         </div>
 
-        <table>
-            <thead>
-                <tr>
-                    <th>Тип</th>
-                    <th>Серия / Модель</th>
-                    <th>Борт. №</th>
-                    <th>Приписка (Депо / Станция)</th>
-                    <th>Построен</th>
-                    <th>Текущий статус</th>
-                    <th>Примечание</th>
-                    <th>Действия (Админ)</th>
-                </tr>
-            </thead>
-            <tbody id="table-body">
-                <!-- Заполняется динамически -->
-            </tbody>
-        </table>
+        <div class="filter-panel">
+            <input type="text" id="searchInput" onkeyup="filterDB()" placeholder="Фильтр по серии, номеру...">
+            <select id="parkSelect" onchange="filterDB()">
+                <option value="">Все депо</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table class="bp-table" id="dbTable">
+                <thead>
+                    <tr>
+                        <th style="width: 40px;">Фото</th>
+                        <th>Депо приписки</th>
+                        <th>Серия / Модель</th>
+                        <th>Сетевой номер</th>
+                        <th>Бортовой №</th>
+                        <th>Назначение</th>
+                        <th>Заводской №</th>
+                        <th>Завод / VIN</th>
+                        <th>Построен</th>
+                        <th>Поступил</th>
+                        <th>Начал работу</th>
+                        <th>Отставлен</th>
+                        <th>Списан</th>
+                        <th>Утилизирован</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="legend-bar">
+            <b>Статусы:</b>
+            <div class="legend-item"><div class="legend-color" style="background:#28a745;"></div> <span>Эксплуатируется</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#2e5c2e;"></div> <span>Не был в эксплуатации</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#6b6b00;"></div> <span>Не эксплуатируется</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#696969;"></div> <span>Выведен из эксплуатации</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#8b0000;"></div> <span>Списан</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#5c4033;"></div> <span>Судьба неизвестна</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#4b6f7e;"></div> <span>КВР/Модернизация</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#1e3f66;"></div> <span>Передан в дороге</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#512e5f;"></div> <span>Передан на другую дорогу</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#117a65;"></div> <span>Смена номера</span></div>
+        </div>
     </div>
 
-</div>
-
-<script>
-    // Словарь статусов для отображения
-    const statusMap = {'in_use': { text: 'В эксплуатации', class: 'st-in_use' },
-        'line_work': { text: 'В поездной работе', class: 'st-line_work' },
-        'shunting': { text: 'В маневровой работе', class: 'st-shunting' },
-        'depot_idle': { text: 'В отстое в депо', class: 'st-depot_idle' },
-        'repair': { text: 'В ремонте', class: 'st-repair' },
-        'waiting': { text: 'Ожидание', class: 'st-waiting' },
-        'scrapped': { text: 'Списан', class: 'st-scrapped' }
-    };
-
-    // Начальные данные для базы (для карты Trainz 12)
-    const defaultData = [
-        { id: 1, category: 'loco', model: 'ТУ2', number: '001', depot: 'ТЧУ Центральная', year: '1956', status: 'line_work', note: 'Основной локомотив пассажирского поезда' },
-        { id: 2, category: 'loco', model: 'ТУ2', number: '124', depot: 'ТЧУ Центральная', year: '1957', status: 'repair', note: 'Замена дизеля 1D12' },
-        { id: 3, category: 'loco', model: 'ТУ2', number: '241', depot: 'Депо Лесное', year: '1959', status: 'shunting', note: 'Маневры по станции Лесная' },
-        { id: 4, category: 'pass', model: 'ПВ40', number: '001-01', depot: 'ЛВЧД-1', year: '1982', status: 'line_work', note: 'Состав поезда №1' },
-        { id: 5, category: 'pass', model: 'ПВ40', number: '001-02', depot: 'ЛВЧД-1', year: '1982', status: 'depot_idle', note: 'В резерве' },
-        { id: 6, category: 'pass', model: 'ВП750', number: '12', depot: 'Депо Лесное', year: '1975', status: 'scrapped', statusText: 'Кузов под склад' }
-    ];
-
-    let currentCategory = 'all';
-
-    // Загрузка данных из LocalStorage браузера
-    function getStoredVehicles() {
-        const data = localStorage.getItem('uzhd_database');
-        if (!data) {
-            localStorage.setItem('uzhd_database', JSON.stringify(defaultData));
-            return defaultData;
-        }
-        return JSON.parse(data);
-    }
-
-    // Сохранение обновленной базы
-    function saveVehicles(data) {
-        localStorage.setItem('uzhd_database', JSON.stringify(data));
-        applyFilters();
-    }
-
-    // Отрисовка таблицы
-    function renderTable(vehicles) {
-        const tbody = document.getElementById('table-body');
-        tbody.innerHTML = '';
-
-        document.getElementById('total-count').innerText = vehicles.length;
-
-        if (vehicles.length === 0) {
-            tbody.innerHTML = <tr><td colspan="8" style="text-align:center; padding: 20px; color: #777;">В базе нет техники по заданным фильтрам</td></tr>;
-            return;
-        }
-
-        vehicles.forEach(item => {
-            const st = statusMap[item.status] || { text: item.status, class: '' };
-            const icon = item.category === 'loco' ? '🚂' : (item.category === 'pass' ? '🚃' : '📦');
+    <div class="modal-overlay" id="addVehicleModal">
+        <div class="modal-card" style="max-width: 550px;">
+            <span class="modal-close" onclick="closeAddModal()">&times;</span>
+            <div class="vehicle-title">➕ Добавление нового ПС</div>
+            <div class="vehicle-subtitle">Заполните данные для внесения локомотива/поезда в базу. Вы можете написать любое новое депо.</div>
             
-            let tr = document.createElement('tr');
-            tr.innerHTML = `
-                <td style="text-align:center; font-size:18px;">${icon}</td>
-                <td><b>${item.model}</b></td>
-                <td><b>${item.number}</b></td>
-                <td>${item.depot}</td>
-                <td>${item.year || '—'}</td>
-                <td><span class="status-badge ${st.class}">${st.text}</span></td>
-                <td>${item.note || '—'}</td>
-                <td>
-                    <button class="btn btn-danger" style="padding: 3px 8px; font-size:12px;" onclick="deleteVehicle(${item.id})">🗑️ Удалить</button>
-                </td>
-            `;
-            tbody.appendChild(tr);
-        });
-    }
+            <form id="addVehicleForm" onsubmit="saveNewVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Депо приписки (можно ввести свое):</label>
+                        <input type="text" id="newPark" placeholder="ТЧ-1 Минск-Сортировочный" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Полная модель / Серия:</label>
+                        <input type="text" id="newModel" placeholder="ЧС4Т-598" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Префикс серии:</label>
+                        <input type="text" id="newModelPrefix" placeholder="ЧС4Т" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Сетевой / Восьмизначный №:</label>
+                        <input type="text" id="newGov" placeholder="15243819" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Бортовой / Инвентарный №:</label>
+                        <input type="text" id="newNum" placeholder="598" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Заводской номер:</label>
+                        <input type="text" id="newFactory" placeholder="36" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата постройки:</label>
+                        <input type="text" id="newBuild" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата поступления:</label>
+                        <input type="text" id="newArrive" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Статус:</label>
+                        <select id="newStatus">
+                            <option value="st-active">Эксплуатируется</option>
+                            <option value="st-inactive">Не эксплуатируется</option>
+                            <option value="st-not-operated">Не был в эксплуатации</option>
+                            <option value="st-out">Выведен из эксплуатации</option>
+                            <option value="st-mod">КВР/Модернизация</option>
+                            <option value="st-decomm">Списан</option>
+                            <option value="st-unknown">Судьба неизвестна</option>
+                            <option value="st-trans-city">Передан в дороге</option>
+                            <option value="st-trans-other">Передан на другую дорогу</option>
+                            <option value="st-plate-change">Смена номера</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Назначение:</label>
+                        <select id="newPurpose">
+                            <option value="linear">Пассажирский / Грузовой</option>
+                            <option value="service">Хозяйственный / Служебный</option>
+                            <option value="—">—</option>
+                        </select>
+                    </div>
+                </div>
+                <div class="form-group">
+                    <label>Примечание:</label>
+                    <input type="text" id="newNote" placeholder="—" value="—">
+                </div>
+                <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить и добавить в базу</button>
+            </form>
+        </div>
+    </div>
 
-    // Применение фильтров
-    function applyFilters() {
-        const vehicles = getStoredVehicles();
-        const statusFilter = document.getElementById('status-filter').value;
-        const searchQuery = document.getElementById('search-input').value.toLowerCase();
+    <div class="modal-overlay" id="vehicleModal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeCard()">&times;</span>
+            <div class="vehicle-title" id="mTitle">Серия / Инвентарный №</div>
+            <div class="vehicle-subtitle" id="mSubtitle">Депо приписки</div>
 
-        const filtered = vehicles.filter(item => {
-            const matchCategory = (currentCategory === 'all') || (item.category === currentCategory);
-            const matchStatus = (statusFilter === 'all') || (item.status === statusFilter);
-            const matchSearch = item.model.toLowerCase().includes(searchQuery) || item.number.toLowerCase().includes(searchQuery);return matchCategory && matchStatus && matchSearch;
-        });
+            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📷 Фотогалерея ПС:</div>
+            <div class="photo-gallery-grid" id="vCardGallery">
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Спереди (3/4)</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Сзади (3/4)</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Профиль</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Кабина / Салон</div></div>
+            </div>
 
-        renderTable(filtered);
-    }
+            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
+            <table class="specs-table">
+                <tr><td class="label">Сетевой номер:</td><td id="mGov">—</td></tr>
+                <tr><td class="label">Бортовой №:</td><td id="mNumber">—</td></tr>
+                <tr><td class="label">Назначение:</td><td id="mPurpose">—</td></tr>
+                <tr><td class="label">Заводской №:</td><td id="mFactory">—</td></tr>
+                <tr><td class="label">Завод / VIN:</td><td id="mVin">—</td></tr>
+                <tr><td class="label">Построен:</td><td id="mBuild">—</td></tr>
+                <tr><td class="label">Поступил:</td><td id="mArrive">—</td></tr>
+                <tr><td class="label">Начал работу:</td><td id="mStart">—</td></tr>
+                <tr><td class="label">Отставлен:</td><td id="mOut">—</td></tr>
+                <tr><td class="label">Списан:</td><td id="mDecomm">—</td></tr>
+                <tr><td class="label">Утилизирован:</td><td id="mUtil">—</td></tr>
+                <tr><td class="label">Текущее состояние:</td><td id="mStatus">—</td></tr>
+                <tr><td class="label">Примечание:</td><td id="mNote">—</td></tr>
+            </table>
 
-    // Переключение вкладок категорий
-    function setCategory(cat) {
-        currentCategory = cat;
-        document.querySelectorAll('nav button').forEach(btn => btn.classList.remove('active'));
-        event.currentTarget.classList.add('active');
-        applyFilters();
-    }
+            <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; width:100%; margin-top:10px;">🗑 Удалить ПС из базы</button>
+        </div>
+    </div>
 
-    // Показать/скрыть форму добавления
-    function toggleAddForm() {
-        const card = document.getElementById('add-form-card');
-        card.style.display = card.style.display === 'none' ? 'block' : 'none';
-    }
+    <script>
+        const defaultVehicleDB = [
+            { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Эксплуатируется с пассажирскими поездами" },
+            { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
+            { park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой двухсекционный тепловоз" },
+            { park: "ТЧ-3 Барановичи", modelPrefix: "ВЛ80С", model: "ВЛ80С-540", gov: "11823901", num: "540", purposeKey: "linear", factory: "540", build: "15.08.1985", arrive: "20.08.1985", start: "1985", out: "08.2025", decomm: "—", util: "—", statusCls: "st-mod", statusKey: "КВР/Модернизация", note: "Проходит капительный ремонт" }
+        ];
 
-    // Добавление новой техники (Админ)
-    function addVehicle(e) {
-        e.preventDefault();
-        const vehicles = getStoredVehicles();
-        
-        const newVehicle = {
-            id: Date.now(), // Уникальный ID
-            category: document.getElementById('add-category').value,
-            model: document.getElementById('add-model').value,
-            number: document.getElementById('add-number').value,
-            depot: document.getElementById('add-depot').value,
-            status: document.getElementById('add-status').value,
-            year: document.getElementById('add-year').value,
-            note: document.getElementById('add-note').value
+        let vehicleDB = [];
+        let currentOpenVehicleIndex = null;
+
+        const statusLabels = {
+            'st-active': 'Эксплуатируется',
+            'st-inactive': 'Не эксплуатируется',
+            'st-not-operated': 'Не был в эксплуатации',
+            'st-out': 'Выведен из эксплуатации',
+            'st-mod': 'КВР/Модернизация',
+            'st-decomm': 'Списан',
+            'st-unknown': 'Судьба неизвестна',
+            'st-trans-city': 'Передан в дороге',
+            'st-trans-other': 'Передан на другую дорогу',
+            'st-plate-change': 'Смена номера'
         };
 
-        vehicles.push(newVehicle);
-        saveVehicles(vehicles);
-        
-        document.getElementById('train-form').reset();
-        toggleAddForm();
-        alert('Подвижной состав успешно добавлен в базу!');
-    }
+        const purposeLabelsMap = {
+            'linear': 'Пассажирский / Грузовой',
+            'service': 'Хозяйственный / Служебный',
+            '—': '—'
+        };
 
-    // Удаление техники (Админ)
-    function deleteVehicle(id) {
-        if (confirm('Вы уверены, что хотите удалить эту единицу ПС из базы?')) {
-            let vehicles = getStoredVehicles();
-            vehicles = vehicles.filter(v => v.id !== id);
-            saveVehicles(vehicles);
+        function loadDatabase() {
+            let saved = localStorage.getItem('railphoto_custom_db');
+            if (saved) {
+                try {
+                    vehicleDB = JSON.parse(saved);
+                } catch(e) {
+                    vehicleDB = [...defaultVehicleDB];
+                }
+            } else {
+                vehicleDB = [...defaultVehicleDB];
+            }
         }
-    }
 
-    // Первый запуск
-    applyFilters();
-</script>
+        function saveDatabaseToStorage() {
+            localStorage.setItem('railphoto_custom_db', JSON.stringify(vehicleDB));
+        }
 
+        function exportDatabase() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vehicleDB, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "railphoto_db.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
+
+        function importDatabase(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        vehicleDB = imported;
+                        saveDatabaseToStorage();
+                        updateParkSelect();
+                        renderTable();
+                        alert('База данных успешно импортирована!');
+                    } else {
+                        alert('Ошибка: неверный формат файла.');
+                    }
+                } catch(err) {
+                    alert('Ошибка при чтении JSON файла.');
+                }
+            };
+            reader.readAsText(file);
+        }
+
+        function generateVIN(model, factoryNum) {
+            if (!factoryNum || factoryNum === '—' || factoryNum === '????') return '—';
+            let modelNoDot = model.replace(/[^a-zA-Z0-9]/g, '');
+            const paddedFactory = String(factoryNum).padStart(5, '0');
+            return "RZ1" + modelNoDot + paddedFactory;
+        }
+
+        function updateParkSelect() {
+            let parkSelect = document.getElementById('parkSelect');
+            let currentSelection = parkSelect.value;
+            
+            // Получаем уникальные депо из текущей базы
+            let uniqueParks = [...new Set(vehicleDB.map(v => v.park))].filter(Boolean);
+            uniqueParks.sort();
+
+            parkSelect.innerHTML = '<option value="">Все депо</option>';
+            uniqueParks.forEach(park => {
+                let opt = document.createElement('option');
+                opt.value = park;
+                opt.innerText = park;
+                parkSelect.appendChild(opt);
+            });
+            parkSelect.value = currentSelection;
+        }
+
+        function renderTable() {
+            let tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('dbCount').innerText = vehicleDB.length;
+            updateParkSelect();
+
+            vehicleDB.forEach((v, index) => {
+                let tr = document.createElement('tr');
+                tr.className = v.statusCls;
+                tr.setAttribute('data-park', v.park);
+                
+                let vin = generateVIN(v.model, v.factory);
+                v._generatedVin = vin; 
+                
+                tr.onclick = () => {
+                    openCardFromObj(index);
+                };
+                
+                let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
+                let statusText = statusLabels[v.statusCls] || v.statusKey;
+                
+                tr.innerHTML = `
+                    <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
+                    <td><b>${v.park}</b></td>
+                    <td><a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a></td>
+                    <td>${v.gov}</td>
+                    <td>${v.num}</td>
+                    <td>${purposeText}</td>
+                    <td class="f-num">${v.factory}</td>
+                    <td class="vin-cell">${vin}</td>
+                    <td>${v.build}</td>
+                    <td>${v.arrive}</td>
+                    <td>${v.start}</td>
+                    <td>${v.out}</td>
+                    <td>${v.decomm}</td>
+                    <td>${v.util}</td>
+                    <td>${v.note}</td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDatabase();
+            
+            let savedTheme = localStorage.getItem('railphoto_theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.remove('light-theme');
+            } else {
+                document.body.classList.add('light-theme');
+            }
+
+            renderTable();
+        });
+
+        function openAddModal() {
+            document.getElementById('addVehicleModal').style.display = 'flex';
+        }
+        function closeAddModal() {
+            document.getElementById('addVehicleModal').style.display = 'none';
+        }
+
+        function saveNewVehicle(event) {
+            event.preventDefault();
+            
+            let statusVal = document.getElementById('newStatus').value;
+
+            let newBus = {
+                park: document.getElementById('newPark').value.trim(),
+                modelPrefix: document.getElementById('newModelPrefix').value.trim(),
+                model: document.getElementById('newModel').value.trim(),
+                gov: document.getElementById('newGov').value.trim(),
+                num: document.getElementById('newNum').value.trim(),
+                purposeKey: document.getElementById('newPurpose').value,
+                factory: document.getElementById('newFactory').value.trim(),
+                build: document.getElementById('newBuild').value.trim(),
+                arrive: document.getElementById('newArrive').value.trim(),
+                start: "2026",
+                out: "—",
+                decomm: "—",
+                util: "—",
+                statusCls: statusVal,
+                statusKey: statusLabels[statusVal] || 'Эксплуатируется',
+                note: document.getElementById('newNote').value.trim()
+            };
+
+            vehicleDB.unshift(newBus); 
+            saveDatabaseToStorage();
+            
+            renderTable();
+            closeAddModal();
+            document.getElementById('addVehicleForm').reset();
+            alert('Новая единица подвижного состава успешно добавлена!');
+        }
+
+        function openCardFromObj(index) {
+            currentOpenVehicleIndex = index;
+            let v = vehicleDB[index];
+            
+            let dispGov = v.gov !== '—' && v.gov !== '????' ? v.gov : '№ ' + v.num;
+            document.getElementById('mTitle').innerText = v.model + " — " + dispGov;
+            document.getElementById('mSubtitle').innerText = v.park;
+            
+            document.getElementById('mGov').innerText = v.gov;
+            document.getElementById('mNumber').innerText = v.num;
+            document.getElementById('mPurpose').innerText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
+            document.getElementById('mFactory').innerText = v.factory;
+            document.getElementById('mVin').innerText = v._generatedVin || "—";
+            document.getElementById('mBuild').innerText = v.build;
+            document.getElementById('mArrive').innerText = v.arrive;
+            document.getElementById('mStart').innerText = v.start;
+            document.getElementById('mOut').innerText = v.out;
+            document.getElementById('mDecomm').innerText = v.decomm;
+            document.getElementById('mUtil').innerText = v.util;
+            document.getElementById('mStatus').innerText = statusLabels[v.statusCls] || v.statusKey;
+            document.getElementById('mNote').innerText = v.note || "—";
+
+            document.getElementById('vehicleModal').style.display = 'flex';
+        }
+
+        function deleteCurrentVehicle() {
+            if (currentOpenVehicleIndex === null || currentOpenVehicleIndex >= vehicleDB.length) return;
+            let v = vehicleDB[currentOpenVehicleIndex];
+            let nameDesc = `${v.model} (${v.gov !== '—' ? v.gov : 'Борт. ' + v.num})`;
+            
+            if (confirm(`Вы действительно хотите удалить ПС: ${nameDesc}?`)) {
+                vehicleDB.splice(currentOpenVehicleIndex, 1);
+                saveDatabaseToStorage();
+                closeCard();
+                renderTable();
+                alert('Единица ПС успешно удалена!');
+            }
+        }
+
+        function closeCard() { document.getElementById('vehicleModal').style.display = 'none'; }
+
+        function toggleTheme() { 
+            document.body.classList.toggle('light-theme');
+            let isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('railphoto_theme', isLight ? 'light' : 'dark');
+        }
+
+        function filterDB() {
+            let input = document.getElementById("searchInput").value.toUpperCase();
+            let parkFilter = document.getElementById("parkSelect").value;
+            let rows = document.querySelectorAll("#dbTable tbody tr");
+
+            rows.forEach(row => {
+                let text = row.innerText.toUpperCase();
+                let park = row.getAttribute("data-park");
+                let matchesSearch = text.indexOf(input) > -1;
+                let matchesPark = parkFilter === "" || park === parkFilter;
+                row.style.display = (matchesSearch && matchesPark) ? "" : "none";
+            });
+        }
+
+        window.onclick = function(event) {
+            let modal = document.getElementById('vehicleModal');
+            let addModal = document.getElementById('addVehicleModal');
+            if (event.target === modal) modal.style.display = "none";
+            if (event.target === addModal) addModal.style.display = "none";
+        }
+    </script>
 </body>
 </html>
