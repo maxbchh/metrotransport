@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>RAILPHOTO — Полнофункциональная База Данных, ДСП и Аттестация</title>
+    <title>RAILPHOTO — Полнофункциональная База Данных, Профиль Сотрудника, ДСП и Аттестация</title>
     <style>
         /* ==========================================================================
            1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ТЕМАТИЗАЦИЯ (CSS VARIABLES)
@@ -31,6 +31,10 @@
             --bp-btn-success-hover: #166534;
             --bp-modal-overlay: rgba(0, 0, 0, 0.85);
             --bp-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.3);
+            --bp-accent-gold: #f59e0b;
+            --bp-accent-teal: #14b8a6;
+            --bp-pinned-bg: rgba(245, 158, 11, 0.1);
+            --bp-pinned-border: #f59e0b;
         }
 
         body.light-theme {
@@ -49,6 +53,10 @@
             --bp-btn-secondary-hover: #cbd5e1;
             --bp-modal-overlay: rgba(0, 0, 0, 0.5);
             --bp-box-shadow: 0 4px 12px rgba(0, 0, 0, 0.1);
+            --bp-accent-gold: #d97706;
+            --bp-accent-teal: #0d9488;
+            --bp-pinned-bg: #fffbeb;
+            --bp-pinned-border: #d97706;
         }
 
         /* ==========================================================================
@@ -58,34 +66,46 @@
             background-color: rgba(43, 43, 43, 0.2) !important; 
             color: var(--bp-text) !important; 
         }
+
         .st-not-operated { 
             background-color: #2e5c2e !important; 
             color: #ffffff !important; 
         }
+
         .st-inactive { 
             background-color: #6b6b00 !important; 
             color: #ffffff !important; 
         }
+
         .st-out { 
             background-color: #696969 !important; 
             color: #ffffff !important; 
         }
+
         .st-decomm { 
             background-color: #8b0000 !important; 
             color: #ffffff !important; 
         }
+
         .st-scrapped { 
             background-color: #3a0000 !important; 
             color: #aaaaaa !important; 
             text-decoration: line-through; 
         }
+
         .st-mod { 
             background-color: #4b6f7e !important; 
             color: #ffffff !important; 
         }
+
         .st-trans { 
             background-color: #512e5f !important; 
             color: #ffffff !important; 
+        }
+
+        .st-reserve {
+            background-color: #1e3a5f !important;
+            color: #ffffff !important;
         }
 
         body.light-theme .st-active { 
@@ -150,7 +170,7 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 8px;
             flex-wrap: wrap;
         }
 
@@ -164,6 +184,9 @@
             font-size: 11px;
             font-weight: bold;
             transition: all 0.2s ease;
+            display: flex;
+            align-items: center;
+            gap: 6px;
         }
 
         .nav-tab-btn:hover {
@@ -282,6 +305,21 @@
             background: var(--bp-btn-success-hover);
         }
 
+        .btn-gold {
+            background: var(--bp-accent-gold);
+            color: #ffffff;
+            border: none;
+            padding: 7px 14px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+
+        .btn-gold:hover {
+            filter: brightness(1.1);
+        }
+
         /* ==========================================================================
            4. Вкладка ФИЛЬТРОВ И КАТЕГОРИЙ (FILTERS & TABS)
            ========================================================================== */
@@ -398,7 +436,158 @@
         }
 
         /* ==========================================================================
-           6. КОНСТРУКТОР СБОРНОГО ПОЕЗДА И ТАБЛО ДСП (TRAIN BUILDER & BOARD)
+           6. СТИЛИ ПРОФИЛЯ СОТРУДНИКА И ЗАКРЕПЛЁННЫХ КАРТОЧЕК
+           ========================================================================== */
+        .profile-grid {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 18px;
+        }
+
+        @media (max-width: 950px) {
+            .profile-grid {
+                grid-template-columns: 1fr;
+            }
+        }
+
+        .profile-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 6px;
+            padding: 18px;
+            box-shadow: var(--bp-box-shadow);
+        }
+
+        .profile-avatar-box {
+            text-align: center;
+            padding-bottom: 16px;
+            border-bottom: 1px solid var(--bp-border);
+            margin-bottom: 16px;
+        }
+
+        .profile-avatar {
+            width: 110px;
+            height: 110px;
+            border-radius: 50%;
+            background: #2563eb;
+            color: #ffffff;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 38px;
+            font-weight: bold;
+            margin: 0 auto 12px auto;
+            border: 4px solid var(--bp-border);
+            box-shadow: 0 4px 10px rgba(0,0,0,0.3);
+        }
+
+        .profile-name {
+            font-size: 16px;
+            font-weight: bold;
+            color: var(--bp-text);
+            margin-bottom: 4px;
+        }
+
+        .profile-role-badge {
+            display: inline-block;
+            background: var(--bp-accent-teal);
+            color: #ffffff;
+            padding: 4px 10px;
+            border-radius: 12px;
+            font-size: 11px;
+            font-weight: bold;
+            margin-top: 4px;
+        }
+
+        .profile-info-list {
+            list-style: none;
+            margin-bottom: 16px;
+        }
+
+        .profile-info-item {
+            padding: 8px 0;
+            border-bottom: 1px solid var(--bp-border);
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            font-size: 11px;
+        }
+
+        .profile-info-label {
+            color: var(--bp-text-muted);
+            font-weight: bold;
+        }
+
+        .profile-info-value {
+            font-weight: bold;
+            color: var(--bp-text);
+            text-align: right;
+        }
+
+        .pinned-section {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 6px;
+            padding: 18px;
+            box-shadow: var(--bp-box-shadow);
+        }
+
+        .pinned-header {
+            font-size: 14px;
+            font-weight: bold;
+            color: var(--bp-accent-gold);
+            margin-bottom: 14px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+            border-bottom: 1px solid var(--bp-border);
+            padding-bottom: 8px;
+        }
+
+        .pinned-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(260px, 1fr));
+            gap: 12px;
+        }
+
+        .pinned-card {
+            background: var(--bp-pinned-bg);
+            border: 1px solid var(--bp-pinned-border);
+            border-radius: 5px;
+            padding: 12px;
+            position: relative;
+        }
+
+        .pinned-card-title {
+            font-weight: bold;
+            font-size: 12px;
+            color: var(--bp-text);
+            margin-bottom: 6px;
+            display: flex;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .pinned-card-body {
+            font-size: 11px;
+            color: var(--bp-text);
+            line-height: 1.4;
+        }
+
+        .pin-icon-btn {
+            cursor: pointer;
+            color: var(--bp-accent-gold);
+            font-size: 14px;
+            background: none;
+            border: none;
+        }
+
+        .pin-icon-btn:hover {
+            transform: scale(1.2);
+        }
+
+        /* ==========================================================================
+           7. КОНСТРУКТОР СБОРНОГО ПОЕЗДА И ТАБЛО ДСП (TRAIN BUILDER & BOARDS)
            ========================================================================== */
         .trip-form-panel {
             background: var(--bp-card-bg);
@@ -407,7 +596,7 @@
             border-radius: 4px;
             margin-bottom: 16px;
             display: grid;
-            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 12px;
         }
 
@@ -493,7 +682,33 @@
             box-shadow: 0 2px 6px rgba(0,0,0,0.2);
         }
 
-        /* Табло станции */
+        /* Табло станций */
+        .station-selector-bar {
+            display: flex;
+            gap: 8px;
+            margin-bottom: 14px;
+            flex-wrap: wrap;
+        }
+
+        .station-tab-btn {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            color: var(--bp-text);
+            padding: 8px 16px;
+            border-radius: 4px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+            transition: all 0.2s ease;
+        }
+
+        .station-tab-btn.active {
+            background: #f59e0b;
+            color: #000000;
+            border-color: #d97706;
+            box-shadow: 0 0 10px rgba(245, 158, 11, 0.4);
+        }
+
         .board-container {
             background: #000000;
             border: 4px solid #333;
@@ -506,7 +721,7 @@
         }
 
         .board-header {
-            font-size: 20px;
+            font-size: 18px;
             font-weight: bold;
             text-align: center;
             border-bottom: 2px dashed #ffb703;
@@ -514,6 +729,9 @@
             margin-bottom: 14px;
             text-transform: uppercase;
             letter-spacing: 2px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
         }
 
         .board-table {
@@ -526,18 +744,28 @@
             border-bottom: 1px solid #ffb703;
             padding: 8px;
             text-align: left;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .board-table td {
             padding: 10px 8px;
             border-bottom: 1px dotted #444;
-            font-size: 13px;
+            font-size: 12px;
         }
 
         .status-blink {
             animation: blinker 1.2s linear infinite;
             color: #2ec4b6;
+            font-weight: bold;
+        }
+
+        .status-delayed {
+            color: #e63946;
+            font-weight: bold;
+        }
+
+        .status-arrived {
+            color: #ffb703;
             font-weight: bold;
         }
 
@@ -582,13 +810,14 @@
             font-size: 13px;
             margin-bottom: 12px;
             color: var(--bp-link);
+            line-height: 1.4;
         }
 
         .test-option {
             display: block;
             margin-bottom: 8px;
             cursor: pointer;
-            padding: 6px 10px;
+            padding: 8px 12px;
             background: var(--bp-input-bg);
             border: 1px solid var(--bp-border);
             border-radius: 3px;
@@ -599,8 +828,17 @@
             border-color: var(--bp-link);
         }
 
+        .test-explanation {
+            margin-top: 10px;
+            padding: 10px;
+            background: rgba(37, 99, 235, 0.1);
+            border-left: 3px solid var(--bp-link);
+            font-size: 11px;
+            display: none;
+        }
+
         /* ==========================================================================
-           7. МОДАЛЬНЫЕ ОКНА (MODALS & FORMS)
+           8. МОДАЛЬНЫЕ ОКНА (MODALS & FORMS)
            ========================================================================== */
         .modal-overlay {
             display: none;
@@ -680,7 +918,7 @@
 
         /* Стили для печати */
         @media print {
-            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .board-container, .test-card {
+            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .board-container, .test-card, .station-selector-bar {
                 display: none !important;
             }
             body {
@@ -714,21 +952,92 @@
     <header class="no-print">
         <div>
             <span class="logo-box">RAILPHOTO</span>
-            <span style="font-size:15px; font-weight:bold; margin-left:10px;">Управление Базой ПС & ДСП</span>
+            <span style="font-size:15px; font-weight:bold; margin-left:10px;">База ПС, Профиль & Управление ДСП</span>
         </div>
         <div class="header-controls">
-            <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
-            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
-            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">📅 Расписание & Табло</button>
-            <button class="nav-tab-btn" id="btnViewTests" onclick="switchPage('tests')">🎓 Аттестация и Тесты</button>
-            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Переключить тему</button>
+            <button class="nav-tab-btn active" id="btnViewProfile" onclick="switchPage('profile')">👤 Профиль</button>
+            <button class="nav-tab-btn" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
+            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор</button>
+            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">📅 Табло станций</button>
+            <button class="nav-tab-btn" id="btnViewTests" onclick="switchPage('tests')">🎓 Аттестация ДСП</button>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
         </div>
     </header>
 
     <!-- ==========================================================================
-       СТРАНИЦА 1: КЛИКАБЕЛЬНАЯ БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА
+       СТРАНИЦА 1: ПРОФИЛЬ СОТРУДНИКА С ЗАКРЕПЛЕНИЕМ ДАННЫХ И ПАМЯТОК
        ========================================================================== -->
-    <div id="pageDatabase" class="main-wrapper">
+    <div id="pageProfile" class="main-wrapper">
+        <div class="page-header">
+            <span>👤 Персональный Профиль Сотрудника / Дежурного по Станции</span>
+            <div class="action-buttons no-print">
+                <button class="btn-primary" onclick="openEditProfileModal()">✏️ Редактировать профиль</button>
+                <button class="btn-gold" onclick="openAddPinnedNoteModal()">📌 Закрепить памятку / заметку</button>
+            </div>
+        </div>
+
+        <div class="profile-grid">
+            <!-- Левая колонка: Личные данные -->
+            <div class="profile-card">
+                <div class="profile-avatar-box">
+                    <div class="profile-avatar" id="profAvatarInitials">ДСП</div>
+                    <div class="profile-name" id="profDisplayName">Иванов Иван Иванович</div>
+                    <div class="profile-role-badge" id="profDisplayRole">Дежурный по станции (ДСП)</div>
+                </div>
+
+                <ul class="profile-info-list">
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Табельный №:</span>
+                        <span class="profile-info-value" id="profDisplayTabNum">ТБ-88402</span>
+                    </li>
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Станция приписки:</span>
+                        <span class="profile-info-value" id="profDisplayStation">ст. Сосновый Бор</span>
+                    </li>
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Квалификация:</span>
+                        <span class="profile-info-value" id="profDisplayQual">ДСП 1-го класса</span>
+                    </li>
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Стаж работы:</span>
+                        <span class="profile-info-value" id="profDisplayExp">5 лет 4 месяца</span>
+                    </li>
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Текущая смена:</span>
+                        <span class="profile-info-value" style="color:var(--bp-btn-success);" id="profDisplayShift">На дежурстве</span>
+                    </li>
+                    <li class="profile-info-item">
+                        <span class="profile-info-label">Аттестация ПТЭ/ИСИ:</span>
+                        <span class="profile-info-value" style="color:var(--bp-link);" id="profDisplayExamDate">Сдано (Действительно)</span>
+                    </li>
+                </ul>
+
+                <div style="margin-top:14px; font-weight:bold; font-size:11px; color:var(--bp-text-muted);">
+                    ЗАКРЕПЛЁННЫЕ БЫСТРЫЕ МЕТКИ:
+                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;" id="profBadgesContainer">
+                    <!-- Заполняется динамически -->
+                </div>
+            </div>
+
+            <!-- Правая колонка: Закреплённые элементы (Имя, должность, инструкции, бланки) -->
+            <div class="pinned-section">
+                <div class="pinned-header">
+                    <span>📌 Закреплённые карточки и оперативные памятки ДСП</span>
+                    <span style="font-size:11px; font-weight:normal; color:var(--bp-text-muted);">Нажмите 📌 для управления</span>
+                </div>
+
+                <div class="pinned-grid" id="pinnedCardsGrid">
+                    <!-- Закреплённые карточки генерируются скриптом -->
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       СТРАНИЦА 2: КЛИКАБЕЛЬНАЯ БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА
+       ========================================================================== -->
+    <div id="pageDatabase" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>Подвижной состав — База данных</span>
             <div class="action-buttons no-print">
@@ -743,6 +1052,7 @@
             <div class="cat-tab active" id="tabCatAll" onclick="setCategoryFilter('all')">Все варианты</div>
             <div class="cat-tab" id="tabCatLoco" onclick="setCategoryFilter('loco')">🚂 Локомотивы</div>
             <div class="cat-tab" id="tabCatPass" onclick="setCategoryFilter('pass_car')">🚃 Пассажирские вагоны</div>
+            <div class="cat-tab" id="tabCatCargo" onclick="setCategoryFilter('cargo_car')">📦 Грузовые вагоны</div>
         </div>
 
         <div class="filter-panel no-print">
@@ -784,11 +1094,11 @@
     </div>
 
     <!-- ==========================================================================
-       СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА
+       СТРАНИЦА 3: КОНСТРУКТОР СБОРНОГО ПОЕЗДА
        ========================================================================== -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Параметры и составление поезда (С назначением ЛНП и ТЧМ)</span>
+            <span>Параметры и составление поезда (С назначением ЛНП, ТЧМ и ДСП)</span>
             <div class="action-buttons no-print">
                 <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
                 <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить форму</button>
@@ -811,6 +1121,10 @@
             <div>
                 <label for="tripLNPInput">Начальник поезда (ЛНП):</label>
                 <input type="text" id="tripLNPInput" placeholder="ФИО ЛНП">
+            </div>
+            <div>
+                <label for="tripDSPInput">ДСП отправления:</label>
+                <input type="text" id="tripDSPInput" value="Иванов И.И.">
             </div>
             <div>
                 <label for="tripTimeInput">Время отправления:</label>
@@ -839,25 +1153,37 @@
     </div>
 
     <!-- ==========================================================================
-       СТРАНИЦА 3: ИНФОРМАЦИОННОЕ ТАБЛО И СПРАВКА ВУ-45
+       СТРАНИЦА 4: ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ (СОСНОВЫЙ БОР, КРУТОБОРКА, ЛЕЛЬМА)
        ========================================================================== -->
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>📅 Информационное Табло и График Движения</span>
+            <span>📅 Информационные Табло Станций & График Движения</span>
             <div class="action-buttons no-print">
                 <button class="btn-primary" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
             </div>
         </div>
 
+        <!-- Переключатель станций -->
+        <div class="station-selector-bar no-print">
+            <button class="station-tab-btn active" id="btnStSosnovy" onclick="selectStationBoard('sosnovy')">🚉 ст. Сосновый Бор</button>
+            <button class="station-tab-btn" id="btnStKrutoborka" onclick="selectStationBoard('krutoborka')">🚉 ст. Крутоборка</button>
+            <button class="station-tab-btn" id="btnStLelma" onclick="selectStationBoard('lelma')">🚉 ст. Лельма</button>
+        </div>
+
+        <!-- Табло текущей станции -->
         <div class="board-container no-print">
-            <div class="board-header">📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР</div>
+            <div class="board-header">
+                <span id="boardStationTitle">📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР</span>
+                <span style="font-size:12px; color:#2ec4b6;" id="boardLiveClock">10:15:00</span>
+            </div>
             <table class="board-table">
                 <thead>
                     <tr>
                         <th>ПОЕЗД</th>
                         <th>МАРШРУТ СЛЕДОВАНИЯ</th>
+                        <th>ПУТЬ</th>
                         <th>ПРИБЫТИЕ</th>
-                        <th>СТОЯНКА / ПОСАДКА</th>
+                        <th>СТОЯНКА</th>
                         <th>ОТПРАВЛЕНИЕ</th>
                         <th>СТАТУС</th>
                     </tr>
@@ -898,14 +1224,14 @@
                     <div style="text-align:center; font-weight:bold; text-decoration:underline; font-size:13px;">СПРАВКА О БЕСПЕРЕБОЙНОМ ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ И ИХ ДЕЙСТВИИ (ФОРМА ВУ-45)</div>
                     <br>
                     <div><b>Поезд №:</b> <span id="vuTrainNum">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Маршрут:</b> <span id="vuRoute">—</span></div>
-                    <div><b>Машинист (ТЧМ):</b> <span id="vuDriver">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>ЛНП:</b> <span id="vuLNP">—</span></div>
+                    <div><b>Машинист (ТЧМ):</b> <span id="vuDriver">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>ЛНП:</b> <span id="vuLNP">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>ДСП:</b> <span id="vuDSP">—</span></div>
                     <div><b>Локомотив:</b> <span id="vuLoco">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Состав:</b> <span id="vuCarsCount">0</span> ваг.</div>
                     <hr style="border-top: 1px dashed #000; margin: 10px 0;">
                     <div><b>Давление в ТМ:</b> 4.5 – 4.8 кгс/см² | <b>Плотность ТМ:</b> Норма</div>
                     <div><b>Хвостовой вагон №:</b> <span id="vuTailCar">—</span> (Сигналы установлены)</div>
                     <hr style="border-top: 1px dashed #000; margin: 10px 0;">
                     <div>Опробование автотормозов: <b>ПОЛНОЕ ИНСПЕКТОРСКОЕ</b></div>
-                    <div style="margin-top:12px;">Осмотрщик вагонов: _________________</div>
+                    <div style="margin-top:12px;">Осмотрщик вагонов / ДСП: _________________</div>
                     <div>Машинист (ТЧМ): _________________</div>
                 </div>
             </div>
@@ -913,17 +1239,18 @@
     </div>
 
     <!-- ==========================================================================
-       СТРАНИЦА 4: АТТЕСТАЦИЯ И ЭКЗАМЕНАТОР
+       СТРАНИЦА 5: АТТЕСТАЦИЯ И ЭКЗАМЕНАТОР (ДСП, ТЧМ, ЛНП)
        ========================================================================== -->
     <div id="pageTests" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>🎓 Экзаменационные тесты (Машинист, Инструктор, ЛНП)</span>
+            <span>🎓 Экзаменационные Тесты & Аттестация (ДСП, ТЧМ, ЛНП, Инструктор)</span>
         </div>
 
         <div class="trip-form-panel no-print">
             <div>
                 <label for="testRoleSelect">Выберите экзаменационный профиль:</label>
                 <select id="testRoleSelect" onchange="loadTestRole()">
+                    <option value="dsp">🚦 Дежурный по станции (ДСП)</option>
                     <option value="driver">🚂 Машинист (ТЧМ)</option>
                     <option value="instructor">👨‍🏫 Машинист-Инструктор</option>
                     <option value="lnp">📋 Начальник поезда (ЛНП)</option>
@@ -932,7 +1259,7 @@
         </div>
 
         <div id="testContainer"></div>
-        <button class="btn-primary" onclick="checkTestResults()" style="padding:10px 22px; font-size:12px;">Сдать экзамиционную работу</button>
+        <button class="btn-primary" onclick="checkTestResults()" style="padding:10px 22px; font-size:12px;">Сдать экзаменационную работу</button>
         <div id="testResultBox" style="margin-top:16px; font-weight:bold; font-size:14px;"></div>
     </div>
 
@@ -941,7 +1268,7 @@
        ========================================================================== -->
     <div class="modal-overlay" id="vehicleModal">
         <div class="modal-card">
-            <span class="modal-close" onclick="closeModal()">&times;</span>
+            <span class="modal-close" onclick="closeModal('vehicleModal')">&times;</span>
             <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;" id="modalTitle">Параметры единицы подвижного состава</div>
             
             <form onsubmit="saveVehicleData(event)">
@@ -952,6 +1279,7 @@
                         <select id="fieldCategory">
                             <option value="loco">🚂 Локомотив</option>
                             <option value="pass_car">🚃 Пассажирский вагон</option>
+                            <option value="cargo_car">📦 Грузовой вагон</option>
                         </select>
                     </div>
                     <div>
@@ -1008,9 +1336,85 @@
                 <div style="margin-top:18px; display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--bp-border); padding-top: 12px;">
                     <button type="button" class="btn-danger" id="btnDeleteVehicle" onclick="deleteCurrentVehicle()">🗑 Удалить из базы</button>
                     <div style="display:flex; gap:8px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal()">Отмена</button>
+                        <button type="button" class="btn-secondary" onclick="closeModal('vehicleModal')">Отмена</button>
                         <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
                     </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ПРОФИЛЯ СТРАНИЦЫ
+       ========================================================================== -->
+    <div class="modal-overlay" id="editProfileModal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeModal('editProfileModal')">&times;</span>
+            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;">✏️ Редактирование Данных Профиля</div>
+            
+            <form onsubmit="saveProfileData(event)">
+                <div class="form-grid">
+                    <div class="form-full">
+                        <label for="editProfName">ФИО Сотрудника:</label>
+                        <input type="text" id="editProfName" required placeholder="Иванов Иван Иванович">
+                    </div>
+                    <div>
+                        <label for="editProfRole">Должность / Специальность:</label>
+                        <input type="text" id="editProfRole" required placeholder="Дежурный по станции (ДСП)">
+                    </div>
+                    <div>
+                        <label for="editProfTabNum">Табельный номер:</label>
+                        <input type="text" id="editProfTabNum" required placeholder="ТБ-88402">
+                    </div>
+                    <div>
+                        <label for="editProfStation">Станция / Депо приписки:</label>
+                        <input type="text" id="editProfStation" required placeholder="ст. Сосновый Бор">
+                    </div>
+                    <div>
+                        <label for="editProfQual">Квалификационный класс:</label>
+                        <input type="text" id="editProfQual" required placeholder="ДСП 1-го класса">
+                    </div>
+                    <div>
+                        <label for="editProfExp">Стаж работы:</label>
+                        <input type="text" id="editProfExp" required placeholder="5 лет 4 месяца">
+                    </div>
+                    <div>
+                        <label for="editProfShift">Статус смены:</label>
+                        <input type="text" id="editProfShift" required placeholder="На дежурстве">
+                    </div>
+                </div>
+
+                <div style="margin-top:18px; display:flex; justify-content:flex-end; gap:8px; border-top: 1px solid var(--bp-border); padding-top: 12px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('editProfileModal')">Отмена</button>
+                    <button type="submit" class="btn-primary">💾 Сохранить профиль</button>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ ЗАКРЕПЛЁННОЙ КАРТОЧКИ / ПАМЯТКИ
+       ========================================================================== -->
+    <div class="modal-overlay" id="addPinnedNoteModal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeModal('addPinnedNoteModal')">&times;</span>
+            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;">📌 Закрепить Новую Заметку / Памятку</div>
+            
+            <form onsubmit="savePinnedNote(event)">
+                <div class="form-grid">
+                    <div class="form-full">
+                        <label for="fieldPinTitle">Заголовок памятки / карточки:</label>
+                        <input type="text" id="fieldPinTitle" required placeholder="Памятка при неисправности СЦБ">
+                    </div>
+                    <div class="form-full">
+                        <label for="fieldPinBody">Содержание / Порядок действий:</label>
+                        <textarea id="fieldPinBody" rows="4" required placeholder="Введите текст памятки, телефон ДНЦ или алгоритм действий..."></textarea>
+                    </div>
+                </div>
+
+                <div style="margin-top:18px; display:flex; justify-content:flex-end; gap:8px; border-top: 1px solid var(--bp-border); padding-top: 12px;">
+                    <button type="button" class="btn-secondary" onclick="closeModal('addPinnedNoteModal')">Отмена</button>
+                    <button type="submit" class="btn-gold">📌 Закрепить в профиле</button>
                 </div>
             </form>
         </div>
@@ -1020,7 +1424,11 @@
        СКРИПТЫ И ЛОГИКА СИСТЕМЫ (JAVASCRIPT LOGIC)
        ========================================================================== -->
     <script>
-        /* Исходные данные для базы данных по умолчанию */
+        /* ==========================================================================
+           ИНИЦИАЛИЗАЦИЯ И ИСХОДНЫЕ ДАННЫЕ СИСТЕМЫ
+           ========================================================================== */
+        
+        // База данных подвижного состава по умолчанию
         const defaultDB = [
             { 
                 id: "ps_1", 
@@ -1034,7 +1442,7 @@
                 outDate: "", 
                 decommDate: "", 
                 scrappedDate: "", 
-                note: "Тепловоз узкой колеи, полностью исправен" 
+                note: "Тепловоз узкой колеи, исправен, регулярно выходит в рейсы" 
             },
             { 
                 id: "ps_2", 
@@ -1048,7 +1456,7 @@
                 outDate: "", 
                 decommDate: "", 
                 scrappedDate: "", 
-                note: "Пассажирский вагон" 
+                note: "Пассажирский вагон, прошел плановый ТО-2" 
             },
             { 
                 id: "ps_3", 
@@ -1067,7 +1475,7 @@
             { 
                 id: "ps_4", 
                 category: "loco", 
-                park: "ст. Крутоборка", 
+                park: "ст. Сосновый Бор", 
                 model: "ТУ7A", 
                 num: "3100", 
                 statusCls: "st-decomm", 
@@ -1077,73 +1485,235 @@
                 decommDate: "2018-11-01", 
                 scrappedDate: "", 
                 note: "Находится на пути отстоя, ожидает резки" 
+            },
+            { 
+                id: "ps_5", 
+                category: "loco", 
+                park: "ст. Лельма", 
+                model: "ТУ2", 
+                num: "141", 
+                statusCls: "st-active", 
+                statusText: "Работает", 
+                buildDate: "1957-09-04", 
+                outDate: "", 
+                decommDate: "", 
+                scrappedDate: "", 
+                note: "Маневрово-вывозная работа по ст. Лельма" 
+            },
+            { 
+                id: "ps_6", 
+                category: "cargo_car", 
+                park: "ст. Лельма", 
+                model: "Платформа 750мм", 
+                num: "502", 
+                statusCls: "st-active", 
+                statusText: "Работает", 
+                buildDate: "1975-04-18", 
+                outDate: "", 
+                decommDate: "", 
+                scrappedDate: "", 
+                note: "Грузовая платформа для путевых работ" 
             }
         ];
 
-        let vehicleDB = [];
-        let consistList = [];
-        let currentCategoryFilter = 'all';
+        // Профиль сотрудника по умолчанию
+        const defaultProfile = {
+            name: "Петров Сергей Владимирович",
+            role: "Дежурный по станции (ДСП)",
+            tabNum: "ТБ-77014",
+            station: "ст. Сосновый Бор",
+            qual: "ДСП 1-го класса",
+            exp: "6 лет 8 месяцев",
+            shift: "На дежурстве",
+            examDate: "Сдано (Действительно)",
+            badges: ["ДСП", "ПТЭ 2026", "СЦБ Разряд 5", "ВУ-45 Инспектор"]
+        };
 
-        /* Вопросы и варианты ответов для интерактивной аттестации */
+        // Закреплённые карточки и памятки по умолчанию
+        const defaultPinnedNotes = [
+            {
+                id: "pin_1",
+                title: "📌 ЗАКРЕПЛЁННЫЙ ПРОФИЛЬ СОТРУДНИКА",
+                body: "<b>ФИО:</b> Петров Сергей Владимирович<br><b>Должность:</b> Дежурный по станции (ДСП)<br><b>Станция:</b> Сосновый Бор<br><b>Классность:</b> 1-й класс"
+            },
+            {
+                id: "pin_2",
+                title: "⚠️ Действия ДСП при ложной занятости пути",
+                body: "1. Убедиться визуально в свободности пути от подвижного состава.<br>2. Сообщить ДНЦ и ШН.<br>3. Перевести стрелки на ручное управление (курбель).<br>4. Выдать машинисту бланк ДУ-52 / ДУ-54."
+            },
+            {
+                id: "pin_3",
+                title: "☎️ Оперативные телефоны ДНЦ и ШН",
+                body: "<b>Поездной диспетчер (ДНЦ):</b> 12-01<br><b>ШН / ШЧ (СЦБ):</b> 12-44<br><b>Дежурный по депо (ТЧЗ):</b> 14-02<br><b>Скорая помощь / МЧС:</b> 112"
+            }
+        ];
+
+        // Данные для табло станций
+        const stationBoardsData = {
+            sosnovy: {
+                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР",
+                trains: [
+                    { num: "601", route: "Крутоборка — Сосновый Бор — Лельма", track: "1 путь", arr: "10:17", stop: "4 мин", dep: "10:21", status: "ПОСАДКА", cls: "status-blink" },
+                    { num: "602", route: "Лельма — Сосновый Бор — Крутоборка", track: "2 путь", arr: "11:05", stop: "5 мин", dep: "11:10", status: "ОЖИДАЕТСЯ", cls: "" },
+                    { num: "7001", route: "Сосновый Бор — Лельма (Пригородный)", track: "1 путь", arr: "12:30", stop: "Формирование", dep: "12:45", status: "ГОТОВИТСЯ", cls: "" }
+                ]
+            },
+            krutoborka: {
+                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. КРУТОБОРКА",
+                trains: [
+                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "—", stop: "Начальная", dep: "10:00", status: "ОТПРАВЛЕН", cls: "status-arrived" },
+                    { num: "602", route: "Лельма — Крутоборка", track: "2 путь", arr: "11:55", stop: "Конечная", dep: "—", status: "ПРИБЫВАЕТ", cls: "status-blink" },
+                    { num: "801", route: "Крутоборка — Сосновый Бор", track: "3 путь", arr: "—", stop: "Начальная", dep: "14:15", status: "ФОРМИРУЕТСЯ", cls: "" }
+                ]
+            },
+            lelma: {
+                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. ЛЕЛЬМА",
+                trains: [
+                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "10:38", stop: "Конечная", dep: "—", status: "В ПУТИ", cls: "status-arrived" },
+                    { num: "602", route: "Лельма — Крутоборка", track: "1 путь", arr: "—", stop: "Начальная", dep: "10:45", status: "ПОСАДКА", cls: "status-blink" },
+                    { num: "904", route: "Лельма — Сосновый Бор (Грузовой)", track: "2 путь", arr: "—", stop: "Начальная", dep: "13:00", status: "ЗАДЕРЖИВАЕТСЯ", cls: "status-delayed" }
+                ]
+            }
+        };
+
+        // База вопросов для интерактивной аттестации (Включая подробные тесты на ДСП)
         const testQuestionsData = {
+            dsp: [
+                {
+                    q: "Каким документом разрешается отправление поезда на перегон при неисправности путевой блокировки (АБ/ПАБ)?",
+                    options: [
+                        "Путевой запиской (Форма ДУ-50)",
+                        "Бланком зелёного цвета ДУ-52",
+                        "Устным распоряжением ДСП",
+                        "Разрешением на бланке ДУ-54"
+                    ],
+                    correct: 0,
+                    exp: "При перерыве действия систем блокировки движение поездов устанавливается по телефонным средствам связи с выдачей машинисту Путевой записки (форма ДУ-50)."
+                },
+                {
+                    q: "Какое основное значение имеет КРАСНЫЙ огонь светофора согласно ИСИ?",
+                    options: [
+                        "Разрешается движение со скоростью не более 20 км/ч",
+                        "Стой! Запрещается проезжать сигнал",
+                        "Разрешается проследование сигнала со особой бдительностью",
+                        "Снизить скорость до 15 км/ч"
+                    ],
+                    correct: 1,
+                    exp: "Красный огонь светофора требует немедленной остановки; проезд категорически запрещён без специального разрешения ДСП."
+                },
+                {
+                    q: "Что обязан сделать ДСП перед открытием входного или выходного светофора для приёма/отправления поезда?",
+                    options: [
+                        "Только убедиться в свободности перегона",
+                        "Убедиться в свободности пути приёма, правильности установки стрелок в маршруте и их запертости",
+                        "Подать звуковой сигнал тифоном",
+                        "Сообщить кондуктору поезда"
+                    ],
+                    correct: 1,
+                    exp: "ДСП лично или по приборам контроля обязан проверить свободность пути приёма, положение всех стрелок в маршруте и их замыкание."
+                },
+                {
+                    q: "На какой документ записываются все распоряжения ДНЦ и движение поездов на станции?",
+                    options: [
+                        "Натурный лист поезда (Ф-1)",
+                        "Журнал движения поездов (Форма ДУ-2)",
+                        "Маршрутный лист машиниста",
+                        "Справка ВУ-45"
+                    ],
+                    correct: 1,
+                    exp: "Журнал движения поездов и локомотивов (ДУ-2) является основным оперативным документом ДСП."
+                },
+                {
+                    q: "Какова максимальная скорость движения при манёврах с вагонами, занятыми людьми?",
+                    options: [
+                        "Не более 40 км/ч",
+                        "Не более 25 км/ч",
+                        "Не более 15 км/ч",
+                        "Не более 5 км/ч"
+                    ],
+                    correct: 2,
+                    exp: "Согласно ПТЭ, при манёврах с вагонами с людьми, а также с негабаритными грузами скорость не должна превышать 15 км/ч."
+                }
+            ],
             driver: [
                 { 
                     q: "Какое нормальное зарядное давление должно быть в тормозной магистрали локомотива?", 
                     options: ["3.0 – 3.5 кгс/см²", "4.5 – 4.8 кгс/см²", "6.0 – 6.5 кгс/см²"], 
-                    correct: 1 
+                    correct: 1,
+                    exp: "Зарядное давление в ТМ пассажирских и узкоколейных поездов поддерживается в пределах 4.5 – 4.8 кгс/см²."
                 },
                 { 
                     q: "Что обязан сделать машинист при проследовании жёлтого сигнала светофора?", 
-                    options: ["Снизить скорость и быть готовым к остановке", "Увеличить скорость", "Продолжить движение с максимальной разрешённой"], 
-                    correct: 0 
+                    options: ["Снизить скорость и быть готовым к остановке перед следующим сигналом", "Увеличить скорость", "Продолжить движение с максимальной разрешённой"], 
+                    correct: 0,
+                    exp: "Жёлтый сигнал разрешает движение с готовностью остановиться у следующего светофора."
                 },
                 { 
                     q: "Какое действие выполняет машинист при внезапной подаче сигнала остановки?", 
                     options: ["Применяет экстренное торможение", "Подаёт тифон и продолжает ход", "Запрашивает ДСП"], 
-                    correct: 0 
+                    correct: 0,
+                    exp: "При подаче сигнала остановки машинист обязан незамедлительно применить экстренное торможение."
                 }
             ],
             instructor: [
                 { 
                     q: "Периодичность проведения контрольно-инструкторских поездок с машинистом?", 
                     options: ["Раз в месяц", "Согласно графику (не реже 1 раза в квартал)", "Раз в год"], 
-                    correct: 1 
+                    correct: 1,
+                    exp: "КИП проводятся по утверждённому графику не реже одного раза в квартал для каждого машиниста."
                 },
                 { 
                     q: "Какое действие приоритетно при обнаружении неисправности тормозов в пути следования?", 
                     options: ["Применить экстренное торможение", "Запросить вспомогательный локомотив без остановки", "Подать звуковой сигнал и продолжать движение"], 
-                    correct: 0 
+                    correct: 0,
+                    exp: "При отказе или неэффективности тормозов применяется экстренное торможение всеми средствами."
                 }
             ],
             lnp: [
                 { 
                     q: "Что проверяет ЛНП перед отправлением поезда в рейс?", 
                     options: ["Только внешний вид вагонов", "Готовность поездной бригады, чистоту, наличие противопожарного инвентаря и посадку", "Состояние дизеля локомотива"], 
-                    correct: 1 
+                    correct: 1,
+                    exp: "ЛНП отвечает за готовность поездной бригады, экипировку вагонов, соблюдение правил посадки и безопасность пассажиров."
                 },
                 { 
                     q: "Кому подчиняется проводник пассажирского вагона в пути следования?", 
                     options: ["ДСП", "Машинисту локомотива напрямую", "Начальнику пассажирского поезда (ЛНП)"], 
-                    correct: 2 
+                    correct: 2,
+                    exp: "Проводники вагонов находятся в прямом подчинении ЛНП."
                 }
             ]
         };
 
-        /* Переключение основных страниц приложения */
+        // Рабочие переменные состояния
+        let vehicleDB = [];
+        let profileData = {};
+        let pinnedNotesData = [];
+        let consistList = [];
+        let currentCategoryFilter = 'all';
+        let currentStation = 'sosnovy';
+
+        /* ==========================================================================
+           НАВИГАЦИЯ И УПРАВЛЕНИЕ СТРАНИЦАМИ
+           ========================================================================== */
         function switchPage(page) {
-            const pages = ['Database', 'Builder', 'Schedule', 'Tests'];
+            const pages = ['Profile', 'Database', 'Builder', 'Schedule', 'Tests'];
             pages.forEach(p => {
                 const pageEl = document.getElementById('page' + p);
                 const btnEl = document.getElementById('btnView' + p);
                 if (page.toLowerCase() === p.toLowerCase()) {
                     pageEl.style.display = 'block';
-                    btnEl.classList.add('active');
+                    if (btnEl) btnEl.classList.add('active');
                 } else {
                     pageEl.style.display = 'none';
-                    btnEl.classList.remove('active');
+                    if (btnEl) btnEl.classList.remove('active');
                 }
             });
 
+            if (page === 'profile') {
+                renderProfile();
+                renderPinnedNotes();
+            }
             if (page === 'builder') {
                 renderBuilderSource();
                 renderConsistTrack();
@@ -1158,15 +1728,149 @@
             }
         }
 
-        /* Загрузка и сохранение базы данных из LocalStorage */
+        /* ==========================================================================
+           УПРАВЛЕНИЕ ПРОФИЛЕМ И ЗАКРЕПЛЁННЫМИ ЭЛЕМЕНТАМИ
+           ========================================================================== */
+        function loadProfileData() {
+            let savedProf = localStorage.getItem('railphoto_user_profile');
+            if (savedProf) {
+                try { profileData = JSON.parse(savedProf); } catch(e) { profileData = { ...defaultProfile }; }
+            } else {
+                profileData = { ...defaultProfile };
+            }
+
+            let savedPins = localStorage.getItem('railphoto_pinned_notes');
+            if (savedPins) {
+                try { pinnedNotesData = JSON.parse(savedPins); } catch(e) { pinnedNotesData = [ ...defaultPinnedNotes ]; }
+            } else {
+                pinnedNotesData = [ ...defaultPinnedNotes ];
+            }
+        }
+
+        function saveProfileState() {
+            localStorage.setItem('railphoto_user_profile', JSON.stringify(profileData));
+            renderProfile();
+        }
+
+        function savePinnedNotesState() {
+            localStorage.setItem('railphoto_pinned_notes', JSON.stringify(pinnedNotesData));
+            renderPinnedNotes();
+        }
+
+        function renderProfile() {
+            document.getElementById('profDisplayName').innerText = profileData.name || "Не указано";
+            document.getElementById('profDisplayRole').innerText = profileData.role || "Дежурный по станции";
+            document.getElementById('profDisplayTabNum').innerText = profileData.tabNum || "—";
+            document.getElementById('profDisplayStation').innerText = profileData.station || "—";
+            document.getElementById('profDisplayQual').innerText = profileData.qual || "—";
+            document.getElementById('profDisplayExp').innerText = profileData.exp || "—";
+            document.getElementById('profDisplayShift').innerText = profileData.shift || "—";
+            document.getElementById('profDisplayExamDate').innerText = profileData.examDate || "Сдано";
+
+            // Генерация инициалов для аватарки
+            let nameParts = profileData.name ? profileData.name.split(' ') : ["Д", "С", "П"];
+            let initials = nameParts.length >= 2 ? (nameParts[0][0] + nameParts[1][0]).toUpperCase() : "ДСП";
+            document.getElementById('profAvatarInitials').innerText = initials;
+
+            // Генерация плашек квалификаций
+            let badgesContainer = document.getElementById('profBadgesContainer');
+            badgesContainer.innerHTML = '';
+            (profileData.badges || []).forEach(b => {
+                let span = document.createElement('span');
+                span.className = 'type-badge';
+                span.style.background = 'rgba(37, 99, 235, 0.2)';
+                span.style.color = 'var(--bp-link)';
+                span.style.borderColor = 'var(--bp-link)';
+                span.innerText = b;
+                badgesContainer.appendChild(span);
+            });
+        }
+
+        function renderPinnedNotes() {
+            let grid = document.getElementById('pinnedCardsGrid');
+            grid.innerHTML = '';
+
+            pinnedNotesData.forEach((pin, idx) => {
+                let card = document.createElement('div');
+                card.className = 'pinned-card';
+                card.innerHTML = `
+                    <div class="pinned-card-title">
+                        <span>${pin.title}</span>
+                        <button class="pin-icon-btn" onclick="unpinNote(${idx})" title="Открепить карточку">📌</button>
+                    </div>
+                    <div class="pinned-card-body">${pin.body}</div>
+                `;
+                grid.appendChild(card);
+            });
+        }
+
+        function unpinNote(index) {
+            if (confirm("Открепить эту памятку из профиля?")) {
+                pinnedNotesData.splice(index, 1);
+                savePinnedNotesState();
+            }
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('editProfName').value = profileData.name || "";
+            document.getElementById('editProfRole').value = profileData.role || "";
+            document.getElementById('editProfTabNum').value = profileData.tabNum || "";
+            document.getElementById('editProfStation').value = profileData.station || "";
+            document.getElementById('editProfQual').value = profileData.qual || "";
+            document.getElementById('editProfExp').value = profileData.exp || "";
+            document.getElementById('editProfShift').value = profileData.shift || "";
+            
+            document.getElementById('editProfileModal').style.display = 'flex';
+        }
+
+        function saveProfileData(e) {
+            e.preventDefault();
+            profileData.name = document.getElementById('editProfName').value;
+            profileData.role = document.getElementById('editProfRole').value;
+            profileData.tabNum = document.getElementById('editProfTabNum').value;
+            profileData.station = document.getElementById('editProfStation').value;
+            profileData.qual = document.getElementById('editProfQual').value;
+            profileData.exp = document.getElementById('editProfExp').value;
+            profileData.shift = document.getElementById('editProfShift').value;
+
+            // Обновляем главную закрепленную карточку профиля
+            if (pinnedNotesData.length > 0 && pinnedNotesData[0].id === 'pin_1') {
+                pinnedNotesData[0].body = `<b>ФИО:</b> ${profileData.name}<br><b>Должность:</b> ${profileData.role}<br><b>Станция:</b> ${profileData.station}<br><b>Классность:</b> ${profileData.qual}`;
+                savePinnedNotesState();
+            }
+
+            saveProfileState();
+            closeModal('editProfileModal');
+        }
+
+        function openAddPinnedNoteModal() {
+            document.getElementById('fieldPinTitle').value = '';
+            document.getElementById('fieldPinBody').value = '';
+            document.getElementById('addPinnedNoteModal').style.display = 'flex';
+        }
+
+        function savePinnedNote(e) {
+            e.preventDefault();
+            let title = document.getElementById('fieldPinTitle').value;
+            let body = document.getElementById('fieldPinBody').value.replace(/\n/g, '<br>');
+
+            pinnedNotesData.push({
+                id: "pin_" + Date.now(),
+                title: "📌 " + title,
+                body: body
+            });
+
+            savePinnedNotesState();
+            closeModal('addPinnedNoteModal');
+        }
+
+        /* ==========================================================================
+           УПРАВЛЕНИЕ БАЗОЙ ДАННЫХ ПОДВИЖНОГО СОСТАВА
+           ========================================================================== */
         function loadDatabase() {
             let saved = localStorage.getItem('railphoto_full_db');
             if (saved) {
-                try {
-                    vehicleDB = JSON.parse(saved);
-                } catch(e) {
-                    vehicleDB = [...defaultDB];
-                }
+                try { vehicleDB = JSON.parse(saved); } catch(e) { vehicleDB = [...defaultDB]; }
             } else {
                 vehicleDB = [...defaultDB];
             }
@@ -1177,17 +1881,16 @@
             renderTable();
         }
 
-        /* Установка фильтрации категорий */
         function setCategoryFilter(cat) {
             currentCategoryFilter = cat;
             document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
             if (cat === 'all') document.getElementById('tabCatAll').classList.add('active');
             if (cat === 'loco') document.getElementById('tabCatLoco').classList.add('active');
             if (cat === 'pass_car') document.getElementById('tabCatPass').classList.add('active');
+            if (cat === 'cargo_car') document.getElementById('tabCatCargo').classList.add('active');
             renderTable();
         }
 
-        /* Отрисовка интерактивной таблицы БД */
         function renderTable() {
             let tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
@@ -1211,8 +1914,12 @@
                 if (v.decommDate) dateInfo.push(`Спис: ${v.decommDate}`);
                 if (v.scrappedDate) dateInfo.push(`Утил: ${v.scrappedDate}`);
 
+                let catLabel = '🚂 Локомотив';
+                if (v.category === 'pass_car') catLabel = '🚃 Вагон Пасс.';
+                if (v.category === 'cargo_car') catLabel = '📦 Вагон Гр.';
+
                 tr.innerHTML = `
-                    <td><span class="type-badge">${v.category === 'loco' ? '🚂 Локомотив' : '🚃 Вагон'}</span></td>
+                    <td><span class="type-badge">${catLabel}</span></td>
                     <td><b>${v.park}</b></td>
                     <td><b>${v.model}</b></td>
                     <td><b>${v.num}</b></td>
@@ -1225,7 +1932,6 @@
             });
         }
 
-        /* Получение текстового статуса по его CSS-классу */
         function getStatusLabel(cls) {
             const map = {
                 'st-active': 'Работает / Эксплуатируется',
@@ -1240,14 +1946,13 @@
             return map[cls] || 'Неизвестно';
         }
 
-        /* Управление модальными окнами редактирования и добавления ПС */
         function openAddModal() {
             document.getElementById('modalTitle').innerText = '➕ Добавить единицу подвижного состава';
             document.getElementById('editVehicleId').value = '';
             document.getElementById('fieldCategory').value = 'loco';
             document.getElementById('fieldModel').value = '';
             document.getElementById('fieldNum').value = '';
-            document.getElementById('fieldPark').value = 'ст. Крутоборка';
+            document.getElementById('fieldPark').value = 'ст. Сосновый Бор';
             document.getElementById('fieldStatusCls').value = 'st-active';
             document.getElementById('fieldStatusText').value = 'Работает';
             document.getElementById('fieldBuildDate').value = '';
@@ -1282,8 +1987,8 @@
             document.getElementById('vehicleModal').style.display = 'flex';
         }
 
-        function closeModal() {
-            document.getElementById('vehicleModal').style.display = 'none';
+        function closeModal(modalId) {
+            document.getElementById(modalId).style.display = 'none';
         }
 
         function saveVehicleData(e) {
@@ -1311,7 +2016,7 @@
             }
 
             saveDatabase();
-            closeModal();
+            closeModal('vehicleModal');
         }
 
         function deleteCurrentVehicle() {
@@ -1320,11 +2025,10 @@
             if (confirm("Вы действительно хотите полностью удалить эту единицу из базы данных?")) {
                 vehicleDB = vehicleDB.filter(v => v.id !== id);
                 saveDatabase();
-                closeModal();
+                closeModal('vehicleModal');
             }
         }
 
-        /* Экспорт и импорт базы данных в JSON */
         function exportDatabase() {
             let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vehicleDB, null, 2));
             let dl = document.createElement('a');
@@ -1349,14 +2053,16 @@
             reader.readAsText(file);
         }
 
-        /* Конструктор поездов */
+        /* ==========================================================================
+           КОНСТРУКТОР ПОЕЗДОВ
+           ========================================================================== */
         function renderBuilderSource() {
             let list = document.getElementById('builderSourceList');
             list.innerHTML = '';
             vehicleDB.filter(v => v.statusCls === 'st-active').forEach((v) => {
                 let div = document.createElement('div');
                 div.className = 'builder-source-item';
-                div.innerHTML = `<div><b>${v.model}</b> (№${v.num})</div>
+                div.innerHTML = `<div><b>${v.model}</b> (№${v.num}) - <span style="font-size:10px; color:var(--bp-text-muted);">${v.park}</span></div>
                 <button class="btn-primary" style="padding:3px 8px;" onclick="addToConsist('${v.id}')">+ В сцепку</button>`;
                 list.appendChild(div);
             });
@@ -1386,6 +2092,7 @@
             let route = document.getElementById('tripRouteInput').value;
             let driver = document.getElementById('tripDriverInput').value || "Не указан";
             let lnp = document.getElementById('tripLNPInput').value || "Не указан";
+            let dsp = document.getElementById('tripDSPInput').value || profileData.name || "Иванов И.И.";
             let time = document.getElementById('tripTimeInput').value;
 
             if (consistList.length === 0) {
@@ -1394,10 +2101,10 @@
             }
 
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            savedTrips.push({ num, route, driver, lnp, time, consist: consistList });
+            savedTrips.push({ num, route, driver, lnp, dsp, time, consist: consistList });
             localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
-            alert("Поезд сформирован и передан на табло станции!");
+            alert("Поезд сформирован и передан на информационные табло станций!");
             consistList = [];
             renderConsistTrack();
             renderCreatedTripsList();
@@ -1410,7 +2117,7 @@
             savedTrips.forEach((t, i) => {
                 let div = document.createElement('div');
                 div.style.cssText = "display:flex; justify-content:space-between; align-items:center; background:var(--bp-input-bg); padding:8px; margin-bottom:6px; border-radius:3px; border:1px solid var(--bp-border);";
-                div.innerHTML = `<div><b>№${t.num}</b> (${t.route}) | ТЧМ: ${t.driver} | ЛНП: ${t.lnp}</div>
+                div.innerHTML = `<div><b>№${t.num}</b> (${t.route}) | ТЧМ: ${t.driver} | ДСП: ${t.dsp}</div>
                 <button onclick="deleteTrip(${i})" style="background:#c62828;color:#fff;border:none;padding:4px 8px;border-radius:3px;cursor:pointer;">Удалить</button>`;
                 container.appendChild(div);
             });
@@ -1428,26 +2135,51 @@
             renderConsistTrack();
         }
 
-        /* Отрисовка табло и вывода расписания/ВУ-45 */
+        /* ==========================================================================
+           ТАБЛО СТАНЦИЙ (СОСНОВЫЙ БОР, КРУТОБОРКА, ЛЕЛЬМА) & СПРАВКА ВУ-45
+           ========================================================================== */
+        function selectStationBoard(stKey) {
+            currentStation = stKey;
+            document.querySelectorAll('.station-tab-btn').forEach(b => b.classList.remove('active'));
+            if (stKey === 'sosnovy') document.getElementById('btnStSosnovy').classList.add('active');
+            if (stKey === 'krutoborka') document.getElementById('btnStKrutoborka').classList.add('active');
+            if (stKey === 'lelma') document.getElementById('btnStLelma').classList.add('active');
+            renderBoard();
+        }
+
         function renderBoard() {
             let tbody = document.getElementById('boardTableBody');
-            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let stData = stationBoardsData[currentStation] || stationBoardsData.sosnovy;
             
-            if (savedTrips.length === 0) {
-                tbody.innerHTML = '<tr><td colspan="6" style="text-align:center;">Нет данных о прибывающих поездах</td></tr>';
-                return;
-            }
-
+            document.getElementById('boardStationTitle').innerText = stData.title;
             tbody.innerHTML = '';
+
+            stData.trains.forEach(t => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><b>№${t.num}</b></td>
+                    <td>${t.route}</td>
+                    <td><b style="color:#2ec4b6;">${t.track}</b></td>
+                    <td>${t.arr}</td>
+                    <td>${t.stop}</td>
+                    <td>${t.dep}</td>
+                    <td><span class="${t.cls}">${t.status}</span></td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            // Добавляем созданные поезда пользователей
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
             savedTrips.forEach(t => {
                 let tr = document.createElement('tr');
                 tr.innerHTML = `
                     <td><b>№${t.num}</b></td>
-                    <td>Крутоборка — <b>Сосновый Бор</b> — Лельма</td>
-                    <td>10:17</td>
-                    <td><b>4 мин (Посадка/Высадка)</b></td>
-                    <td>10:21</td>
-                    <td><span class="status-blink">К ПОСАДКЕ</span></td>
+                    <td>${t.route}</td>
+                    <td><b style="color:#2ec4b6;">1 путь</b></td>
+                    <td>${t.time}</td>
+                    <td>4 мин</td>
+                    <td>${t.time}</td>
+                    <td><span class="status-blink">ГОТОВ К ОТПРАВЛЕНИЮ</span></td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -1457,6 +2189,15 @@
             let select = document.getElementById('schTrainSelect');
             select.innerHTML = '';
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            
+            if (savedTrips.length === 0) {
+                let opt = document.createElement('option');
+                opt.value = "default_601";
+                opt.innerText = "Поезд №601 (Крутоборка — Сосновый Бор — Лельма)";
+                select.appendChild(opt);
+                return;
+            }
+
             savedTrips.forEach((t, idx) => {
                 let opt = document.createElement('option');
                 opt.value = idx;
@@ -1467,33 +2208,46 @@
 
         function generateScheduleAndVU45() {
             let select = document.getElementById('schTrainSelect');
-            if (select.value === "") return;
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            let trip = savedTrips[select.value];
+            let trip = savedTrips[select.value] || {
+                num: "601",
+                route: "Крутоборка — Сосновый Бор — Лельма",
+                driver: "Сидоров А.В.",
+                lnp: "Кузнецов Н.С.",
+                dsp: profileData.name || "Иванов И.И.",
+                consist: [
+                    { category: 'loco', model: 'ТУ2', num: '001' },
+                    { category: 'pass_car', model: 'ПВ40', num: '012' },
+                    { category: 'pass_car', model: 'ПВ40', num: '013' }
+                ]
+            };
 
-            document.getElementById('schTitle').innerText = `Расписание движения поезда №${trip.num}`;
+            document.getElementById('schTitle').innerText = `Расписание движения поезда №${trip.num} (${trip.route})`;
             document.getElementById('schTableBody').innerHTML = `
                 <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td>10:00</td><td>Крутоборка — Сосновый Бор</td></tr>
-                <tr><td><b>ст. Сосновый Бор</b></td><td>10:17</td><td><b>4 мин (Посадка и высадка пассажиров)</b></td><td>10:21</td><td>Сосновый Бор — Лельма</td></tr>
-                <tr><td><b>ст. Лельма</b></td><td><b>10:26</b></td><td>Оборот состава</td><td>—</td><td>—</td></tr>
+                <tr><td><b>ст. Сосновый Бор</b></td><td>10:17</td><td><b>4 мин (Посадка и высадка)</b></td><td>10:21</td><td>Сосновый Бор — Лельма</td></tr>
+                <tr><td><b>ст. Лельма</b></td><td><b>10:38</b></td><td>Оборот состава</td><td>—</td><td>—</td></tr>
             `;
 
             document.getElementById('vuTrainNum').innerText = trip.num;
             document.getElementById('vuRoute').innerText = trip.route;
             document.getElementById('vuDriver').innerText = trip.driver;
             document.getElementById('vuLNP').innerText = trip.lnp;
+            document.getElementById('vuDSP').innerText = trip.dsp || profileData.name;
             
             let loco = trip.consist.find(c => c.category === 'loco');
-            document.getElementById('vuLoco').innerText = loco ? `${loco.model}-${loco.num}` : "ТУ2";
+            document.getElementById('vuLoco').innerText = loco ? `${loco.model}-${loco.num}` : "ТУ2-001";
             document.getElementById('vuCarsCount').innerText = trip.consist.length;
             
             let tail = trip.consist[trip.consist.length - 1];
-            document.getElementById('vuTailCar').innerText = tail ? `${tail.model} №${tail.num}` : "ПВ40";
+            document.getElementById('vuTailCar').innerText = tail ? `${tail.model} №${tail.num}` : "ПВ40 №013";
 
             document.getElementById('scheduleOutput').style.display = 'block';
         }
 
-        /* Система тестирования и аттестации */
+        /* ==========================================================================
+           СИСТЕМА АТТЕСТАЦИИ И ЭКЗАМЕНАЦИОННЫХ ТЕСТОВ (ДСП, ТЧМ, ЛНП)
+           ========================================================================== */
         function loadTestRole() {
             let role = document.getElementById('testRoleSelect').value;
             let container = document.getElementById('testContainer');
@@ -1509,7 +2263,11 @@
                     </label>
                 `).join('');
 
-                card.innerHTML = `<div class="test-question">Вопрос ${qIdx + 1}: ${qObj.q}</div>${optionsHtml}`;
+                card.innerHTML = `
+                    <div class="test-question">Вопрос ${qIdx + 1}: ${qObj.q}</div>
+                    ${optionsHtml}
+                    <div class="test-explanation" id="exp_${qIdx}">${qObj.exp || ''}</div>
+                `;
                 container.appendChild(card);
             });
             document.getElementById('testResultBox').innerText = '';
@@ -1522,28 +2280,63 @@
 
             qList.forEach((qObj, qIdx) => {
                 let selected = document.querySelector(`input[name="q_${qIdx}"]:checked`);
-                if (selected && parseInt(selected.value) === qObj.correct) score++;
+                let expBox = document.getElementById(`exp_${qIdx}`);
+                if (expBox) expBox.style.display = 'block';
+
+                if (selected && parseInt(selected.value) === qObj.correct) {
+                    score++;
+                }
             });
 
             let resBox = document.getElementById('testResultBox');
             if (score === qList.length) {
                 resBox.style.color = "#2ec4b6";
-                resBox.innerText = `🎉 Аттестация успешно пройдена! Вы ответили верно на все вопросы (${score}/${qList.length}). Допуск подтверждён.`;
+                resBox.innerText = `🎉 Аттестация по квалификации "${getRoleTitle(role)}" успешно пройдена! Верно: ${score}/${qList.length}. Допуск подтверждён.`;
+                
+                // Обновляем запись в профиле
+                profileData.examDate = "Сдано " + new Date().toLocaleDateString();
+                saveProfileState();
             } else {
                 resBox.style.color = "#e63946";
-                resBox.innerText = `❌ Аттестация не пройдена (${score}/${qList.length}). Освежите знания ИСИ/ПТЭ и повторите попытку.`;
+                resBox.innerText = `❌ Аттестация не пройдена (${score}/${qList.length}). Повторите нормативные акты (ПТЭ, ИСИ, ИДП) и повторите попытку.`;
             }
         }
 
-        /* Переключение цветовой темы приложения */
+        function getRoleTitle(roleKey) {
+            const map = {
+                'dsp': 'Дежурный по станции (ДСП)',
+                'driver': 'Машинист (ТЧМ)',
+                'instructor': 'Машинист-Инструктор',
+                'lnp': 'Начальник поезда (ЛНП)'
+            };
+            return map[roleKey] || 'Специалист';
+        }
+
+        /* ==========================================================================
+           ОПЕРАТИВНЫЕ ЧАСЫ И ПЕРЕКЛЮЧЕНИЕ ТЕМЫ
+           ========================================================================== */
         function toggleTheme() {
             document.body.classList.toggle('light-theme');
         }
 
-        /* Первоначальная инициализация */
+        function updateBoardClock() {
+            let clockEl = document.getElementById('boardLiveClock');
+            if (clockEl) {
+                let now = new Date();
+                clockEl.innerText = now.toTimeString().split(' ')[0];
+            }
+        }
+
+        setInterval(updateBoardClock, 1000);
+
+        /* Первоначальная загрузка и старт системы */
         window.addEventListener('DOMContentLoaded', () => {
+            loadProfileData();
             loadDatabase();
+            renderProfile();
+            renderPinnedNotes();
             renderTable();
+            updateBoardClock();
         });
     </script>
 </body>
