@@ -154,7 +154,6 @@
         }
         .btn-secondary:hover { background: #444; }
 
-        /* Вкладки подкатегорий */
         .category-tabs {
             display: flex;
             gap: 6px;
@@ -278,7 +277,28 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
-        /* Конструктор поездов */
+        /* Панель параметров поезда в конструкторе */
+        .trip-form-panel {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .trip-form-panel input {
+            padding: 6px;
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            font-size: 11px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
         .builder-layout {
             display: grid;
             grid-template-columns: 320px 1fr;
@@ -452,7 +472,6 @@
             margin-top: 15px;
         }
 
-        /* --- СТИЛИ ДЛЯ ОТОБРАЖЕНИЯ РЕЙСА В ТАБЛИЦЕ --- */
         .ps-title-cell {
             display: flex;
             align-items: center;
@@ -525,7 +544,6 @@
             </div>
         </div>
 
-        <!-- Вкладки категорий -->
         <div class="category-tabs">
             <div class="cat-tab active" onclick="setCategoryFilter('all', this)">Все варианты</div>
             <div class="cat-tab" onclick="setCategoryFilter('loco', this)">🚂 Локомотивы</div>
@@ -586,10 +604,30 @@
     <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Составление сборного поезда для следования</span>
+            <span>Параметры и составление поезда для следования</span>
             <div class="action-buttons">
                 <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
                 <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
+            </div>
+        </div>
+
+        <!-- Поля параметров рецса -->
+        <div class="trip-form-panel">
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Номер поезда / рейса:</label>
+                <input type="text" id="tripNumInput" placeholder="Например: 601Б / 702">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
+                <input type="text" id="tripRouteInput" placeholder="Например: Минск-Пасс. — Брест">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
+                <input type="date" id="tripDateInput">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления:</label>
+                <input type="time" id="tripTimeInput">
             </div>
         </div>
 
@@ -820,7 +858,6 @@
                 vehicleDB = [...defaultVehicleDB];
             }
 
-            // Гарантируем уникальный ID для каждого ПС
             vehicleDB.forEach((v, i) => {
                 if (!v.id) v.id = 'ps_' + Date.now() + '_' + i;
             });
@@ -909,9 +946,9 @@
                 tr.setAttribute('data-category', v.category || 'loco');
                 tr.draggable = true;
 
-                // Проверяем, находится ли данный ПС в рейсе
-                let tripNumber = localStorage.getItem(`trip_status_${v.id}`);
-                if (tripNumber) {
+                // Загружаем данные о рейсе из Памяти
+                let tripData = JSON.parse(localStorage.getItem(`trip_full_info_${v.id}`));
+                if (tripData) {
                     tr.classList.add('in-trip');
                 }
 
@@ -928,6 +965,14 @@
                 let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
                 let catLabel = categoryNames[v.category || 'loco'] || '—';
 
+                let badgeHtml = '';
+                if (tripData) {
+                    let routePart = tripData.route ? ` [${tripData.route}]` : '';
+                    let datePart = tripData.date ? ` ${tripData.date}` : '';
+                    let timePart = tripData.time ? ` в ${tripData.time}` : '';
+                    badgeHtml = `<span class="trip-badge" title="Сообщение: ${tripData.route || '—'}">В рейсе №${tripData.num}${routePart}${datePart}${timePart}</span>`;
+                }
+
                 tr.innerHTML = `
                     <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
                     <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
@@ -936,7 +981,7 @@
                     <td>
                         <div class="ps-title-cell">
                             <a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a>
-                            ${tripNumber ? `<span class="trip-badge">В рейсе №${tripNumber}</span>` : ''}
+                            ${badgeHtml}
                         </div>
                     </td>
                     <td>${v.gov || '—'}</td>
@@ -952,7 +997,7 @@
                     <td>${v.util || '—'}</td>
                     <td>
                         <span>${v.note || '—'}</span>
-                        ${tripNumber ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
+                        ${tripData ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -964,30 +1009,39 @@
         /* --- ЛОГИКА ОТПРАВКИ И ОТМЕНЫ РЕЙСА --- */
         function cancelTrip(psId) {
             if (confirm("Вы уверены, что хотите отменить рейс для этого ПС?")) {
-                localStorage.removeItem(`trip_status_${psId}`);
+                localStorage.removeItem(`trip_full_info_${psId}`);
                 renderTable();
             }
         }
 
         function sendConsistToTrip() {
+            let num = document.getElementById('tripNumInput').value.trim();
+            let route = document.getElementById('tripRouteInput').value.trim();
+            let date = document.getElementById('tripDateInput').value;
+            let time = document.getElementById('tripTimeInput').value;
+
+            if (!num) {
+                alert("Пожалуйста, введите номер поезда / рейса!");
+                return;
+            }
+
             if (consistList.length === 0) {
                 alert("Сначала добавьте хотя бы одну единицу ПС в поезд!");
                 return;
             }
 
-            let trainNum = prompt("Введите номер рейса / поезда:", "601");
-            if (!trainNum) return;
+            let tripInfo = { num, route, date, time };
 
             consistList.forEach(v => {
-                localStorage.setItem(`trip_status_${v.id}`, trainNum);
+                localStorage.setItem(`trip_full_info_${v.id}`, JSON.stringify(tripInfo));
             });
 
-            alert(`Состав успешно отправлен в рейс №${trainNum}!`);
+            alert(`Состав успешно отправлен в рейс №${num}!`);
             renderTable();
             switchPage('database');
         }
 
-        /* Логика Drag and Drop перетаскивания строк таблицы */
+        /* Drag and Drop перетаскивание строк */
         let dragSrcIndex = null;
 
         function handleDragStart(e) {
