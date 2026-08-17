@@ -238,7 +238,6 @@
             text-align: center;
             color: #888;
         }
-        .drag-handle:active { cursor: grabbing; }
 
         .type-badge {
             display: inline-block;
@@ -313,12 +312,32 @@
             align-items: center;
         }
 
+        .created-trips-list {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+        .created-trip-card {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            padding: 8px 12px;
+            border-radius: 4px;
+            margin-bottom: 6px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
+        }
+
         .consist-area {
             background: var(--bp-card-bg);
             border: 2px dashed var(--bp-border);
             padding: 15px;
             border-radius: 4px;
-            min-height: 300px;
+            min-height: 250px;
         }
 
         .consist-track {
@@ -474,7 +493,7 @@
         }
 
         @media print {
-            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .legend-bar, .builder-layout {
+            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .legend-bar, .builder-layout, .created-trips-list {
                 display: none !important;
             }
             body { background: #fff !important; color: #000 !important; }
@@ -575,7 +594,7 @@
             <span>Параметры и составление поезда для следования</span>
             <div class="action-buttons no-print">
                 <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
-                <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
+                <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить форму</button>
             </div>
         </div>
 
@@ -605,15 +624,29 @@
                 <div id="builderSourceList"></div>
             </div>
 
-            <div class="consist-area">
-                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="font-weight:bold; font-size:13px;">Сформированный поезд:</div>
-                    <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
+            <div>
+                <!-- БЛОК СПИСКА СОЗДАННЫХ ПОЕЗДОВ -->
+                <div class="created-trips-list no-print">
+                    <div style="font-weight:bold; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                        <span>📋 Активные поездки и сформированные поезда:</span>
+                        <span style="font-size:10px; color:#888;">Всего поездов: <b id="createdTripsCount">0</b></span>
+                    </div>
+                    <div id="createdTripsContainer">
+                        <div style="color:#888; font-style:italic; font-size:11px;">Список созданных поездов пуст.</div>
+                    </div>
                 </div>
 
-                <div class="consist-track" id="consistTrack">
-                    <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
-                        Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
+                <!-- ЗОНА СБОРКИ ТЕКУЩЕГО ПОЕЗДА -->
+                <div class="consist-area">
+                    <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                        <div style="font-weight:bold; font-size:13px;">Сформировать новый поезд:</div>
+                        <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
+                    </div>
+
+                    <div class="consist-track" id="consistTrack">
+                        <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
+                            Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
+                        </div>
                     </div>
                 </div>
             </div>
@@ -853,7 +886,7 @@
 
         function saveFormDraft() {
             let editIdx = document.getElementById('editIndex').value;
-            if (editIdx !== "-1") return; // Черновик сохраняем только для НОВОГО ПС
+            if (editIdx !== "-1") return;
 
             let draft = {
                 category: document.getElementById('newCategory').value,
@@ -916,6 +949,7 @@
             if (page === 'builder') {
                 renderBuilderSource();
                 renderConsistTrack();
+                renderCreatedTripsList();
             } else if (page === 'schedule') {
                 loadScheduleTrainSelect();
             }
@@ -1086,7 +1120,58 @@
                 localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
                 renderTable();
+                renderCreatedTripsList();
             }
+        }
+
+        function deleteCreatedTrip(tripIdx) {
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let trip = savedTrips[tripIdx];
+            if (!trip) return;
+
+            if (confirm(`Удалить поезд №${trip.num} и снять его с рейса?`)) {
+                if (trip.psIds && Array.isArray(trip.psIds)) {
+                    trip.psIds.forEach(psId => {
+                        localStorage.removeItem(`trip_full_info_${psId}`);
+                    });
+                }
+                savedTrips.splice(tripIdx, 1);
+                localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
+                
+                renderCreatedTripsList();
+                renderTable();
+            }
+        }
+
+        function renderCreatedTripsList() {
+            let container = document.getElementById('createdTripsContainer');
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            
+            document.getElementById('createdTripsCount').innerText = savedTrips.length;
+
+            if (savedTrips.length === 0) {
+                container.innerHTML = '<div style="color:#888; font-style:italic; font-size:11px;">Список созданных поездов пуст. Добавьте состав ниже и нажмите «Отправить поезд в рейс».</div>';
+                return;
+            }
+
+            container.innerHTML = '';
+            savedTrips.forEach((t, idx) => {
+                let div = document.createElement('div');
+                div.className = 'created-trip-card';
+
+                let consistModels = t.consist ? t.consist.map(c => c.model).join(', ') : '';
+
+                div.innerHTML = `
+                    <div>
+                        <div style="font-weight:bold; color:var(--bp-link); font-size:12px;">Поезд №${t.num} <span style="color:var(--bp-text); font-weight:normal;">— ${t.route || 'Маршрут не указан'}</span></div>
+                        <div style="font-size:10px; color:#888; margin-top:2px;">
+                            Состав: <b>${consistModels || '—'}</b> | Время: ${t.time || '—'} | Дата: ${t.date || '—'}
+                        </div>
+                    </div>
+                    <button onclick="deleteCreatedTrip(${idx})" style="background:#c62828; color:#fff; border:none; padding:4px 8px; font-weight:bold; border-radius:3px; cursor:pointer; font-size:10px;">🗑 Удалить поезд</button>
+                `;
+                container.appendChild(div);
+            });
         }
 
         function sendConsistToTrip() {
@@ -1122,8 +1207,9 @@
             localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
             alert(`Состав успешно отправлен в рейс №${num}!`);
+            clearConsist();
+            renderCreatedTripsList();
             renderTable();
-            switchPage('database');
         }
 
         function loadScheduleTrainSelect() {
@@ -1183,14 +1269,13 @@
                 return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
             }
 
-            // График со сменой направления и двукратным заходом в Лельму[cite: 1]:
-            let t1_arr = startSec + (13 * 60);          // Крутоборка -> Лельма (13 мин)
-            let t1_dep = t1_arr + (2 * 60);             // Лельма (стоянка 2 мин)
-            let t2_arr = t1_dep + (4 * 60);             // Лельма -> Сосновый Бор (4 мин)
-            let t2_dep = t2_arr + (4 * 60);             // Сосновый Бор (стоянка 4 мин)
-            let t3_arr = t2_dep + (4 * 60) + 30;        // Сосновый Бор -> Лельма (4 мин 30 сек)
-            let t3_dep = t3_arr + 150;                  // Лельма (стоянка 2,5 мин / 150 сек)
-            let t4_arr = t3_dep + (9 * 60);             // Лельма -> Крутоборка (9 мин)
+            let t1_arr = startSec + (13 * 60);
+            let t1_dep = t1_arr + (2 * 60);
+            let t2_arr = t1_dep + (4 * 60);
+            let t2_dep = t2_arr + (4 * 60);
+            let t3_arr = t2_dep + (4 * 60) + 30;
+            let t3_dep = t3_arr + 150;
+            let t4_arr = t3_dep + (9 * 60);
 
             document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'ст. Крутоборка — ст. Сосновый Бор — ст. Крутоборка'})`;
 
@@ -1291,6 +1376,10 @@
 
         function clearConsist() {
             consistList = [];
+            document.getElementById('tripNumInput').value = '';
+            document.getElementById('tripRouteInput').value = '';
+            document.getElementById('tripDateInput').value = '';
+            document.getElementById('tripTimeInput').value = '';
             renderConsistTrack();
         }
 
@@ -1342,7 +1431,7 @@
             document.getElementById('formModalSub').innerText = "Заполните данные для внесения локомотива/поезда в базу.";
             document.getElementById('addVehicleForm').reset();
             
-            restoreFormDraft(); // Восстанавливаем черновик, если он сохранялся
+            restoreFormDraft();
             
             document.getElementById('addVehicleModal').style.display = 'flex';
         }
@@ -1384,7 +1473,7 @@
             } else {
                 vehicleDB.unshift(vehicleData);
                 alert('Новая единица подвижного состава успешно добавлена!');
-                clearFormDraft(); // Очищаем черновик после успешного сохранения
+                clearFormDraft();
             }
 
             saveDatabaseToStorage();
