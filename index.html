@@ -37,9 +37,8 @@
         .st-decomm { background-color: #8b0000 !important; color: #ffffff !important; }
         .st-unknown { background-color: #5c4033 !important; color: #ffffff !important; }
         .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }
-        .st-trans-city { background-color: #1e3f66 !important; color: #ffffff !important; }
-        .st-trans-other { background-color: #512e5f !important; color: #ffffff !important; }
-        .st-plate-change { background-color: #117a65 !important; color: #ffffff !important; }
+        .st-repair { background-color: #d97706 !important; color: #ffffff !important; }
+        .st-cap-repair { background-color: #b45309 !important; color: #ffffff !important; }
 
         body.light-theme .st-active { background-color: #ffffff; }
 
@@ -154,7 +153,6 @@
         }
         .btn-secondary:hover { background: #444; }
 
-        /* Вкладки подкатегорий */
         .category-tabs {
             display: flex;
             gap: 6px;
@@ -241,20 +239,6 @@
         }
         .drag-handle:active { cursor: grabbing; }
 
-        .table-thumb {
-            width: 35px;
-            height: 24px;
-            background: #111;
-            border: 1px solid var(--bp-border);
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #777;
-            overflow: hidden;
-        }
-
         .type-badge {
             display: inline-block;
             padding: 2px 6px;
@@ -278,7 +262,18 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
-        /* Конструктор поездов */
+        .train-status-banner {
+            background: #1e3a8a;
+            color: #ffffff;
+            padding: 10px 15px;
+            border-radius: 4px;
+            margin-bottom: 12px;
+            border: 1px solid #3b82f6;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
         .builder-layout {
             display: grid;
             grid-template-columns: 320px 1fr;
@@ -310,10 +305,35 @@
 
         .consist-area {
             background: var(--bp-card-bg);
-            border: 2px dashed var(--bp-border);
+            border: 1px solid var(--bp-border);
             padding: 15px;
             border-radius: 4px;
-            min-height: 300px;
+        }
+
+        .route-form {
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));
+            gap: 10px;
+            background: var(--bp-input-bg);
+            padding: 12px;
+            border: 1px solid var(--bp-border);
+            border-radius: 4px;
+            margin-bottom: 15px;
+        }
+
+        .route-form label {
+            display: flex;
+            flex-direction: column;
+            gap: 4px;
+            font-size: 11px;
+        }
+
+        .route-form input {
+            padding: 6px;
+            background: var(--bp-card-bg);
+            color: var(--bp-text);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
         }
 
         .consist-track {
@@ -337,7 +357,6 @@
             align-items: center;
             gap: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            cursor: move;
         }
 
         .modal-overlay {
@@ -396,47 +415,6 @@
             border-radius: 3px;
         }
 
-        .photo-gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .busphoto-thumb {
-            background: var(--bp-input-bg);
-            border: 1px solid var(--bp-border);
-            border-radius: 3px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.15s;
-        }
-        .busphoto-thumb:hover {
-            border-color: var(--bp-link);
-            transform: translateY(-2px);
-        }
-        .thumb-img-wrapper {
-            height: 95px;
-            background: #111;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            color: #555;
-            font-size: 10px;
-        }
-        .thumb-caption {
-            padding: 5px;
-            font-size: 10px;
-            text-align: center;
-            color: var(--bp-text);
-            background: var(--bp-card-bg);
-            border-top: 1px solid var(--bp-border);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
         .specs-table {
             width: 100%;
             border-collapse: collapse;
@@ -470,6 +448,18 @@
 
     <!-- СТРАНИЦА 1: БАЗА ДАННЫХ -->
     <div id="pageDatabase" class="main-wrapper">
+        <!-- Блок статуса поезда в пути -->
+        <div id="activeTrainBanner" class="train-status-banner" style="display:none;">
+            <div>
+                <span style="font-size:14px; font-weight:bold;">🟢 ПОЕЗД В ПУТИ</span> — 
+                <b>Рейс №<span id="bannerTrainNum"></span></b> (<span id="bannerTrainRoute"></span>)
+                <span style="margin-left:10px; font-size:11px; opacity:0.9;">
+                    🕒 Отправление: <span id="bannerTrainDate"></span> в <span id="bannerTrainTime"></span>
+                </span>
+            </div>
+            <button class="btn-secondary" style="background:rgba(255,255,255,0.2); border:none;" onclick="cancelTrainRoute()">Завершить рейс</button>
+        </div>
+
         <div class="page-header">
             <span>Белорусская железная дорога — Подвижной состав</span>
             <div class="action-buttons">
@@ -501,7 +491,6 @@
                 <thead>
                     <tr>
                         <th style="width: 25px; text-align:center;">⋮⋮</th>
-                        <th style="width: 40px;">Фото</th>
                         <th>Тип</th>
                         <th>Депо приписки</th>
                         <th>Серия / Модель</th>
@@ -531,17 +520,16 @@
             <div class="legend-item"><div class="legend-color" style="background:#696969;"></div> <span>Выведен из эксплуатации</span></div>
             <div class="legend-item"><div class="legend-color" style="background:#8b0000;"></div> <span>Списан</span></div>
             <div class="legend-item"><div class="legend-color" style="background:#5c4033;"></div> <span>Судьба неизвестна</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#4b6f7e;"></div> <span>КВР/Модернизация</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#1e3f66;"></div> <span>Передан в дороге</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#512e5f;"></div> <span>Передан на другую дорогу</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#117a65;"></div> <span>Смена номера</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#d97706;"></div> <span>Ремонт</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#b45309;"></div> <span>Капитальный Ремонт</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#4b6f7e;"></div> <span>Капитально Восстановительный Ремонт</span></div>
         </div>
     </div>
 
     <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Составление сборного поезда для следования</span>
+            <span>Составление и отправка сборного поезда</span>
             <div class="action-buttons">
                 <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
             </div>
@@ -555,8 +543,28 @@
             </div>
 
             <div class="consist-area">
+                <div style="font-weight:bold; font-size:13px; margin-bottom:10px;">📋 Данные рейса и расписание:</div>
+                <div class="route-form">
+                    <label>
+                        Дата отправления:
+                        <input type="date" id="trainDate">
+                    </label>
+                    <label>
+                        Время отправления:
+                        <input type="time" id="trainTime">
+                    </label>
+                    <label>
+                        Номер рейса / поезда:
+                        <input type="text" id="trainNumber" placeholder="Например: 381А">
+                    </label>
+                    <label>
+                        Сообщение (Маршрут):
+                        <input type="text" id="trainRoute" placeholder="Минск — Брест">
+                    </label>
+                </div>
+
                 <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
-                    <div style="font-weight:bold; font-size:13px;">Сформированный поезд:</div>
+                    <div style="font-weight:bold; font-size:13px;">Сформированный состав:</div>
                     <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
                 </div>
 
@@ -565,6 +573,8 @@
                         Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
                     </div>
                 </div>
+
+                <button class="btn-primary" style="margin-top:15px; width:100%; padding:10px; font-size:13px;" onclick="dispatchTrain()">🟢 Отправить поезд в путь</button>
             </div>
         </div>
     </div>
@@ -643,12 +653,11 @@
                             <option value="st-inactive">Не эксплуатируется</option>
                             <option value="st-not-operated">Не был в эксплуатации</option>
                             <option value="st-out">Выведен из эксплуатации</option>
-                            <option value="st-mod">КВР/Модернизация</option>
+                            <option value="st-repair">Ремонт</option>
+                            <option value="st-cap-repair">Капитальный Ремонт</option>
+                            <option value="st-mod">Капитально Восстановительный Ремонт</option>
                             <option value="st-decomm">Списан</option>
                             <option value="st-unknown">Судьба неизвестна</option>
-                            <option value="st-trans-city">Передан в дороге</option>
-                            <option value="st-trans-other">Передан на другую дорогу</option>
-                            <option value="st-plate-change">Смена номера</option>
                         </select>
                     </div>
                     <div class="form-group">
@@ -675,14 +684,6 @@
             <span class="modal-close" onclick="closeCard()">&times;</span>
             <div class="vehicle-title" id="mTitle">Серия / Инвентарный №</div>
             <div class="vehicle-subtitle" id="mSubtitle">Депо приписки</div>
-
-            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📷 Фотогалерея ПС:</div>
-            <div class="photo-gallery-grid" id="vCardGallery">
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Спереди (3/4)</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Сзади (3/4)</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Профиль</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Кабина / Салон</div></div>
-            </div>
 
             <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
             <table class="specs-table">
@@ -721,7 +722,8 @@
         let vehicleDB = [];
         let currentOpenVehicleIndex = null;
         let currentCategoryFilter = 'all';
-        let consistList = []; // Поезд сборный
+        let consistList = [];
+        let activeTrainData = null;
 
         const categoryNames = {
             'loco': '🚂 Локомотив',
@@ -735,12 +737,11 @@
             'st-inactive': 'Не эксплуатируется',
             'st-not-operated': 'Не был в эксплуатации',
             'st-out': 'Выведен из эксплуатации',
-            'st-mod': 'КВР/Модернизация',
+            'st-repair': 'Ремонт',
+            'st-cap-repair': 'Капитальный Ремонт',
+            'st-mod': 'Капитально Восстановительный Ремонт',
             'st-decomm': 'Списан',
-            'st-unknown': 'Судьба неизвестна',
-            'st-trans-city': 'Передан в дороге',
-            'st-trans-other': 'Передан на другую дорогу',
-            'st-plate-change': 'Смена номера'
+            'st-unknown': 'Судьба неизвестна'
         };
 
         const purposeLabelsMap = {
@@ -772,6 +773,14 @@
                 }
             } else {
                 vehicleDB = [...defaultVehicleDB];
+            }
+
+            let savedTrain = localStorage.getItem('railphoto_active_train');
+            if (savedTrain) {
+                try {
+                    activeTrainData = JSON.parse(savedTrain);
+                    renderTrainBanner();
+                } catch(e) {}
             }
         }
 
@@ -858,7 +867,6 @@
                 tr.setAttribute('data-category', v.category || 'loco');
                 tr.draggable = true;
 
-                // Drag and drop события для строк таблицы
                 tr.addEventListener('dragstart', handleDragStart);
                 tr.addEventListener('dragover', handleDragOver);
                 tr.addEventListener('drop', handleDrop);
@@ -874,7 +882,6 @@
 
                 tr.innerHTML = `
                     <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
-                    <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
                     <td><span class="type-badge">${catLabel}</span></td>
                     <td><b>${v.park}</b></td>
                     <td><a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a></td>
@@ -897,7 +904,6 @@
             filterDB();
         }
 
-        /* Логика Drag and Drop перетаскивания строк таблицы */
         let dragSrcIndex = null;
 
         function handleDragStart(e) {
@@ -929,7 +935,7 @@
             this.classList.remove('dragging');
         }
 
-        /* Конструктор поездов (Сборный поезд) */
+        /* Конструктор поездов и Рейсы */
         function renderBuilderSource() {
             let list = document.getElementById('builderSourceList');
             let q = document.getElementById('builderSearch').value.toUpperCase();
@@ -1001,6 +1007,57 @@
                 `;
                 track.appendChild(card);
             });
+        }
+
+        function dispatchTrain() {
+            let date = document.getElementById('trainDate').value;
+            let time = document.getElementById('trainTime').value;
+            let number = document.getElementById('trainNumber').value.trim();
+            let route = document.getElementById('trainRoute').value.trim();
+
+            if (!date || !time || !number || !route) {
+                alert('Пожалуйста, заполните все поля рейса: дату, время, номер поезда и сообщение!');
+                return;
+            }
+
+            if (consistList.length === 0) {
+                alert('Добавьте хотя бы один локомотив или вагон в состав поезда!');
+                return;
+            }
+
+            activeTrainData = {
+                date: date,
+                time: time,
+                number: number,
+                route: route,
+                consistCount: consistList.length
+            };
+
+            localStorage.setItem('railphoto_active_train', JSON.stringify(activeTrainData));
+            renderTrainBanner();
+            switchPage('database');
+            alert(`Поезд №${number} (${route}) успешно сформирован и отправлен в путь!`);
+        }
+
+        function renderTrainBanner() {
+            let banner = document.getElementById('activeTrainBanner');
+            if (activeTrainData) {
+                document.getElementById('bannerTrainNum').innerText = activeTrainData.number;
+                document.getElementById('bannerTrainRoute').innerText = activeTrainData.route;
+                document.getElementById('bannerTrainDate').innerText = activeTrainData.date;
+                document.getElementById('bannerTrainTime').innerText = activeTrainData.time;
+                banner.style.display = 'flex';
+            } else {
+                banner.style.display = 'none';
+            }
+        }
+
+        function cancelTrainRoute() {
+            if (confirm('Вы действительно хотите завершить рейс поезда?')) {
+                activeTrainData = null;
+                localStorage.removeItem('railphoto_active_train');
+                renderTrainBanner();
+            }
         }
 
         window.addEventListener('DOMContentLoaded', () => {
