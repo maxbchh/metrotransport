@@ -277,7 +277,6 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
-        /* Панель параметров поезда в конструкторе */
         .trip-form-panel {
             background: var(--bp-card-bg);
             border: 1px solid var(--bp-border);
@@ -515,6 +514,27 @@
         table.bp-table tbody tr.in-trip {
             background-color: rgba(217, 83, 79, 0.2) !important;
         }
+
+        /* Стиль распечатываемой справки ВУ-45 */
+        .schedule-box {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 15px;
+            border-radius: 4px;
+            margin-top: 15px;
+        }
+        .vu45-ticket {
+            font-family: 'Courier New', Courier, monospace;
+            background: #fff;
+            color: #000;
+            padding: 15px;
+            border: 2px dashed #333;
+            border-radius: 4px;
+            margin-top: 15px;
+            font-size: 12px;
+            line-height: 1.4;
+            max-width: 650px;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -527,6 +547,7 @@
         <div class="header-controls">
             <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
             <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
+            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">📅 Расписание</button>
             <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
             <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
         </div>
@@ -611,7 +632,6 @@
             </div>
         </div>
 
-        <!-- Поля параметров рецса -->
         <div class="trip-form-panel">
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Номер поезда / рейса:</label>
@@ -619,7 +639,7 @@
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
-                <input type="text" id="tripRouteInput" placeholder="Например: Минск-Пасс. — Брест">
+                <input type="text" id="tripRouteInput" placeholder="Заслоново — Пионерская">
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
@@ -648,6 +668,65 @@
                     <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
                         Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
                     </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 3: ГЕНЕРАТОР РАСПИСАНИЯ И ТОРМОЗНОЙ СПРАВКИ -->
+    <div id="pageSchedule" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>📅 Генератор расписания и справки опробования тормозов (ВУ-45)</span>
+        </div>
+
+        <div class="trip-form-panel">
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Выберите созданный поезд:</label>
+                <select id="schTrainSelect" style="padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px; width:100%;" onchange="autoFillSchTime()"></select>
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления (Заслоново):</label>
+                <input type="time" id="schTimeInput" value="11:00">
+            </div>
+            <div style="display:flex; align-items:flex-end;">
+                <button class="btn-primary" onclick="generateScheduleAndVU45()" style="width:100%; padding:7px;">⚡ Сгенерировать расписание</button>
+            </div>
+        </div>
+
+        <div id="scheduleOutput" style="display:none;">
+            <div class="schedule-box">
+                <h3 style="margin-top:0; color:var(--bp-link);" id="schTitle">Расписание поезда</h3>
+                <div class="table-container">
+                    <table class="bp-table" id="schTable">
+                        <thead>
+                            <tr>
+                                <th>Станция / Разъезд</th>
+                                <th>Прибытие</th>
+                                <th>Стоянка (мин)</th>
+                                <th>Отправление</th>
+                                <th>Перегон</th>
+                                <th>Время в пути</th>
+                            </tr>
+                        </thead>
+                        <tbody id="schTableBody"></tbody>
+                    </table>
+                </div>
+
+                <div class="vu45-ticket" id="vu45PrintArea">
+                    <div style="text-align:center; font-weight:bold; text-decoration:underline;">СПРАВКА О БЕСПЕРЕБОЙНОМ ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ (ВУ-45)</div>
+                    <br>
+                    <div><b>Поезд №:</b> <span id="vuTrainNum">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Дата:</b> <span id="vuDate">—</span></div>
+                    <div><b>Маршрут:</b> <span id="vuRoute">—</span></div>
+                    <div><b>Локомотив:</b> <span id="vuLoco">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Состав:</b> <span id="vuCarsCount">0</span> ваг.</div>
+                    <hr style="border-top: 1px dashed #000;">
+                    <div><b>Давление в ТМ:</b> 4.5 – 4.8 кгс/см²</div>
+                    <div><b>Плотность ТМ:</b> 0.2 кгс/см² за 60 сек (Норма)</div>
+                    <div><b>Процент нажатия тормозных колодок:</b> 100% (Обеспечен)</div>
+                    <div><b>Хвостовой вагон №:</b> <span id="vuTailCar">—</span> (Огражден, К/С проверен)</div>
+                    <hr style="border-top: 1px dashed #000;">
+                    <div>Опробование тормозов: <b>ПОЛНОЕ (от стационарной сети / локомотива)</b></div>
+                    <div style="margin-top:10px; font-style:italic;">Осмотрщик вагонов (ДЖД): _________________ (Подпись)</div>
+                    <div>Машинист: _________________ (Подпись)</div>
                 </div>
             </div>
         </div>
@@ -806,6 +885,7 @@
         let currentOpenVehicleIndex = null;
         let currentCategoryFilter = 'all';
         let consistList = [];
+        let createdTripsList = [];
 
         const categoryNames = {
             'loco': '🚂 Локомотив',
@@ -836,13 +916,17 @@
         function switchPage(page) {
             document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
             document.getElementById('pageBuilder').style.display = (page === 'builder') ? 'block' : 'none';
+            document.getElementById('pageSchedule').style.display = (page === 'schedule') ? 'block' : 'none';
             
             document.getElementById('btnViewDatabase').classList.toggle('active', page === 'database');
             document.getElementById('btnViewBuilder').classList.toggle('active', page === 'builder');
+            document.getElementById('btnViewSchedule').classList.toggle('active', page === 'schedule');
 
             if (page === 'builder') {
                 renderBuilderSource();
                 renderConsistTrack();
+            } else if (page === 'schedule') {
+                loadScheduleTrainSelect();
             }
         }
 
@@ -946,7 +1030,6 @@
                 tr.setAttribute('data-category', v.category || 'loco');
                 tr.draggable = true;
 
-                // Загружаем данные о рейсе из Памяти
                 let tripData = JSON.parse(localStorage.getItem(`trip_full_info_${v.id}`));
                 if (tripData) {
                     tr.classList.add('in-trip');
@@ -1006,10 +1089,14 @@
             filterDB();
         }
 
-        /* --- ЛОГИКА ОТПРАВКИ И ОТМЕНЫ РЕЙСА --- */
         function cancelTrip(psId) {
             if (confirm("Вы уверены, что хотите отменить рейс для этого ПС?")) {
                 localStorage.removeItem(`trip_full_info_${psId}`);
+                
+                let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+                savedTrips = savedTrips.filter(t => !t.psIds.includes(psId));
+                localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
+
                 renderTable();
             }
         }
@@ -1031,17 +1118,117 @@
             }
 
             let tripInfo = { num, route, date, time };
+            let psIds = [];
 
             consistList.forEach(v => {
+                psIds.push(v.id);
                 localStorage.setItem(`trip_full_info_${v.id}`, JSON.stringify(tripInfo));
             });
+
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            savedTrips.push({
+                num, route, date, time,
+                consist: consistList,
+                psIds
+            });
+            localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
             alert(`Состав успешно отправлен в рейс №${num}!`);
             renderTable();
             switchPage('database');
         }
 
-        /* Drag and Drop перетаскивание строк */
+        /* ЛОГИКА ГЕНЕРАЦИИ РАСПИСАНИЯ И ВУ-45 */
+        function loadScheduleTrainSelect() {
+            let select = document.getElementById('schTrainSelect');
+            select.innerHTML = '';
+
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+
+            if (savedTrips.length === 0) {
+                select.innerHTML = '<option value="">Нет созданных поездов в рейсе</option>';
+                return;
+            }
+
+            savedTrips.forEach((t, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                let routeText = t.route ? ` (${t.route})` : '';
+                opt.innerText = `Поезд №${t.num}${routeText}`;
+                select.appendChild(opt);
+            });
+
+            autoFillSchTime();
+        }
+
+        function autoFillSchTime() {
+            let select = document.getElementById('schTrainSelect');
+            if (select.value === "") return;
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let trip = savedTrips[select.value];
+            if (trip && trip.time) {
+                document.getElementById('schTimeInput').value = trip.time;
+            }
+        }
+
+        function generateScheduleAndVU45() {
+            let select = document.getElementById('schTrainSelect');
+            if (select.value === "") {
+                alert("Сначала создайте поезд в Конструкторе и отправьте его в рейс!");
+                return;
+            }
+
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let trip = savedTrips[select.value];
+            let startTime = document.getElementById('schTimeInput').value || "11:00";
+
+            let [h, m] = startTime.split(':').map(Number);
+
+            function addMins(hrs, mins, add) {
+                let total = hrs * 60 + mins + add;
+                let newH = Math.floor(total / 60) % 24;
+                let newM = total % 60;
+                return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+            }
+
+            // Трафарет Минской ДЖД
+            let depZaslonovo = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            let arrPionerskaya1 = addMins(h, m, 6);
+            let depPionerskaya1 = addMins(h, m, 8);
+            let arrSosnovy = addMins(h, m, 15);
+            let depSosnovy = addMins(h, m, 20);
+            let arrPionerskaya2 = addMins(h, m, 27);
+            let depPionerskaya2 = addMins(h, m, 29);
+            let arrZaslonovo = addMins(h, m, 35);
+
+            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'Заслоново — Сосновый Бор'})`;
+
+            let tbody = document.getElementById('schTableBody');
+            tbody.innerHTML = `
+                <tr><td><b>Заслоново</b></td><td>—</td><td>—</td><td><b>${depZaslonovo}</b></td><td>Заслоново — Пионерская</td><td>6 мин</td></tr>
+                <tr><td><b>Пионерская</b></td><td>${arrPionerskaya1}</td><td>2 мин</td><td>${depPionerskaya1}</td><td>Пионерская — Сосновый Бор</td><td>7 мин</td></tr>
+                <tr><td><b>Сосновый Бор</b></td><td>${arrSosnovy}</td><td>5 мин (обгон)</td><td>${depSosnovy}</td><td>Сосновый Бор — Пионерская</td><td>7 мин</td></tr>
+                <tr><td><b>Пионерская</b></td><td>${arrPionerskaya2}</td><td>2 мин</td><td>${depPionerskaya2}</td><td>Пионерская — Заслоново</td><td>6 мин</td></tr>
+                <tr><td><b>Заслоново</b></td><td><b>${arrZaslonovo}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            `;
+
+            // Заполнение справки ВУ-45
+            document.getElementById('vuTrainNum').innerText = trip.num;
+            document.getElementById('vuDate').innerText = trip.date || new Date().toLocaleDateString('ru-RU');
+            document.getElementById('vuRoute').innerText = trip.route || "Заслоново — Сосновый Бор — Заслоново";
+
+            let loco = trip.consist.find(c => c.category === 'loco');
+            document.getElementById('vuLoco').innerText = loco ? loco.model : "ТУ2 / ТУ7А";
+            
+            let passCars = trip.consist.filter(c => c.category === 'pass_car' || c.category === 'freight_car');
+            document.getElementById('vuCarsCount').innerText = passCars.length > 0 ? passCars.length : trip.consist.length;
+
+            let tailCar = trip.consist[trip.consist.length - 1];
+            document.getElementById('vuTailCar').innerText = tailCar ? `${tailCar.model} (№${tailCar.num})` : "ПВ40";
+
+            document.getElementById('scheduleOutput').style.display = 'block';
+        }
+
         let dragSrcIndex = null;
 
         function handleDragStart(e) {
@@ -1073,7 +1260,6 @@
             this.classList.remove('dragging');
         }
 
-        /* Конструктор поездов (Сборный поезд) */
         function renderBuilderSource() {
             let list = document.getElementById('builderSourceList');
             let q = document.getElementById('builderSearch').value.toUpperCase();
