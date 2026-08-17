@@ -80,7 +80,7 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 10px;
+            gap: 15px;
         }
 
         .nav-tab-btn {
@@ -154,7 +154,6 @@
         }
         .btn-secondary:hover { background: #444; }
 
-        /* Вкладки подкатегорий */
         .category-tabs {
             display: flex;
             gap: 6px;
@@ -278,7 +277,28 @@
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; }
 
-        /* Конструктор поездов */
+        /* Панель параметров поезда в конструкторе */
+        .trip-form-panel {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 12px;
+            border-radius: 4px;
+            margin-bottom: 15px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 10px;
+        }
+        .trip-form-panel input {
+            padding: 6px;
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            font-size: 11px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
         .builder-layout {
             display: grid;
             grid-template-columns: 320px 1fr;
@@ -507,7 +527,6 @@
         <div class="header-controls">
             <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
             <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
-            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">🗓 Расписание</button>
             <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
             <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
         </div>
@@ -585,10 +604,30 @@
     <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Составление сборного поезда для следования</span>
+            <span>Параметры и составление поезда для следования</span>
             <div class="action-buttons">
                 <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
                 <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
+            </div>
+        </div>
+
+        <!-- Поля параметров рецса -->
+        <div class="trip-form-panel">
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Номер поезда / рейса:</label>
+                <input type="text" id="tripNumInput" placeholder="Например: 601Б / 702">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
+                <input type="text" id="tripRouteInput" placeholder="Например: Минск-Пасс. — Брест">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
+                <input type="date" id="tripDateInput">
+            </div>
+            <div>
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления:</label>
+                <input type="time" id="tripTimeInput">
             </div>
         </div>
 
@@ -611,49 +650,6 @@
                     </div>
                 </div>
             </div>
-        </div>
-    </div>
-
-    <!-- СТРАНИЦА 3: ГЕНЕРАЦИЯ РАСПИСАНИЯ -->
-    <div id="pageSchedule" class="main-wrapper" style="display:none;">
-        <div class="page-header">
-            <span>🗓 Генератор расписания поездов</span>
-            <div class="action-buttons">
-                <button class="btn-primary" onclick="addScheduleRow()">➕ Добавить нитку расписания</button>
-            </div>
-        </div>
-
-        <div class="filter-panel" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
-            <div class="form-group">
-                <label>Номер поезда:</label>
-                <input type="text" id="schedTrainNum" placeholder="Например: 601Б">
-            </div>
-            <div class="form-group">
-                <label>Маршрут следования:</label>
-                <input type="text" id="schedRoute" placeholder="Минск — Орша">
-            </div>
-            <div class="form-group">
-                <label>Периодичность:</label>
-                <input type="text" id="schedDays" placeholder="Ежедневно / По дням">
-            </div>
-        </div>
-
-        <div class="table-container" style="margin-top:10px;">
-            <table class="bp-table" id="scheduleTable">
-                <thead>
-                    <tr>
-                        <th>Станция</th>
-                        <th style="width: 100px;">Прибытие</th>
-                        <th style="width: 100px;">Стоянка (мин)</th>
-                        <th style="width: 100px;">Отправление</th>
-                        <th style="width: 120px;">Путь / Платформа</th>
-                        <th style="width: 60px; text-align:center;">Удалить</th>
-                    </tr>
-                </thead>
-                <tbody id="scheduleBody">
-                    <!-- Заполняется динамически -->
-                </tbody>
-            </table>
         </div>
     </div>
 
@@ -840,17 +836,13 @@
         function switchPage(page) {
             document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
             document.getElementById('pageBuilder').style.display = (page === 'builder') ? 'block' : 'none';
-            document.getElementById('pageSchedule').style.display = (page === 'schedule') ? 'block' : 'none';
             
             document.getElementById('btnViewDatabase').classList.toggle('active', page === 'database');
             document.getElementById('btnViewBuilder').classList.toggle('active', page === 'builder');
-            document.getElementById('btnViewSchedule').classList.toggle('active', page === 'schedule');
 
             if (page === 'builder') {
                 renderBuilderSource();
                 renderConsistTrack();
-            } else if (page === 'schedule') {
-                renderSchedule();
             }
         }
 
@@ -954,8 +946,9 @@
                 tr.setAttribute('data-category', v.category || 'loco');
                 tr.draggable = true;
 
-                let tripNumber = localStorage.getItem(`trip_status_${v.id}`);
-                if (tripNumber) {
+                // Загружаем данные о рейсе из Памяти
+                let tripData = JSON.parse(localStorage.getItem(`trip_full_info_${v.id}`));
+                if (tripData) {
                     tr.classList.add('in-trip');
                 }
 
@@ -972,6 +965,14 @@
                 let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
                 let catLabel = categoryNames[v.category || 'loco'] || '—';
 
+                let badgeHtml = '';
+                if (tripData) {
+                    let routePart = tripData.route ? ` [${tripData.route}]` : '';
+                    let datePart = tripData.date ? ` ${tripData.date}` : '';
+                    let timePart = tripData.time ? ` в ${tripData.time}` : '';
+                    badgeHtml = `<span class="trip-badge" title="Сообщение: ${tripData.route || '—'}">В рейсе №${tripData.num}${routePart}${datePart}${timePart}</span>`;
+                }
+
                 tr.innerHTML = `
                     <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
                     <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
@@ -980,7 +981,7 @@
                     <td>
                         <div class="ps-title-cell">
                             <a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a>
-                            ${tripNumber ? `<span class="trip-badge">В рейсе №${tripNumber}</span>` : ''}
+                            ${badgeHtml}
                         </div>
                     </td>
                     <td>${v.gov || '—'}</td>
@@ -996,7 +997,7 @@
                     <td>${v.util || '—'}</td>
                     <td>
                         <span>${v.note || '—'}</span>
-                        ${tripNumber ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
+                        ${tripData ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1005,31 +1006,42 @@
             filterDB();
         }
 
+        /* --- ЛОГИКА ОТПРАВКИ И ОТМЕНЫ РЕЙСА --- */
         function cancelTrip(psId) {
             if (confirm("Вы уверены, что хотите отменить рейс для этого ПС?")) {
-                localStorage.removeItem(`trip_status_${psId}`);
+                localStorage.removeItem(`trip_full_info_${psId}`);
                 renderTable();
             }
         }
 
         function sendConsistToTrip() {
+            let num = document.getElementById('tripNumInput').value.trim();
+            let route = document.getElementById('tripRouteInput').value.trim();
+            let date = document.getElementById('tripDateInput').value;
+            let time = document.getElementById('tripTimeInput').value;
+
+            if (!num) {
+                alert("Пожалуйста, введите номер поезда / рейса!");
+                return;
+            }
+
             if (consistList.length === 0) {
                 alert("Сначала добавьте хотя бы одну единицу ПС в поезд!");
                 return;
             }
 
-            let trainNum = prompt("Введите номер рейса / поезда:", "601");
-            if (!trainNum) return;
+            let tripInfo = { num, route, date, time };
 
             consistList.forEach(v => {
-                localStorage.setItem(`trip_status_${v.id}`, trainNum);
+                localStorage.setItem(`trip_full_info_${v.id}`, JSON.stringify(tripInfo));
             });
 
-            alert(`Состав успешно отправлен в рейс №${trainNum}!`);
+            alert(`Состав успешно отправлен в рейс №${num}!`);
             renderTable();
             switchPage('database');
         }
 
+        /* Drag and Drop перетаскивание строк */
         let dragSrcIndex = null;
 
         function handleDragStart(e) {
@@ -1061,6 +1073,7 @@
             this.classList.remove('dragging');
         }
 
+        /* Конструктор поездов (Сборный поезд) */
         function renderBuilderSource() {
             let list = document.getElementById('builderSourceList');
             let q = document.getElementById('builderSearch').value.toUpperCase();
@@ -1132,42 +1145,6 @@
                 `;
                 track.appendChild(card);
             });
-        }
-
-        /* --- ЛОГИКА ГЕНЕРАТОРА РАСПИСАНИЯ --- */
-        let scheduleRows = [
-            { station: "Минск-Пассажирский", arr: "—", stop: "—", dep: "08:15", track: "1 Пл. 2" },
-            { station: "Жодино", arr: "09:02", stop: "2", dep: "09:04", track: "2 Путь" },
-            { station: "Борисов", arr: "09:20", stop: "4", dep: "09:24", track: "1 Путь" },
-            { station: "Орша-Центральная", arr: "10:45", stop: "—", dep: "—", track: "3 Путь" }
-        ];
-
-        function renderSchedule() {
-            let tbody = document.getElementById('scheduleBody');
-            tbody.innerHTML = '';
-
-            scheduleRows.forEach((row, idx) => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><input type="text" value="${row.station}" onchange="scheduleRows[${idx}].station = this.value" style="width:95%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
-                    <td><input type="text" value="${row.arr}" onchange="scheduleRows[${idx}].arr = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
-                    <td><input type="text" value="${row.stop}" onchange="scheduleRows[${idx}].stop = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
-                    <td><input type="text" value="${row.dep}" onchange="scheduleRows[${idx}].dep = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
-                    <td><input type="text" value="${row.track}" onchange="scheduleRows[${idx}].track = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
-                    <td style="text-align:center;"><button onclick="deleteScheduleRow(${idx})" style="border:none; background:#c62828; color:#fff; cursor:pointer; border-radius:2px; font-weight:bold;">✕</button></td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function addScheduleRow() {
-            scheduleRows.push({ station: "Новая станция", arr: "00:00", stop: "1", dep: "00:01", track: "1 Путь" });
-            renderSchedule();
-        }
-
-        function deleteScheduleRow(idx) {
-            scheduleRows.splice(idx, 1);
-            renderSchedule();
         }
 
         window.addEventListener('DOMContentLoaded', () => {
