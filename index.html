@@ -3,486 +3,1343 @@
 <head>
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
-    <title>УЖД — База, Конструктор и Расписание</title>
+    <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
+    <meta http-equiv="Pragma" content="no-cache">
+    <meta http-equiv="Expires" content="0">
+    <title>RAILPHOTO — База данных подвижного состава</title>
     <style>
-        body {
-            font-family: Arial, sans-serif;
-            background-color: #eef2f5;
-            margin: 0;
-            padding: 0;
-            color: #333;
+        :root {
+            --bp-header-bg: #102a43;
+            --bp-bg-main: #12181f;
+            --bp-card-bg: #1b222c;
+            --bp-border: #2c3848;
+            --bp-table-header: #243040;
+            --bp-text: #e0e6ed;
+            --bp-link: #4895ef;
+            --bp-input-bg: #0f141c;
         }
 
-        /* Шапка и Навигация */
+        body.light-theme {
+            --bp-header-bg: #1e3a8a;
+            --bp-bg-main: #f1f5f9;
+            --bp-card-bg: #ffffff;
+            --bp-border: #cbd5e1;
+            --bp-table-header: #e2e8f0;
+            --bp-text: #0f172a;
+            --bp-link: #2563eb;
+            --bp-input-bg: #ffffff;
+        }
+
+        .st-active { background-color: rgba(43, 43, 43, 0.4); }
+        .st-not-operated { background-color: #2e5c2e !important; color: #ffffff !important; }
+        .st-inactive { background-color: #6b6b00 !important; color: #ffffff !important; }
+        .st-out { background-color: #696969 !important; color: #ffffff !important; }
+        .st-decomm { background-color: #8b0000 !important; color: #ffffff !important; }
+        .st-unknown { background-color: #5c4033 !important; color: #ffffff !important; }
+        .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }
+        .st-trans-city { background-color: #1e3f66 !important; color: #ffffff !important; }
+        .st-trans-other { background-color: #512e5f !important; color: #ffffff !important; }
+        .st-plate-change { background-color: #117a65 !important; color: #ffffff !important; }
+
+        body.light-theme .st-active { background-color: #ffffff; }
+
+        body {
+            font-family: Verdana, Arial, Helvetica, sans-serif;
+            margin: 0;
+            padding: 0;
+            background-color: var(--bp-bg-main);
+            color: var(--bp-text);
+            font-size: 12px;
+            transition: background 0.2s, color 0.2s;
+        }
+
+        a { color: var(--bp-link); text-decoration: none; cursor: pointer; }
+        a:hover { text-decoration: underline; }
+
         header {
-            background-color: #1b365d;
-            color: white;
-            padding: 15px 20px;
+            background-color: var(--bp-header-bg);
+            color: #ffffff;
+            padding: 10px 20px;
             display: flex;
             justify-content: space-between;
             align-items: center;
+            border-bottom: 2px solid #081726;
         }
 
-        header h1 { margin: 0; font-size: 20px; }
-
-        nav button {
-            background: #2c4d75;
-            color: white;
-            border: none;
-            padding: 8px 16px;
-            margin-left: 5px;
-            border-radius: 4px;
-            cursor: pointer;
+        .logo-box {
+            background: #2563eb;
+            color: #ffffff;
             font-weight: bold;
+            font-size: 18px;
+            padding: 4px 10px;
+            border-radius: 3px;
+            letter-spacing: 1px;
+            display: inline-block;
         }
 
-        nav button.active, nav button:hover {
-            background: #007bff;
-        }
-
-        .container {
-            max-width: 1000px;
-            margin: 20px auto;
-            padding: 0 15px;
-        }
-
-        .tab-content { display: none; }
-        .tab-content.active { display: block; }
-
-        /* Карточки и панели */
-        .panel {
-            background: white;
-            padding: 20px;
-            border-radius: 8px;
-            box-shadow: 0 2px 6px rgba(0,0,0,0.1);
-            margin-bottom: 20px;
-        }
-
-        .form-group {
-            margin-bottom: 15px;
+        .header-controls {
             display: flex;
             align-items: center;
             gap: 10px;
         }
 
-        .form-group label { font-weight: bold; width: 220px; }
-        .form-group input, .form-group select {
-            padding: 8px;
-            font-size: 14px;
-            border: 1px solid #ccc;
+        .nav-tab-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 6px 12px;
             border-radius: 4px;
-            flex: 1;
-        }
-
-        .btn {
-            background-color: #28a745;
-            color: white;
-            border: none;
-            padding: 10px 20px;
-            font-size: 15px;
-            font-weight: bold;
-            border-radius: 5px;
             cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
         }
-        .btn:hover { background-color: #218838; }
+        .nav-tab-btn.active {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
 
-        /* Спец-стили для печатного листа А4 */
-        .page-a4 {
-            width: 210mm;
-            height: 297mm;
-            background: white;
-            margin: 0 auto;
-            padding: 8mm;
-            box-sizing: border-box;
-            box-shadow: 0 0 10px rgba(0,0,0,0.15);
+        .theme-toggle-btn {
+            background: rgba(0,0,0,0.3);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 5px 10px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .theme-toggle-btn:hover { background: rgba(0,0,0,0.5); }
+
+        .main-wrapper { padding: 12px 18px; }
+        
+        .page-header {
+            font-size: 16px;
+            font-weight: bold;
+            margin-bottom: 12px;
+            padding-bottom: 5px;
+            border-bottom: 2px solid var(--bp-border);
             display: flex;
-            flex-direction: column;
             justify-content: space-between;
+            align-items: center;
+            flex-wrap: wrap;
+            gap: 8px;
         }
 
-        .block-a5 {
-            height: 138mm;
-            border: 1px solid #000;
-            padding: 6mm;
-            box-sizing: border-box;
+        .action-buttons {
             display: flex;
-            flex-direction: column;
-            justify-content: space-between;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
-        .doc-header {
+        .btn-primary {
+            background: #2563eb;
+            color: #fff;
+            border: none;
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-primary:hover { background: #1d4ed8; }
+
+        .btn-secondary {
+            background: #333;
+            color: #fff;
+            border: 1px solid var(--bp-border);
+            padding: 6px 12px;
+            border-radius: 3px;
+            font-weight: bold;
+            cursor: pointer;
+            font-size: 11px;
+        }
+        .btn-secondary:hover { background: #444; }
+
+        /* Вкладки подкатегорий */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .cat-tab {
+            padding: 6px 12px;
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--bp-text);
+        }
+        .cat-tab.active {
+            background: var(--bp-link);
+            color: #fff;
+            border-color: var(--bp-link);
+        }
+
+        .filter-panel {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 10px;
+            margin-bottom: 12px;
+            display: grid;
+            grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
+            gap: 8px;
+            align-items: center;
+        }
+
+        .filter-panel input, .filter-panel select {
+            padding: 6px 8px;
+            border: 1px solid var(--bp-border);
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            font-size: 11px;
+            border-radius: 3px;
+            width: 100%;
+            box-sizing: border-box;
+        }
+
+        .table-container {
+            width: 100%;
+            overflow-x: auto;
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+        }
+
+        table.bp-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            white-space: nowrap;
+        }
+
+        table.bp-table th {
+            background-color: var(--bp-table-header);
+            color: var(--bp-text);
+            padding: 7px 8px;
+            text-align: left;
+            border: 1px solid var(--bp-border);
+            font-weight: bold;
+        }
+
+        table.bp-table td {
+            padding: 6px 8px;
+            border: 1px solid var(--bp-border);
+            vertical-align: middle;
+        }
+
+        table.bp-table tbody tr { cursor: pointer; }
+        table.bp-table tbody tr.dragging { opacity: 0.4; }
+        table.bp-table tbody tr:hover { outline: 1px solid var(--bp-link); }
+
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+            font-size: 14px;
             text-align: center;
-            border-bottom: 2px solid #000;
-            padding-bottom: 4px;
-            margin-bottom: 6px;
+            color: #888;
         }
-        .doc-header h3 { margin: 0; font-size: 13pt; text-transform: uppercase; }
-        .doc-header h4 { margin: 2px 0 0 0; font-size: 10pt; font-weight: normal; }
+        .drag-handle:active { cursor: grabbing; }
 
-        .info-grid {
+        .table-thumb {
+            width: 35px;
+            height: 24px;
+            background: #111;
+            border: 1px solid var(--bp-border);
+            border-radius: 2px;
+            display: flex;
+            align-items: center;
+            justify-content: center;
+            font-size: 10px;
+            color: #777;
+            overflow: hidden;
+        }
+
+        .type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--bp-border);
+        }
+
+        .legend-bar {
+            display: flex;
+            gap: 10px;
+            flex-wrap: wrap;
+            margin-top: 12px;
+            background: var(--bp-card-bg);
+            padding: 10px;
+            border: 1px solid var(--bp-border);
+            font-size: 10px;
+        }
+        .legend-item { display: flex; align-items: center; gap: 5px; }
+        .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+        /* Конструктор поездов */
+        .builder-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 850px) {
+            .builder-layout { grid-template-columns: 1fr; }
+        }
+
+        .builder-source {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .builder-source-item {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .consist-area {
+            background: var(--bp-card-bg);
+            border: 2px dashed var(--bp-border);
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 300px;
+        }
+
+        .consist-track {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 100px;
+            padding: 10px;
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 4px;
+        }
+
+        .consist-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-link);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: move;
+        }
+
+        .modal-overlay {
+            display: none;
+            position: fixed;
+            top: 0; left: 0; right: 0; bottom: 0;
+            background: rgba(0, 0, 0, 0.75);
+            z-index: 1000;
+            justify-content: center;
+            align-items: flex-start;
+            padding-top: 15px;
+            overflow-y: auto;
+        }
+
+        .modal-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            width: 94%;
+            max-width: 900px;
+            padding: 15px;
+            border-radius: 4px;
+            margin-bottom: 40px;
+            position: relative;
+        }
+
+        .modal-close {
+            position: absolute;
+            top: 10px;
+            right: 12px;
+            font-size: 20px;
+            cursor: pointer;
+            color: #888;
+            background: rgba(0,0,0,0.1);
+            width: 28px; height: 28px;
+            display: flex; align-items: center; justify-content: center;
+            border-radius: 50%;
+            z-index: 10;
+        }
+        .modal-close:hover { color: #fff; background: #e02424; }
+
+        .vehicle-title { font-size: 18px; font-weight: bold; color: var(--bp-link); margin-bottom: 2px; }
+        .vehicle-subtitle { font-size: 11px; color: #888; margin-bottom: 12px; border-bottom: 1px solid var(--bp-border); padding-bottom: 6px; }
+
+        .form-grid {
             display: grid;
             grid-template-columns: 1fr 1fr;
-            font-size: 9pt;
-            margin-bottom: 6px;
+            gap: 10px;
+        }
+        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
+        .form-group { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
+        .form-group input, .form-group select {
+            padding: 6px;
+            background: var(--bp-input-bg);
+            color: var(--bp-text);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
         }
 
-        table.timetable {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 8pt;
-        }
-        table.timetable th, table.timetable td {
-            border: 1px solid #000;
-            padding: 2px 4px;
-            text-align: center;
-        }
-        table.timetable th { background-color: #f0f0f0; }
-
-        .cut-line {
-            border-top: 2px dashed #666;
-            text-align: center;
-            position: relative;
-            margin: 2mm 0;
-        }
-        .cut-line::after {
-            content: '✂ Линия отреза (Формат А5)';
-            position: absolute;
-            top: -9px;
-            right: 15px;
-            background: white;
-            padding: 0 5px;
-            font-size: 7.5pt;
-            color: #555;
+        .photo-gallery-grid {
+            display: grid;
+            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
+            gap: 10px;
+            margin-bottom: 15px;
         }
 
-        .vu45-table {
-            width: 100%;
-            font-size: 9pt;
-            border-collapse: collapse;
+        .busphoto-thumb {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            overflow: hidden;
+            cursor: pointer;
+            transition: transform 0.15s, border-color 0.15s;
         }
-        .vu45-table td { padding: 3px; vertical-align: top; }
-
-        .signatures {
+        .busphoto-thumb:hover {
+            border-color: var(--bp-link);
+            transform: translateY(-2px);
+        }
+        .thumb-img-wrapper {
+            height: 95px;
+            background: #111;
             display: flex;
-            justify-content: space-between;
-            font-size: 9pt;
-            margin-top: 8px;
+            align-items: center;
+            justify-content: center;
+            position: relative;
+            color: #555;
+            font-size: 10px;
+        }
+        .thumb-caption {
+            padding: 5px;
+            font-size: 10px;
+            text-align: center;
+            color: var(--bp-text);
+            background: var(--bp-card-bg);
+            border-top: 1px solid var(--bp-border);
+            white-space: nowrap;
+            overflow: hidden;
+            text-overflow: ellipsis;
         }
 
-        /* Настройки для печати */
-        @media print {
-            body { background: white; padding: 0; }
-            header, nav, .controls, .panel, .no-print { display: none !important; }
-            .container { max-width: 100%; margin: 0; padding: 0; }
-            .tab-content { display: block !important; }
-            #tab-schedule { display: block !important; }
-            .page-a4 { box-shadow: none; margin: 0; width: 210mm; height: 297mm; }
+        .specs-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-size: 11px;
+            margin-bottom: 10px;
+        }
+        .specs-table td { padding: 5px 8px; border-bottom: 1px solid var(--bp-border); }
+        .specs-table td.label { font-weight: bold; width: 28%; background: var(--bp-table-header); }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
+
+        .ps-title-cell {
+            display: flex;
+            align-items: center;
+            gap: 6px;
+            flex-wrap: wrap;
+        }
+
+        .trip-badge {
+            background-color: #d9534f;
+            color: #ffffff;
+            font-size: 10px;
+            font-weight: bold;
+            padding: 2px 6px;
+            border-radius: 3px;
+            white-space: nowrap;
+            animation: pulse-badge 2s infinite;
+        }
+
+        @keyframes pulse-badge {
+            0% { opacity: 1; }
+            50% { opacity: 0.7; }
+            100% { opacity: 1; }
+        }
+
+        .btn-cancel-trip {
+            background-color: #c9302c;
+            color: white;
+            border: none;
+            padding: 3px 6px;
+            font-size: 10px;
+            border-radius: 3px;
+            cursor: pointer;
+            margin-left: 8px;
+            font-weight: bold;
+        }
+
+        .btn-cancel-trip:hover {
+            background-color: #ac2925;
+        }
+
+        table.bp-table tbody tr.in-trip {
+            background-color: rgba(217, 83, 79, 0.2) !important;
         }
     </style>
 </head>
-<body>
+<body class="light-theme">
 
-<header>
-    <h1>Узкоколейная Железная Дорога (УЖД)</h1>
-    <nav>
-        <button class="nav-btn active" onclick="openTab('tab-db')">📦 База ПС</button>
-        <button class="nav-btn" onclick="openTab('tab-editor')">🛠 Consist Editor</button>
-        <button class="nav-btn" onclick="openTab('tab-schedule')">📅 Расписание и ВУ-45</button>
-    </nav>
-</header>
+    <header>
+        <div>
+            <span class="logo-box">RAILPHOTO</span>
+            <span style="font-size:15px; font-weight:bold; margin-left:8px;">База данных ПС</span>
+        </div>
+        <div class="header-controls">
+            <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
+            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
+            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">🗓 Расписание</button>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
+            <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
+        </div>
+    </header>
 
-<div class="container">
+    <!-- СТРАНИЦА 1: БАЗА ДАННЫХ -->
+    <div id="pageDatabase" class="main-wrapper">
+        <div class="page-header">
+            <span>Белорусская железная дорога — Подвижной состав</span>
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="exportDatabase()">💾 Экспорт БД</button>
+                <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📂 Импорт БД</button>
+                <input type="file" id="importFile" style="display:none" accept=".json" onchange="importDatabase(event)">
+                <button class="btn-primary" onclick="openAddModal()">➕ Добавить ПС</button>
+            </div>
+        </div>
 
-    <!-- ВКТАДКА 1: БАЗА ДАННЫХ -->
-    <div id="tab-db" class="tab-content active">
-        <div class="panel">
-            <h2>База подвижного состава (750 мм)</h2>
-            <p><b>Локомотивы в парке:</b> ТУ10, ТУ2 (3 ед.), 2ТУ2 (1 ед.)</p>
-            <p><b>Вагонный парк:</b> 10 вагонов ПВ48-051 (Пассажирский сидячий, 45 мест, масса брутто 10.0 т, 4 оси).</p>
+        <div class="category-tabs">
+            <div class="cat-tab active" onclick="setCategoryFilter('all', this)">Все варианты</div>
+            <div class="cat-tab" onclick="setCategoryFilter('loco', this)">🚂 Локомотивы</div>
+            <div class="cat-tab" onclick="setCategoryFilter('pass_car', this)">🚃 Пассажирские вагоны</div>
+            <div class="cat-tab" onclick="setCategoryFilter('freight_car', this)">📦 Грузовые вагоны</div>
+            <div class="cat-tab" onclick="setCategoryFilter('mvps', this)">🚆 МВПС / Специальный</div>
+        </div>
+
+        <div class="filter-panel">
+            <input type="text" id="searchInput" onkeyup="filterDB()" placeholder="Фильтр по серии, номеру...">
+            <select id="parkSelect" onchange="filterDB()">
+                <option value="">Все депо</option>
+            </select>
+        </div>
+
+        <div class="table-container">
+            <table class="bp-table" id="dbTable">
+                <thead>
+                    <tr>
+                        <th style="width: 25px; text-align:center;">⋮⋮</th>
+                        <th style="width: 40px;">Фото</th>
+                        <th>Тип</th>
+                        <th>Депо приписки</th>
+                        <th>Серия / Модель</th>
+                        <th>Сетевой номер</th>
+                        <th>Бортовой №</th>
+                        <th>Назначение</th>
+                        <th>Заводской №</th>
+                        <th>Завод / VIN</th>
+                        <th>Построен</th>
+                        <th>Поступил</th>
+                        <th>Начал работу</th>
+                        <th>Отставлен</th>
+                        <th>Списан</th>
+                        <th>Утилизирован</th>
+                        <th>Примечание</th>
+                    </tr>
+                </thead>
+                <tbody id="tableBody"></tbody>
+            </table>
+        </div>
+
+        <div class="legend-bar">
+            <b>Статусы:</b>
+            <div class="legend-item"><div class="legend-color" style="background:#28a745;"></div> <span>Эксплуатируется</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#2e5c2e;"></div> <span>Не был в эксплуатации</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#6b6b00;"></div> <span>Не эксплуатируется</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#696969;"></div> <span>Выведен из эксплуатации</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#8b0000;"></div> <span>Списан</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#5c4033;"></div> <span>Судьба неизвестна</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#4b6f7e;"></div> <span>КВР/Модернизация</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#1e3f66;"></div> <span>Передан в дороге</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#512e5f;"></div> <span>Передан на другую дорогу</span></div>
+            <div class="legend-item"><div class="legend-color" style="background:#117a65;"></div> <span>Смена номера</span></div>
         </div>
     </div>
 
-    <!-- ВКТАДКА 2: CONSIST EDITOR -->
-    <div id="tab-editor" class="tab-content">
-        <div class="panel">
-            <h2>Составитель поездов (Consist Editor)</h2>
+    <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
+    <div id="pageBuilder" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>Составление сборного поезда для следования</span>
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
+                <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
+            </div>
+        </div>
+
+        <div class="builder-layout">
+            <div class="builder-source">
+                <div style="font-weight:bold; margin-bottom:8px;">Доступный ПС из базы:</div>
+                <input type="text" id="builderSearch" placeholder="Поиск вагонов/локомотивов..." onkeyup="renderBuilderSource()" style="width:100%; box-sizing:border-box; padding:5px; margin-bottom:8px; font-size:11px; border:1px solid var(--bp-border); background:var(--bp-input-bg); color:var(--bp-text); border-radius:3px;">
+                <div id="builderSourceList"></div>
+            </div>
+
+            <div class="consist-area">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="font-weight:bold; font-size:13px;">Сформированный поезд:</div>
+                    <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
+                </div>
+
+                <div class="consist-track" id="consistTrack">
+                    <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
+                        Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 3: ГЕНЕРАЦИЯ РАСПИСАНИЯ -->
+    <div id="pageSchedule" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>🗓 Генератор расписания поездов</span>
+            <div class="action-buttons">
+                <button class="btn-primary" onclick="addScheduleRow()">➕ Добавить нитку расписания</button>
+            </div>
+        </div>
+
+        <div class="filter-panel" style="grid-template-columns: repeat(auto-fit, minmax(200px, 1fr));">
             <div class="form-group">
                 <label>Номер поезда:</label>
-                <input type="text" id="train-num" value="601/602">
+                <input type="text" id="schedTrainNum" placeholder="Например: 601Б">
             </div>
             <div class="form-group">
-                <label>Маршрут:</label>
-                <input type="text" id="train-route" value="Крутоборка — Сосновый Бор">
+                <label>Маршрут следования:</label>
+                <input type="text" id="schedRoute" placeholder="Минск — Орша">
             </div>
             <div class="form-group">
-                <label>Выберите локомотив:</label>
-                <select id="train-loco">
-                    <option value="ТУ2-155">Тепловоз ТУ2-155 (4 оси)</option>
-                    <option value="ТУ10-001">Тепловоз ТУ10-001 (4 оси)</option>
-                    <option value="2ТУ2-001">Тепловоз 2ТУ2-001 (8 осей)</option>
-                </select>
+                <label>Периодичность:</label>
+                <input type="text" id="schedDays" placeholder="Ежедневно / По дням">
             </div>
-            <div class="form-group">
-                <label>Количество вагонов ПВ48-051:</label>
-                <input type="number" id="train-cars" value="4" min="1" max="10">
-            </div>
-            <div class="form-group">
-                <label>Номер хвостового вагона:</label>
-                <input type="text" id="tail-car-num" value="051">
-            </div>
-            <button class="btn" onclick="saveTrain()">Сформировать поезд и отправить в рейс</button>
+        </div>
+
+        <div class="table-container" style="margin-top:10px;">
+            <table class="bp-table" id="scheduleTable">
+                <thead>
+                    <tr>
+                        <th>Станция</th>
+                        <th style="width: 100px;">Прибытие</th>
+                        <th style="width: 100px;">Стоянка (мин)</th>
+                        <th style="width: 100px;">Отправление</th>
+                        <th style="width: 120px;">Путь / Платформа</th>
+                        <th style="width: 60px; text-align:center;">Удалить</th>
+                    </tr>
+                </thead>
+                <tbody id="scheduleBody">
+                    <!-- Заполняется динамически -->
+                </tbody>
+            </table>
         </div>
     </div>
 
-    <!-- ВКТАДКА 3: РАСПИСАНИЕ И ВУ-45 -->
-    <div id="tab-schedule" class="tab-content">
-        
-        <div class="panel controls no-print">
-            <h2>Настройка расписания и формирование документа</h2>
-            <div class="form-group">
-                <label for="select-active-train">Выбрать сформированный поезд:</label>
-                <select id="select-active-train" onchange="updateSchedule()">
-                    <!-- Заполняется автоматически из Editor -->
-                </select>
-            </div>
-            <div class="form-group">
-                <label for="startTime">Время первого отправления:</label>
-                <input type="time" id="startTime" value="10:00" step="1" onchange="updateSchedule()">
-            </div>
-            <div class="form-group">
-                <label for="departDate">Дата отправления:</label>
-                <input type="date" id="departDate" value="2026-08-17" onchange="updateSchedule()">
-            </div>
-            <button class="btn" onclick="window.print()">🖨 Распечать бланк А4 (Расписание + ВУ-45)</button>
-        </div>
-
-        <!-- Печатная форма -->
-        <div class="page-a4">
+    <!-- Модальное окно: Добавление / Редактирование ПС -->
+    <div class="modal-overlay" id="addVehicleModal">
+        <div class="modal-card" style="max-width: 600px;">
+            <span class="modal-close" onclick="closeAddModal()">&times;</span>
+            <div class="vehicle-title" id="formModalTitle">➕ Добавление нового ПС</div>
+            <div class="vehicle-subtitle" id="formModalSub">Заполните данные для внесения локомотива/поезда в базу.</div>
             
-            <!-- БЛОК 1: РАСПИСАНИЕ -->
-            <div class="block-a5">
-                <div>
-                    <div class="doc-header">
-                        <h3>УЗКОКОЛЕЙНАЯ ЖЕЛЕЗНАЯ ДОРОГА (УЖД 750 мм)</h3>
-                        <h4>СЛУЖЕБНОЕ РАСПИСАНИЕ ДВИЖЕНИЯ ПОЕЗДА № <span id="doc-train-num">601/602</span></h4>
+            <form id="addVehicleForm" onsubmit="saveVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="hidden" id="editIndex" value="-1">
+                <div class="form-grid">
+                    <div class="form-group">
+                        <label>Тип / Категория ПС:</label>
+                        <select id="newCategory" required>
+                            <option value="loco">🚂 Локомотив</option>
+                            <option value="pass_car">🚃 Пассажирский вагон</option>
+                            <option value="freight_car">📦 Грузовой вагон</option>
+                            <option value="mvps">🚆 МВПС / Специальный ПС</option>
+                        </select>
                     </div>
-
-                    <div class="info-grid">
-                        <div><b>Сообщение:</b> <span id="doc-route">Крутоборка — Сосновый Бор</span></div>
-                        <div><b>Дата:</b> <span id="out-date">17.08.2026</span></div>
-                        <div><b>Локомотив:</b> <span id="doc-loco">ТУ2-155</span></div>
-                        <div><b>Состав:</b> <span id="doc-cars-info">4 ваг. ПВ48-051 (16 осей | 40.0 т)</span></div>
+                    <div class="form-group">
+                        <label>Депо приписки:</label>
+                        <input type="text" id="newPark" placeholder="ТЧ-1 Минск-Сортировочный" required>
                     </div>
-
-                    <table class="timetable">
-                        <thead>
-                            <tr>
-                                <th>Раздельный пункт / ОП</th>
-                                <th>Приб.</th>
-                                <th>Путь</th>
-                                <th>Стоянка</th>
-                                <th>Отпр.</th>
-                                <th>Примечание</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schedule-body">
-                            <!-- Автозаполнение из JS -->
-                        </tbody>
-                    </table>
-                </div>
-                <div style="font-size: 8pt; text-align: right; font-style: italic;">Время в пути: 44 мин 30 сек</div>
-            </div>
-
-            <!-- ЛИНИЯ ОТРЕЗА -->
-            <div class="cut-line"></div>
-
-            <!-- БЛОК 2: СПРАВКА ВУ-45 -->
-            <div class="block-a5">
-                <div>
-                    <div class="doc-header">
-                        <h3>СПРАВКА О ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ (ВУ-45)</h3>
-                        <h4>Узкоколейная железная дорога (колея 750 мм)</h4>
+                    <div class="form-group">
+                        <label>Полная модель / Серия:</label>
+                        <input type="text" id="newModel" placeholder="ЧС4Т-598" required>
                     </div>
-
-                    <table class="vu45-table">
-                        <tr>
-                            <td><b>Дата:</b> <span id="out-date-vu">17.08.2026</span> г.</td>
-                            <td><b>Время опробования:</b> <span id="out-proba-time">09:50</span></td>
-                        </tr>
-                        <tr>
-                            <td><b>Выдана машинисту в/ч:</b> <span id="vu-loco">ТУ2-155</span></td>
-                            <td><b>Поезд №:</b> <span id="vu-train-num">601/602</span></td>
-                        </tr>
-                        <tr>
-                            <td colspan="2"><b>Хвостовой вагон №:</b> <span id="vu-tail">051</span></td>
-                        </tr>
-                    </table>
-
-                    <hr style="border: none; border-top: 1px solid #000; margin: 4px 0;">
-
-                    <table class="vu45-table">
-                        <tr>
-                            <td><b>Всего вагонов:</b> <span id="vu-cars-count">4</span> (ПВ48-051)</td>
-                            <td><b>Всего осей (с локомотивом):</b> <span id="vu-total-axes">20</span></td>
-                        </tr>
-                        <tr>
-                            <td><b>Масса состава (брутто):</b> <span id="vu-weight">40.0</span> тонн</td>
-                            <td><b>Плотность ТМ:</b> ______ сек.</td>
-                        </tr>
-                        <tr>
-                            <td><b>Требуемое нажатие:</b> ______ тс</td>
-                            <td><b>Фактическое нажатие:</b> ______ тс</td>
-                        </tr>
-                    </table>
-
-                    <p style="font-size: 8.5pt; margin: 8px 0 4px 0;">Тормоза в поезде переписаны, опробованы от локомотива и действуют исправно.</p>
+                    <div class="form-group">
+                        <label>Префикс серии:</label>
+                        <input type="text" id="newModelPrefix" placeholder="ЧС4Т" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Сетевой / Восьмизначный №:</label>
+                        <input type="text" id="newGov" placeholder="15243819" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Бортовой / Инвентарный №:</label>
+                        <input type="text" id="newNum" placeholder="598" required>
+                    </div>
+                    <div class="form-group">
+                        <label>Заводской номер:</label>
+                        <input type="text" id="newFactory" placeholder="36" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата постройки:</label>
+                        <input type="text" id="newBuild" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата поступления:</label>
+                        <input type="text" id="newArrive" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Начало работы:</label>
+                        <input type="text" id="newStart" placeholder="ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Отставлен / Выведен:</label>
+                        <input type="text" id="newOut" placeholder="ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата списания:</label>
+                        <input type="text" id="newDecomm" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата утилизации:</label>
+                        <input type="text" id="newUtil" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Статус:</label>
+                        <select id="newStatus">
+                            <option value="st-active">Эксплуатируется</option>
+                            <option value="st-inactive">Не эксплуатируется</option>
+                            <option value="st-not-operated">Не был в эксплуатации</option>
+                            <option value="st-out">Выведен из эксплуатации</option>
+                            <option value="st-mod">КВР/Модернизация</option>
+                            <option value="st-decomm">Списан</option>
+                            <option value="st-unknown">Судьба неизвестна</option>
+                            <option value="st-trans-city">Передан в дороге</option>
+                            <option value="st-trans-other">Передан на другую дорогу</option>
+                            <option value="st-plate-change">Смена номера</option>
+                        </select>
+                    </div>
+                    <div class="form-group">
+                        <label>Назначение:</label>
+                        <select id="newPurpose">
+                            <option value="linear">Пассажирский / Грузовой</option>
+                            <option value="service">Хозяйственный / Служебный</option>
+                            <option value="—">—</option>
+                        </select>
+                    </div>
                 </div>
-
-                <div class="signatures">
-                    <div><b>Осмотрщик вагонов:</b> _________________</div>
-                    <div><b>Машинист:</b> _________________</div>
+                <div class="form-group">
+                    <label>Примечание:</label>
+                    <input type="text" id="newNote" placeholder="—" value="—">
                 </div>
-            </div>
-
+                <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить изменения</button>
+            </form>
         </div>
-
     </div>
 
-</div>
+    <!-- Модальное окно просмотра карточки ПС -->
+    <div class="modal-overlay" id="vehicleModal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeCard()">&times;</span>
+            <div class="vehicle-title" id="mTitle">Серия / Инвентарный №</div>
+            <div class="vehicle-subtitle" id="mSubtitle">Депо приписки</div>
 
-<script>
-// Переключение вкладок
-function openTab(tabId) {
-    document.querySelectorAll('.tab-content').forEach(el => el.classList.remove('active'));
-    document.querySelectorAll('.nav-btn').forEach(el => el.classList.remove('active'));
-    document.getElementById(tabId).classList.add('active');
-    event.target.classList.add('active');
-}
+            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📷 Фотогалерея ПС:</div>
+            <div class="photo-gallery-grid" id="vCardGallery">
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Спереди (3/4)</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Сзади (3/4)</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Профиль</div></div>
+                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Кабина / Салон</div></div>
+            </div>
 
-// Хранилище созданных поездов
-let activeTrains = [
-    {
-        num: "601/602",
-        route: "Крутоборка — Сосновый Бор",
-        loco: "ТУ2-155",
-        locoAxes: 4,
-        carsCount: 4,
-        tailNum: "051"
-    }
-];
+            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
+            <table class="specs-table">
+                <tr><td class="label">Категория ПС:</td><td id="mCat">—</td></tr>
+                <tr><td class="label">Сетевой номер:</td><td id="mGov">—</td></tr>
+                <tr><td class="label">Бортовой №:</td><td id="mNumber">—</td></tr>
+                <tr><td class="label">Назначение:</td><td id="mPurpose">—</td></tr>
+                <tr><td class="label">Заводской №:</td><td id="mFactory">—</td></tr>
+                <tr><td class="label">Завод / VIN:</td><td id="mVin">—</td></tr>
+                <tr><td class="label">Построен:</td><td id="mBuild">—</td></tr>
+                <tr><td class="label">Поступил:</td><td id="mArrive">—</td></tr>
+                <tr><td class="label">Начал работу:</td><td id="mStart">—</td></tr>
+                <tr><td class="label">Отставлен:</td><td id="mOut">—</td></tr>
+                <tr><td class="label">Списан:</td><td id="mDecomm">—</td></tr>
+                <tr><td class="label">Утилизирован:</td><td id="mUtil">—</td></tr>
+                <tr><td class="label">Текущее состояние:</td><td id="mStatus">—</td></tr>
+                <tr><td class="label">Примечание:</td><td id="mNote">—</td></tr>
+            </table>
 
-function saveTrain() {
-    const num = document.getElementById('train-num').value;
-    const route = document.getElementById('train-route').value;
-    const locoSelect = document.getElementById('train-loco');
-    const loco = locoSelect.value;
-    const locoAxes = loco.includes("2ТУ2") ? 8 : 4;
-    const carsCount = parseInt(document.getElementById('train-cars').value);
-    const tailNum = document.getElementById('tail-car-num').value;
+            <div class="card-actions">
+                <button onclick="editCurrentVehicle()" class="btn-primary" style="flex:1; padding:9px;">✏️ Редактировать ПС</button>
+                <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; flex:1;">🗑 Удалить ПС из базы</button>
+            </div>
+        </div>
+    </div>
 
-    const newTrain = { num, route, loco, locoAxes, carsCount, tailNum };
-    activeTrains.push(newTrain);
-    
-    updateTrainDropdown();
-    alert(`Поезд № ${num} успешно сформирован и доступен во вкладке Расписание!`);
-    openTab('tab-schedule');
-}
+    <script>
+        const defaultVehicleDB = [
+            { id: "1", category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский электровоз" },
+            { id: "2", category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
+            { id: "3", category: "loco", park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой тепловоз" },
+            { id: "4", category: "freight_car", park: "ВЧД-1 Минск", modelPrefix: "11-280", model: "Крытый вагон 11-280", gov: "52841029", num: "1029", purposeKey: "linear", factory: "884", build: "12.04.2010", arrive: "15.04.2010", start: "2010", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Универсальный крытый вагон" },
+            { id: "5", category: "pass_car", park: "ЛВЧ-1 Минск", modelPrefix: "61-4177", model: "Купейный вагон 61-4177", gov: "01784920", num: "4920", purposeKey: "linear", factory: "310", build: "18.09.2018", arrive: "20.09.2018", start: "2018", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский купейный вагон СМК" }
+        ];
 
-function updateTrainDropdown() {
-    const select = document.getElementById('select-active-train');
-    select.innerHTML = '';
-    activeTrains.forEach((t, idx) => {
-        const opt = document.createElement('option');
-        opt.value = idx;
-        opt.innerText = `Поезд № ${t.num} (${t.route}) — ${t.loco} + ${t.carsCount} ваг.`;
-        select.appendChild(opt);
-    });
-}
+        let vehicleDB = [];
+        let currentOpenVehicleIndex = null;
+        let currentCategoryFilter = 'all';
+        let consistList = [];
 
-// Данные маршрута (смещение в секундах)
-const routeData = [
-    { name: "ст. Крутоборка", arr: null, path: "3К", stop: "—", dep: 0, note: "Отправление" },
-    { name: "ст. Крутоборка", arr: null, path: "1", stop: "прослед.", dep: 60, note: "Ход по 1 пути" },
-    { name: "о.п. Деревенская", arr: 210, path: "1", stop: "0.5 мин", dep: 240, note: "Посадка/высадка" },
-    { name: "о.п. Озеро-Птичь", arr: 390, path: "1", stop: "0.5 мин", dep: 420, note: "Посадка/высадка" },
-    { name: "о.п. Железнодорожная", arr: 510, path: "1", stop: "0.5 мин", dep: 540, note: "Посадка/высадка" },
-    { name: "ст. Лельма", arr: 780, path: "2", stop: "2.0 мин", dep: 900, note: "Скрещение" },
-    { name: "ст. Сосновый Бор", arr: 1140, path: "1К", stop: "6.0 мин", dep: 1500, note: "Стоянка на кольце" },
-    { name: "ст. Лельма", arr: 1770, path: "2", stop: "2.5 мин", dep: 1920, note: "Скрещение" },
-    { name: "о.п. Железнодорожная", arr: 2130, path: "1", stop: "0.5 мин", dep: 2160, note: "Посадка/высадка" },
-    { name: "о.п. Озеро-Птичь", arr: 2250, path: "1", stop: "0.5 мин", dep: 2280, note: "Посадка/высадка" },
-    { name: "о.п. Деревенская", arr: 2460, path: "1", stop: "0.5 мин", dep: 2490, note: "Посадка/высадка" },
-    { name: "ст. Крутоборка", arr: null, path: "2", stop: "прослед.", dep: 2610, note: "Вход на станцию" },
-    { name: "ст. Крутоборка", arr: 2670, path: "3К", stop: "—", dep: null, note: "Конечная (Прибытие)" }
-];
+        const categoryNames = {
+            'loco': '🚂 Локомотив',
+            'pass_car': '🚃 Пассажирский вагон',
+            'freight_car': '📦 Грузовой вагон',
+            'mvps': '🚆 МВПС / Спец'
+        };
 
-function formatTime(totalSeconds) {
-    if (totalSeconds === null) return "—";
-    totalSeconds = (totalSeconds + 86400) % 86400;
-    let h = Math.floor(totalSeconds / 3600);
-    let m = Math.floor((totalSeconds % 3600) / 60);
-    let s = totalSeconds % 60;
-    return `${h.toString().padStart(2, '0')}:${m.toString().padStart(2, '0')}:${s.toString().padStart(2, '0')}`;
-}
+        const statusLabels = {
+            'st-active': 'Эксплуатируется',
+            'st-inactive': 'Не эксплуатируется',
+            'st-not-operated': 'Не был в эксплуатации',
+            'st-out': 'Выведен из эксплуатации',
+            'st-mod': 'КВР/Модернизация',
+            'st-decomm': 'Списан',
+            'st-unknown': 'Судьба неизвестна',
+            'st-trans-city': 'Передан в дороге',
+            'st-trans-other': 'Передан на другую дорогу',
+            'st-plate-change': 'Смена номера'
+        };
 
-function updateSchedule() {
-    const selectedIdx = document.getElementById('select-active-train').value || 0;
-    const train = activeTrains[selectedIdx];
+        const purposeLabelsMap = {
+            'linear': 'Пассажирский / Грузовой',
+            'service': 'Хозяйственный / Служебный',
+            '—': '—'
+        };
 
-    // Обновляем данные поезда в бланке
-    document.getElementById('doc-train-num').innerText = train.num;
-    document.getElementById('doc-route').innerText = train.route;
-    document.getElementById('doc-loco').innerText = train.loco;
-    
-    const carAxes = train.carsCount * 4;
-    const weight = (train.carsCount * 10.0).toFixed(1);
-    document.getElementById('doc-cars-info').innerText = `${train.carsCount} ваг. ПВ48-051 (${carAxes} осей | ${weight} т брутто)`;
+        function switchPage(page) {
+            document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
+            document.getElementById('pageBuilder').style.display = (page === 'builder') ? 'block' : 'none';
+            document.getElementById('pageSchedule').style.display = (page === 'schedule') ? 'block' : 'none';
+            
+            document.getElementById('btnViewDatabase').classList.toggle('active', page === 'database');
+            document.getElementById('btnViewBuilder').classList.toggle('active', page === 'builder');
+            document.getElementById('btnViewSchedule').classList.toggle('active', page === 'schedule');
 
-    // Обновляем данные в ВУ-45
-    document.getElementById('vu-train-num').innerText = train.num;
-    document.getElementById('vu-loco').innerText = train.loco;
-    document.getElementById('vu-tail').innerText = train.tailNum;
-    document.getElementById('vu-cars-count').innerText = train.carsCount;
-    document.getElementById('vu-total-axes').innerText = carAxes + train.locoAxes;
-    document.getElementById('vu-weight').innerText = weight;
+            if (page === 'builder') {
+                renderBuilderSource();
+                renderConsistTrack();
+            } else if (page === 'schedule') {
+                renderSchedule();
+            }
+        }
 
-    // Время и дата
-    const timeInput = document.getElementById('startTime').value;
-    const dateInput = document.getElementById('departDate').value;
-    
-    const timeParts = timeInput.split(':');
-    const startSec = (parseInt(timeParts[0]) * 3600) + (parseInt(timeParts[1]) * 60);
+        function loadDatabase() {
+            let saved = localStorage.getItem('railphoto_custom_db');
+            if (saved) {
+                try {
+                    vehicleDB = JSON.parse(saved);
+                } catch(e) {
+                    vehicleDB = [...defaultVehicleDB];
+                }
+            } else {
+                vehicleDB = [...defaultVehicleDB];
+            }
 
-    if (dateInput) {
-        const d = new Date(dateInput);
-        const formattedDate = `${d.getDate().toString().padStart(2, '0')}.${(d.getMonth() + 1).toString().padStart(2, '0')}.${d.getFullYear()}`;
-        document.getElementById('out-date').innerText = formattedDate;
-        document.getElementById('out-date-vu').innerText = formattedDate;
-    }
+            vehicleDB.forEach((v, i) => {
+                if (!v.id) v.id = 'ps_' + Date.now() + '_' + i;
+            });
+        }
 
-    document.getElementById('out-proba-time').innerText = formatTime(startSec - 600).substring(0, 5);
+        function saveDatabaseToStorage() {
+            localStorage.setItem('railphoto_custom_db', JSON.stringify(vehicleDB));
+        }
 
-    // Заполнение таблицы
-    const tbody = document.getElementById('schedule-body');
-    tbody.innerHTML = '';
-    routeData.forEach(row => {
-        const tr = document.createElement('tr');
-        tr.innerHTML = `
-            <td>${row.name}</td>
-            <td>${row.arr !== null ? formatTime(startSec + row.arr) : "—"}</td>
-            <td>${row.path}</td>
-            <td>${row.stop}</td>
-            <td>${row.dep !== null ? formatTime(startSec + row.dep) : "—"}</td>
-            <td>${row.note}</td>
-        `;
-        tbody.appendChild(tr);
-    });
-}
+        function exportDatabase() {
+            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vehicleDB, null, 2));
+            let downloadAnchor = document.createElement('a');
+            downloadAnchor.setAttribute("href", dataStr);
+            downloadAnchor.setAttribute("download", "railphoto_db.json");
+            document.body.appendChild(downloadAnchor);
+            downloadAnchor.click();
+            downloadAnchor.remove();
+        }
 
-// Инициализация
-updateTrainDropdown();
-updateSchedule();
-</script>
+        function importDatabase(event) {
+            let file = event.target.files[0];
+            if (!file) return;
+            let reader = new FileReader();
+            reader.onload = function(e) {
+                try {
+                    let imported = JSON.parse(e.target.result);
+                    if (Array.isArray(imported)) {
+                        vehicleDB = imported;
+                        saveDatabaseToStorage();
+                        updateParkSelect();
+                        renderTable();
+                        alert('База данных успешно импортирована!');
+                    } else {
+                        alert('Ошибка: неверный формат файла.');
+                    }
+                } catch(err) {
+                    alert('Ошибка при чтении JSON файла.');
+                }
+            };
+            reader.readAsText(file);
+        }
 
+        function generateVIN(model, factoryNum) {
+            if (!factoryNum || factoryNum === '—' || factoryNum === '????') return '—';
+            let modelNoDot = model.replace(/[^a-zA-Z0-9]/g, '');
+            const paddedFactory = String(factoryNum).padStart(5, '0');
+            return "RZ1" + modelNoDot + paddedFactory;
+        }
+
+        function setCategoryFilter(cat, elem) {
+            currentCategoryFilter = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            elem.classList.add('active');
+            filterDB();
+        }
+
+        function updateParkSelect() {
+            let parkSelect = document.getElementById('parkSelect');
+            let currentSelection = parkSelect.value;
+            
+            let uniqueParks = [...new Set(vehicleDB.map(v => v.park))].filter(Boolean);
+            uniqueParks.sort();
+
+            parkSelect.innerHTML = '<option value="">Все депо</option>';
+            uniqueParks.forEach(park => {
+                let opt = document.createElement('option');
+                opt.value = park;
+                opt.innerText = park;
+                parkSelect.appendChild(opt);
+            });
+            parkSelect.value = currentSelection;
+        }
+
+        function renderTable() {
+            let tbody = document.getElementById('tableBody');
+            tbody.innerHTML = '';
+            
+            document.getElementById('dbCount').innerText = vehicleDB.length;
+            updateParkSelect();
+
+            vehicleDB.forEach((v, index) => {
+                let tr = document.createElement('tr');
+                tr.className = v.statusCls;
+                tr.setAttribute('data-index', index);
+                tr.setAttribute('data-park', v.park);
+                tr.setAttribute('data-category', v.category || 'loco');
+                tr.draggable = true;
+
+                let tripNumber = localStorage.getItem(`trip_status_${v.id}`);
+                if (tripNumber) {
+                    tr.classList.add('in-trip');
+                }
+
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+
+                let vin = generateVIN(v.model, v.factory);
+                v._generatedVin = vin; 
+                
+                tr.onclick = () => { openCardFromObj(index); };
+                
+                let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
+                let catLabel = categoryNames[v.category || 'loco'] || '—';
+
+                tr.innerHTML = `
+                    <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
+                    <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
+                    <td><span class="type-badge">${catLabel}</span></td>
+                    <td><b>${v.park}</b></td>
+                    <td>
+                        <div class="ps-title-cell">
+                            <a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a>
+                            ${tripNumber ? `<span class="trip-badge">В рейсе №${tripNumber}</span>` : ''}
+                        </div>
+                    </td>
+                    <td>${v.gov || '—'}</td>
+                    <td>${v.num || '—'}</td>
+                    <td>${purposeText}</td>
+                    <td class="f-num">${v.factory || '—'}</td>
+                    <td class="vin-cell">${vin}</td>
+                    <td>${v.build || '—'}</td>
+                    <td>${v.arrive || '—'}</td>
+                    <td>${v.start || '—'}</td>
+                    <td>${v.out || '—'}</td>
+                    <td>${v.decomm || '—'}</td>
+                    <td>${v.util || '—'}</td>
+                    <td>
+                        <span>${v.note || '—'}</span>
+                        ${tripNumber ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
+                    </td>
+                `;
+                tbody.appendChild(tr);
+            });
+
+            filterDB();
+        }
+
+        function cancelTrip(psId) {
+            if (confirm("Вы уверены, что хотите отменить рейс для этого ПС?")) {
+                localStorage.removeItem(`trip_status_${psId}`);
+                renderTable();
+            }
+        }
+
+        function sendConsistToTrip() {
+            if (consistList.length === 0) {
+                alert("Сначала добавьте хотя бы одну единицу ПС в поезд!");
+                return;
+            }
+
+            let trainNum = prompt("Введите номер рейса / поезда:", "601");
+            if (!trainNum) return;
+
+            consistList.forEach(v => {
+                localStorage.setItem(`trip_status_${v.id}`, trainNum);
+            });
+
+            alert(`Состав успешно отправлен в рейс №${trainNum}!`);
+            renderTable();
+            switchPage('database');
+        }
+
+        let dragSrcIndex = null;
+
+        function handleDragStart(e) {
+            dragSrcIndex = Number(this.getAttribute('data-index'));
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            let targetIndex = Number(this.getAttribute('data-index'));
+
+            if (dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
+                const movedItem = vehicleDB.splice(dragSrcIndex, 1)[0];
+                vehicleDB.splice(targetIndex, 0, movedItem);
+                saveDatabaseToStorage();
+                renderTable();
+            }
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+
+        function renderBuilderSource() {
+            let list = document.getElementById('builderSourceList');
+            let q = document.getElementById('builderSearch').value.toUpperCase();
+            list.innerHTML = '';
+
+            vehicleDB.forEach((v, idx) => {
+                let name = `${v.model} (${v.num})`;
+                if (name.toUpperCase().includes(q)) {
+                    let div = document.createElement('div');
+                    div.className = 'builder-source-item';
+                    div.innerHTML = `
+                        <div>
+                            <div><b>${v.model}</b></div>
+                            <div style="font-size:10px; color:#888;">${categoryNames[v.category||'loco']} | №${v.num}</div>
+                        </div>
+                        <button class="btn-primary" style="padding:3px 8px;" onclick="addToConsist(${idx})">+ В поезд</button>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        function addToConsist(dbIndex) {
+            consistList.push(vehicleDB[dbIndex]);
+            renderConsistTrack();
+        }
+
+        function removeFromConsist(cIndex) {
+            consistList.splice(cIndex, 1);
+            renderConsistTrack();
+        }
+
+        function moveConsistItem(from, to) {
+            if (to < 0 || to >= consistList.length) return;
+            let item = consistList.splice(from, 1)[0];
+            consistList.splice(to, 0, item);
+            renderConsistTrack();
+        }
+
+        function clearConsist() {
+            consistList = [];
+            renderConsistTrack();
+        }
+
+        function renderConsistTrack() {
+            let track = document.getElementById('consistTrack');
+            document.getElementById('consistCount').innerText = consistList.length;
+
+            if (consistList.length === 0) {
+                track.innerHTML = `<div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав</div>`;
+                return;
+            }
+
+            track.innerHTML = '';
+            consistList.forEach((v, cIdx) => {
+                let card = document.createElement('div');
+                card.className = 'consist-card';
+                card.innerHTML = `
+                    <div style="font-size:16px;">${v.category === 'loco' ? '🚂' : '🚃'}</div>
+                    <div>
+                        <div style="font-weight:bold;">${v.model}</div>
+                        <div style="font-size:9px; color:#888;">№${v.num}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-left:6px;">
+                        ${cIdx > 0 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx-1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">◀</button>` : ''}
+                        ${cIdx < consistList.length - 1 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx+1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">▶</button>` : ''}
+                    </div>
+                    <button onclick="removeFromConsist(${cIdx})" style="border:none; background:#c62828; color:#fff; cursor:pointer; border-radius:3px; padding:2px 6px; font-weight:bold; margin-left:4px;">✕</button>
+                `;
+                track.appendChild(card);
+            });
+        }
+
+        /* --- ЛОГИКА ГЕНЕРАТОРА РАСПИСАНИЯ --- */
+        let scheduleRows = [
+            { station: "Минск-Пассажирский", arr: "—", stop: "—", dep: "08:15", track: "1 Пл. 2" },
+            { station: "Жодино", arr: "09:02", stop: "2", dep: "09:04", track: "2 Путь" },
+            { station: "Борисов", arr: "09:20", stop: "4", dep: "09:24", track: "1 Путь" },
+            { station: "Орша-Центральная", arr: "10:45", stop: "—", dep: "—", track: "3 Путь" }
+        ];
+
+        function renderSchedule() {
+            let tbody = document.getElementById('scheduleBody');
+            tbody.innerHTML = '';
+
+            scheduleRows.forEach((row, idx) => {
+                let tr = document.createElement('tr');
+                tr.innerHTML = `
+                    <td><input type="text" value="${row.station}" onchange="scheduleRows[${idx}].station = this.value" style="width:95%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
+                    <td><input type="text" value="${row.arr}" onchange="scheduleRows[${idx}].arr = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
+                    <td><input type="text" value="${row.stop}" onchange="scheduleRows[${idx}].stop = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
+                    <td><input type="text" value="${row.dep}" onchange="scheduleRows[${idx}].dep = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
+                    <td><input type="text" value="${row.track}" onchange="scheduleRows[${idx}].track = this.value" style="width:90%; background:transparent; border:none; color:inherit; font-size:11px;"></td>
+                    <td style="text-align:center;"><button onclick="deleteScheduleRow(${idx})" style="border:none; background:#c62828; color:#fff; cursor:pointer; border-radius:2px; font-weight:bold;">✕</button></td>
+                `;
+                tbody.appendChild(tr);
+            });
+        }
+
+        function addScheduleRow() {
+            scheduleRows.push({ station: "Новая станция", arr: "00:00", stop: "1", dep: "00:01", track: "1 Путь" });
+            renderSchedule();
+        }
+
+        function deleteScheduleRow(idx) {
+            scheduleRows.splice(idx, 1);
+            renderSchedule();
+        }
+
+        window.addEventListener('DOMContentLoaded', () => {
+            loadDatabase();
+            
+            let savedTheme = localStorage.getItem('railphoto_theme');
+            if (savedTheme === 'dark') {
+                document.body.classList.remove('light-theme');
+            } else {
+                document.body.classList.add('light-theme');
+            }
+
+            renderTable();
+        });
+
+        function openAddModal() {
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('formModalTitle').innerText = "➕ Добавление нового ПС";
+            document.getElementById('formModalSub').innerText = "Заполните данные для внесения локомотива/поезда в базу.";
+            document.getElementById('addVehicleForm').reset();
+            document.getElementById('addVehicleModal').style.display = 'flex';
+        }
+
+        function closeAddModal() {
+            document.getElementById('addVehicleModal').style.display = 'none';
+        }
+
+        function saveVehicle(event) {
+            event.preventDefault();
+            
+            let statusVal = document.getElementById('newStatus').value;
+            let editIdx = parseInt(document.getElementById('editIndex').value);
+
+            let vehicleData = {
+                id: editIdx >= 0 ? vehicleDB[editIdx].id : ('ps_' + Date.now()),
+                category: document.getElementById('newCategory').value,
+                park: document.getElementById('newPark').value.trim() || '—',
+                modelPrefix: document.getElementById('newModelPrefix').value.trim() || '—',
+                model: document.getElementById('newModel').value.trim() || '—',
+                gov: document.getElementById('newGov').value.trim() || '—',
+                num: document.getElementById('newNum').value.trim() || '—',
+                purposeKey: document.getElementById('newPurpose').value,
+                factory: document.getElementById('newFactory').value.trim() || '—',
+                build: document.getElementById('newBuild').value.trim() || '—',
+                arrive: document.getElementById('newArrive').value.trim() || '—',
+                start: document.getElementById('newStart').value.trim() || '—',
+                out: document.getElementById('newOut').value.trim() || '—',
+                decomm: document.getElementById('newDecomm').value.trim() || '—',
+                util: document.getElementById('newUtil').value.trim() || '—',
+                statusCls: statusVal,
+                statusKey: statusLabels[statusVal] || 'Эксплуатируется',
+                note: document.getElementById('newNote').value.trim() || '—'
+            };
+
+            if (editIdx >= 0) {
+                vehicleDB[editIdx] = vehicleData;
+                alert('Данные о ПС успешно обновлены!');
+            } else {
+                vehicleDB.unshift(vehicleData);
+                alert('Новая единица подвижного состава успешно добавлена!');
+            }
+
+            saveDatabaseToStorage();
+            renderTable();
+            closeAddModal();
+
+            if (editIdx >= 0) {
+                openCardFromObj(editIdx);
+            }
+        }
+
+        function openCardFromObj(index) {
+            currentOpenVehicleIndex = index;
+            let v = vehicleDB[index];
+            
+            let dispGov = v.gov !== '—' && v.gov !== '????' ? v.gov : '№ ' + v.num;
+            document.getElementById('mTitle').innerText = v.model + " — " + dispGov;
+            document.getElementById('mSubtitle').innerText = v.park;
+            
+            document.getElementById('mCat').innerText = categoryNames[v.category || 'loco'] || '—';
+            document.getElementById('mGov').innerText = v.gov || '—';
+            document.getElementById('mNumber').innerText = v.num || '—';
+            document.getElementById('mPurpose').innerText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
+            document.getElementById('mFactory').innerText = v.factory || '—';
+            document.getElementById('mVin').innerText = v._generatedVin || "—";
+            document.getElementById('mBuild').innerText = v.build || '—';
+            document.getElementById('mArrive').innerText = v.arrive || '—';
+            document.getElementById('mStart').innerText = v.start || '—';
+            document.getElementById('mOut').innerText = v.out || '—';
+            document.getElementById('mDecomm').innerText = v.decomm || '—';
+            document.getElementById('mUtil').innerText = v.util || '—';
+            document.getElementById('mStatus').innerText = statusLabels[v.statusCls] || v.statusKey;
+            document.getElementById('mNote').innerText = v.note || "—";
+
+            document.getElementById('vehicleModal').style.display = 'flex';
+        }
+
+        function editCurrentVehicle() {
+            if (currentOpenVehicleIndex === null) return;
+            let v = vehicleDB[currentOpenVehicleIndex];
+
+            document.getElementById('editIndex').value = currentOpenVehicleIndex;
+            document.getElementById('formModalTitle').innerText = "✏️ Редактирование ПС";
+            document.getElementById('formModalSub').innerText = "Изменение статуса, дат или примечаний.";
+
+            document.getElementById('newCategory').value = v.category || 'loco';
+            document.getElementById('newPark').value = v.park !== '—' ? v.park : '';
+            document.getElementById('newModel').value = v.model !== '—' ? v.model : '';
+            document.getElementById('newModelPrefix').value = v.modelPrefix !== '—' ? v.modelPrefix : '';
+            document.getElementById('newGov').value = v.gov !== '—' ? v.gov : '—';
+            document.getElementById('newNum').value = v.num !== '—' ? v.num : '';
+            document.getElementById('newFactory').value = v.factory !== '—' ? v.factory : '—';
+            document.getElementById('newBuild').value = v.build !== '—' ? v.build : '—';
+            document.getElementById('newArrive').value = v.arrive !== '—' ? v.arrive : '—';
+            document.getElementById('newStart').value = v.start !== '—' ? v.start : '—';
+            document.getElementById('newOut').value = v.out !== '—' ? v.out : '—';
+            document.getElementById('newDecomm').value = v.decomm !== '—' ? v.decomm : '—';
+            document.getElementById('newUtil').value = v.util !== '—' ? v.util : '—';
+            document.getElementById('newStatus').value = v.statusCls || 'st-active';
+            document.getElementById('newPurpose').value = v.purposeKey || 'linear';
+            document.getElementById('newNote').value = v.note !== '—' ? v.note : '—';
+
+            closeCard();
+            document.getElementById('addVehicleModal').style.display = 'flex';
+        }
+
+        function deleteCurrentVehicle() {
+            if (currentOpenVehicleIndex === null || currentOpenVehicleIndex >= vehicleDB.length) return;
+            let v = vehicleDB[currentOpenVehicleIndex];
+            let nameDesc = `${v.model} (${v.gov !== '—' ? v.gov : 'Борт. ' + v.num})`;
+            
+            if (confirm(`Вы действительно хотите удалить ПС: ${nameDesc}?`)) {
+                vehicleDB.splice(currentOpenVehicleIndex, 1);
+                saveDatabaseToStorage();
+                closeCard();
+                renderTable();
+                alert('Единица ПС успешно удалена!');
+            }
+        }
+
+        function closeCard() { document.getElementById('vehicleModal').style.display = 'none'; }
+
+        function toggleTheme() { 
+            document.body.classList.toggle('light-theme');
+            let isLight = document.body.classList.contains('light-theme');
+            localStorage.setItem('railphoto_theme', isLight ? 'light' : 'dark');
+        }
+
+        function filterDB() {
+            let input = document.getElementById("searchInput").value.toUpperCase();
+            let parkFilter = document.getElementById("parkSelect").value;
+            let rows = document.querySelectorAll("#dbTable tbody tr");
+
+            rows.forEach(row => {
+                let text = row.innerText.toUpperCase();
+                let park = row.getAttribute("data-park");
+                let cat = row.getAttribute("data-category");
+
+                let matchesSearch = text.indexOf(input) > -1;
+                let matchesPark = parkFilter === "" || park === parkFilter;
+                let matchesCat = currentCategoryFilter === "all" || cat === currentCategoryFilter;
+
+                row.style.display = (matchesSearch && matchesPark && matchesCat) ? "" : "none";
+            });
+        }
+
+        window.onclick = function(event) {
+            let modal = document.getElementById('vehicleModal');
+            let addModal = document.getElementById('addVehicleModal');
+            if (event.target === modal) modal.style.display = "none";
+            if (event.target === addModal) addModal.style.display = "none";
+        }
+    </script>
 </body>
 </html>
