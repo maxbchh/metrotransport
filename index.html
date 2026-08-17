@@ -126,17 +126,6 @@
         }
         .btn-success:hover { background: #15803d; }
 
-        .btn-secondary {
-            background: #333;
-            color: #fff;
-            border: 1px solid var(--bp-border);
-            padding: 6px 12px;
-            border-radius: 3px;
-            font-weight: bold;
-            cursor: pointer;
-            font-size: 11px;
-        }
-
         .category-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
         .cat-tab {
             padding: 6px 12px;
@@ -289,7 +278,7 @@
         </div>
     </header>
 
-    <!-- СТРАНИЦА 1: БАЗА ДАННЫХ -->
+    <!-- СТРАНИЦА 1: БАЗА ДАННЫХ (НЕ ТРОНУТА) -->
     <div id="pageDatabase" class="main-wrapper">
         <div class="page-header">
             <span>Подвижной состав — База данных</span>
@@ -333,7 +322,7 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 3: РАСПИСАНИЕ И ОТПРАВКА НА ТАБЛО -->
+    <!-- СТРАНИЦА 3: РАСПИСАНИЕ И АВТО-ОТПРАВКА НА ТАБЛО -->
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>📅 Расписание движения и справка ВУ-45</span>
@@ -351,7 +340,7 @@
             </div>
             <div style="display:flex; gap:8px; align-items:flex-end; grid-column: span 2;">
                 <button class="btn-primary" onclick="generateScheduleAndVU45()" style="flex:1; padding:7px;">⚡ Сгенерировать расписание</button>
-                <button class="btn-success" onclick="pushCurrentScheduleToBoards()" style="flex:1; padding:7px;">📟 Вывести расписание на табло станций</button>
+                <button class="btn-success" onclick="pushCurrentScheduleToBoards()" style="flex:1; padding:7px;">📟 Вывести сразу на табло станций</button>
             </div>
         </div>
 
@@ -384,7 +373,7 @@
                     <div><b>Процент нажатия тормозных колодок:</b> 100% (Обеспечен)</div>
                     <hr style="border-top:1px dashed #000;">
                     <div>Опробование тормозов: <b>ПОЛНОЕ</b></div>
-                    <div style="margin-top:10px;">Машинист: _________________ (Подпись)</div>
+                    <div style="margin-top:10px;">Машинист / Машинист-инструктор: _________________ (Подпись)</div>
                 </div>
             </div>
         </div>
@@ -393,7 +382,7 @@
     <!-- СТРАНИЦА 4: ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ -->
     <div id="pageBoards" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>📟 Информационные светодиодные табло станций</span>
+            <span>📟 Информационные светодиодные табло станций (Синхронизировано)</span>
         </div>
 
         <div class="category-tabs no-print">
@@ -415,10 +404,10 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 5: ЛИЧНЫЙ ПРОФИЛЬ (2 ПРОФЕССИИ + МАШИНИСТ-ИНСТРУКТОР) -->
+    <!-- СТРАНИЦА 5: ЛИЧНЫЙ ПРОФИЛЬ (ВЫБОР 2-Х ДОЛЖНОСТЕЙ И ТЕСТ ИНСТРУКТОРА) -->
     <div id="pageProfile" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>👤 Профиль сотрудника / Машиниста</span>
+            <span>👤 Профиль сотрудника (Машинист / Машинист-инструктор)</span>
         </div>
 
         <div class="builder-layout">
@@ -435,9 +424,9 @@
                             <input type="number" id="profYear" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;" required>
                         </div>
 
-                        <!-- ВЫБОР 2-Х ПРОФЕССИЙ -->
+                        <!-- ВЫБОР 2-Х ДОЛЖНОСТЕЙ -->
                         <div>
-                            <label style="font-weight:bold;">Основная должность (Профессия 1):</label>
+                            <label style="font-weight:bold;">Основная должность (1):</label>
                             <select id="profRole1" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;">
                                 <option value="Машинист-инструктор">Машинист-инструктор</option>
                                 <option value="Машинист">Машинист</option>
@@ -451,10 +440,10 @@
                         </div>
 
                         <div>
-                            <label style="font-weight:bold;">Вторая должность (Профессия 2 / Сомещение):</label>
+                            <label style="font-weight:bold;">Вторая должность (2 / Совмещение):</label>
                             <select id="profRole2" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;">
-                                <option value="Нет (Не совмещает)">Нет (Не совмещает)</option>
                                 <option value="Машинист-инструктор">Машинист-инструктор</option>
+                                <option value="Нет (Не совмещает)">Нет (Не совмещает)</option>
                                 <option value="Машинист">Машинист</option>
                                 <option value="Помощник машиниста">Помощник машиниста</option>
                                 <option value="Дежурный по станции (ДСП)">Дежурный по станции (ДСП)</option>
@@ -474,9 +463,9 @@
                 </form>
             </div>
 
-            <!-- ТЕСТ КВАЛИФИКАЦИИ -->
+            <!-- ТЕСТ НА МАШИНИСТА И МАШИНИСТА-ИНСТРУКТОРА -->
             <div class="profile-card" style="max-width:100%;">
-                <h3 style="margin-top:0; color:var(--bp-link);">📝 Квалификационный тест машиниста</h3>
+                <h3 style="margin-top:0; color:var(--bp-link);">📝 Квалификационный тест (Машинист / Машинист-инструктор)</h3>
                 <div class="test-box">
                     <form id="qualTestForm" onsubmit="evaluateQualificationTest(event)">
                         <div class="test-q">1. Что означает один жёлтый мигающий огонь светофора?</div>
@@ -487,19 +476,19 @@
                         <label><input type="radio" name="q2" value="1"> 4.5 – 4.8 кгс/см²</label><br>
                         <label><input type="radio" name="q2" value="0"> 6.0 – 6.5 кгс/см²</label><br>
 
-                        <div class="test-q">3. Оповестительный сигнал свистком локомотива:</div>
-                        <label><input type="radio" name="q3" value="1"> Один длинный свисток</label><br>
-                        <label><input type="radio" name="q3" value="0"> Три коротких свистка</label><br>
+                        <div class="test-q">3. [Инструкторский блок] Какова периодичность проверки технических формуляров локомотивных бригад машинистом-инструктором?</div>
+                        <label><input type="radio" name="q3" value="1"> Ежемесячно во время контрольно-инструкторских поездок</label><br>
+                        <label><input type="radio" name="q3" value="0"> Один раз в три года</label><br>
 
-                        <div class="test-q">4. Действие машиниста при падении давления в ТМ:</div>
-                        <label><input type="radio" name="q4" value="1"> Немедленно применить экстренное торможение</label><br>
-                        <label><input type="radio" name="q4" value="0"> Увеличить тягу</label><br>
+                        <div class="test-q">4. [Инструкторский блок] Действие машиниста-инструктора при обнаружении нарушения ПТЭ локомотивной бригадой:</div>
+                        <label><input type="radio" name="q4" value="1"> Провести целевой инструктаж, записать замечание в формуляр и при необходимости отстранить</label><br>
+                        <label><input type="radio" name="q4" value="0"> Проигнорировать до конца смены</label><br>
 
                         <div class="test-q">5. Обозначение хвоста пассажирского поезда днем и ночью:</div>
                         <label><input type="radio" name="q5" value="1"> Три красных огня / диска</label><br>
-                        <label><input type="radio" name="q5" value="0"> один белый огонь</label><br>
+                        <label><input type="radio" name="q5" value="0"> Один белый огонь</label><br>
 
-                        <button type="submit" class="btn-primary" style="margin-top:15px; width:100%; padding:10px;">📊 Сдать тест и определить класс</button>
+                        <button type="submit" class="btn-primary" style="margin-top:15px; width:100%; padding:10px;">📊 Сдать тест и определить квалификацию</button>
                     </form>
                 </div>
             </div>
@@ -507,6 +496,7 @@
     </div>
 
     <script>
+        // БАЗА ДАННЫХ В СТРОГОМ ИСХОДНОМ ВИДЕ
         const defaultVehicleDB = [
             { id: "1", category: "loco", park: "ст. Крутоборка", model: "ТУ2-001", num: "001", build: "1956", note: "Тепловоз узкой колеи" },
             { id: "2", category: "pass_car", park: "ст. Крутоборка", model: "Пассажирский ПВ40", num: "012", build: "1980", note: "Пассажирский вагон" }
@@ -531,6 +521,7 @@
             if(page === 'profile') { document.getElementById('btnViewProfile').classList.add('active'); loadProfileData(); }
         }
 
+        /* --- РАБОТА С БАЗОЙ ДАННЫХ (НЕ МЕНЯЕТСЯ) --- */
         function loadDatabase() {
             let saved = localStorage.getItem('railphoto_custom_db');
             vehicleDB = saved ? JSON.parse(saved) : [...defaultVehicleDB];
@@ -546,7 +537,7 @@
             });
         }
 
-        /* --- ВЫЧИСЛЕНИЕ ВРЕМЕНИ ДЛЯ СТАНЦИЙ --- */
+        /* --- РАСЧЕТ И СИНХРОНИЗАЦИЯ РАСПИСАНИЯ С ТАБЛО --- */
         function addMinutesToTime(timeStr, mins) {
             let [h, m] = timeStr.split(':').map(Number);
             let d = new Date();
@@ -569,7 +560,6 @@
             };
         }
 
-        /* --- ГЕНЕРАЦИЯ РАСПИСАНИЯ И ВЫВОД НА ТАБЛО --- */
         function loadScheduleTrainSelect() {
             let select = document.getElementById('schTrainSelect');
             select.innerHTML = '';
@@ -604,18 +594,18 @@
             document.getElementById('vuCarsCount').innerText = trip.consist ? trip.consist.length : 0;
             document.getElementById('scheduleOutput').style.display = 'block';
 
-            // Сохраняем активный рейс с расписанием
+            // Автоматическое сохранение расписания для вывода на станционные табло
             trip.calculatedSchedule = sch;
             localStorage.setItem('railphoto_active_board_trip', JSON.stringify(trip));
         }
 
         function pushCurrentScheduleToBoards() {
             generateScheduleAndVU45();
-            alert("Расписание поезда успешно выведено на табло всех станций!");
+            alert("Расписание поезда успешно синхронизировано и выведено на табло станций!");
             switchPage('boards');
         }
 
-        /* --- ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ --- */
+        /* --- ТАБЛО СТАНЦИЙ С ПОЛНЫМИ ДАННЫМИ --- */
         function switchStationBoard(stationKey, elem) {
             currentStation = stationKey;
             document.querySelectorAll('#pageBoards .cat-tab').forEach(t => t.classList.remove('active'));
@@ -659,13 +649,13 @@
             display.innerText = out;
         }
 
-        /* --- ПРОФИЛЬ СО СМЕШИВАНИЕМ 2-Х ПРОФЕССИЙ --- */
+        /* --- ПРОФИЛЬ С ВЫБОРОМ 2 ДОЛЖНОСТЕЙ И КВАЛИФИКАЦИЕЙ --- */
         function loadProfileData() {
             let prof = JSON.parse(localStorage.getItem('railphoto_user_profile') || '{}');
             document.getElementById('profName').value = prof.name || '';
             document.getElementById('profYear').value = prof.year || '';
             document.getElementById('profRole1').value = prof.role1 || 'Машинист-инструктор';
-            document.getElementById('profRole2').value = prof.role2 || 'Нет (Не совмещает)';
+            document.getElementById('profRole2').value = prof.role2 || 'Машинист';
             document.getElementById('profQual').value = prof.qual || 'Не определена (пройдите тест)';
         }
 
@@ -679,7 +669,7 @@
                 qual: document.getElementById('profQual').value
             };
             localStorage.setItem('railphoto_user_profile', JSON.stringify(prof));
-            alert('Данные профиля и профессии успешно сохранены!');
+            alert('Две должности и данные профиля успешно сохранены!');
         }
 
         function evaluateQualificationTest(e) {
@@ -692,7 +682,8 @@
             }
 
             let qualification = "";
-            if (score === 5) qualification = "Машинист 1-го класса";
+            if (score === 5) qualification = "Машинист-инструктор / 1-й класс";
+            else if (score >= 4) qualification = "Машинист 1-го класса";
             else if (score >= 3) qualification = "Машинист 2-го класса";
             else if (score >= 1) qualification = "Машинист 3-го класса";
             else qualification = "Без квалификации";
@@ -703,7 +694,7 @@
             prof.qual = qualification;
             localStorage.setItem('railphoto_user_profile', JSON.stringify(prof));
 
-            alert(`Результат: ${score} из 5. Квалификация: ${qualification}`);
+            alert(`Результат теста: ${score} из 5. Назначена квалификация: ${qualification}`);
         }
 
         /* --- КОНСТРУКТОР СБОРКИ --- */
