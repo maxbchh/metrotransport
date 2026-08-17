@@ -473,7 +473,6 @@
             max-width: 650px;
         }
 
-        /* Правила печати */
         @media print {
             .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .legend-bar, .builder-layout {
                 display: none !important;
@@ -587,7 +586,7 @@
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
-                <input type="text" id="tripRouteInput" placeholder="Крутоборка — Сосновый Бор">
+                <input type="text" id="tripRouteInput" placeholder="Крутоборка — Сосновый Бор — Крутоборка">
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
@@ -695,7 +694,7 @@
                 <div class="form-grid">
                     <div class="form-group">
                         <label>Тип / Категория ПС:</label>
-                        <select id="newCategory" required>
+                        <select id="newCategory" oninput="saveFormDraft()" required>
                             <option value="loco">🚂 Локомотив</option>
                             <option value="pass_car">🚃 Пассажирский вагон</option>
                             <option value="freight_car">📦 Грузовой вагон</option>
@@ -704,55 +703,55 @@
                     </div>
                     <div class="form-group">
                         <label>Депо / Станция приписки:</label>
-                        <input type="text" id="newPark" placeholder="ст. Крутоборка" required>
+                        <input type="text" id="newPark" placeholder="ст. Крутоборка" oninput="saveFormDraft()" required>
                     </div>
                     <div class="form-group">
                         <label>Полная модель / Серия:</label>
-                        <input type="text" id="newModel" placeholder="ТУ2-001" required>
+                        <input type="text" id="newModel" placeholder="ТУ2-001" oninput="saveFormDraft()" required>
                     </div>
                     <div class="form-group">
                         <label>Префикс серии:</label>
-                        <input type="text" id="newModelPrefix" placeholder="ТУ2" required>
+                        <input type="text" id="newModelPrefix" placeholder="ТУ2" oninput="saveFormDraft()" required>
                     </div>
                     <div class="form-group">
                         <label>Сетевой №:</label>
-                        <input type="text" id="newGov" placeholder="—" value="—">
+                        <input type="text" id="newGov" placeholder="—" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Бортовой / Инвентарный №:</label>
-                        <input type="text" id="newNum" placeholder="001" required>
+                        <input type="text" id="newNum" placeholder="001" oninput="saveFormDraft()" required>
                     </div>
                     <div class="form-group">
                         <label>Заводской номер:</label>
-                        <input type="text" id="newFactory" placeholder="—" value="—">
+                        <input type="text" id="newFactory" placeholder="—" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Дата постройки:</label>
-                        <input type="text" id="newBuild" placeholder="ГГГГ" value="—">
+                        <input type="text" id="newBuild" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Дата поступления:</label>
-                        <input type="text" id="newArrive" placeholder="ГГГГ" value="—">
+                        <input type="text" id="newArrive" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Начало работы:</label>
-                        <input type="text" id="newStart" placeholder="ГГГГ" value="—">
+                        <input type="text" id="newStart" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Отставлен / Выведен:</label>
-                        <input type="text" id="newOut" placeholder="—" value="—">
+                        <input type="text" id="newOut" placeholder="—" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Дата списания:</label>
-                        <input type="text" id="newDecomm" placeholder="—" value="—">
+                        <input type="text" id="newDecomm" placeholder="—" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Дата утилизации:</label>
-                        <input type="text" id="newUtil" placeholder="—" value="—">
+                        <input type="text" id="newUtil" placeholder="—" value="—" oninput="saveFormDraft()">
                     </div>
                     <div class="form-group">
                         <label>Статус:</label>
-                        <select id="newStatus">
+                        <select id="newStatus" oninput="saveFormDraft()">
                             <option value="st-active">Эксплуатируется</option>
                             <option value="st-inactive">Не эксплуатируется</option>
                             <option value="st-not-operated">Не был в эксплуатации</option>
@@ -767,7 +766,7 @@
                     </div>
                     <div class="form-group">
                         <label>Назначение:</label>
-                        <select id="newPurpose">
+                        <select id="newPurpose" oninput="saveFormDraft()">
                             <option value="linear">Пассажирский / Грузовой</option>
                             <option value="service">Хозяйственный / Служебный</option>
                             <option value="—">—</option>
@@ -776,14 +775,14 @@
                 </div>
                 <div class="form-group">
                     <label>Примечание:</label>
-                    <input type="text" id="newNote" placeholder="—" value="—">
+                    <input type="text" id="newNote" placeholder="—" value="—" oninput="saveFormDraft()">
                 </div>
                 <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить изменения</button>
             </form>
         </div>
     </div>
 
-    <!-- Модальное окно просмотра карточки ПС (Без фото) -->
+    <!-- Модальное окно просмотра карточки ПС -->
     <div class="modal-overlay" id="vehicleModal">
         <div class="modal-card">
             <span class="modal-close" onclick="closeCard()">&times;</span>
@@ -851,6 +850,59 @@
             'service': 'Хозяйственный / Служебный',
             '—': '—'
         };
+
+        function saveFormDraft() {
+            let editIdx = document.getElementById('editIndex').value;
+            if (editIdx !== "-1") return; // Черновик сохраняем только для НОВОГО ПС
+
+            let draft = {
+                category: document.getElementById('newCategory').value,
+                park: document.getElementById('newPark').value,
+                model: document.getElementById('newModel').value,
+                modelPrefix: document.getElementById('newModelPrefix').value,
+                gov: document.getElementById('newGov').value,
+                num: document.getElementById('newNum').value,
+                factory: document.getElementById('newFactory').value,
+                build: document.getElementById('newBuild').value,
+                arrive: document.getElementById('newArrive').value,
+                start: document.getElementById('newStart').value,
+                out: document.getElementById('newOut').value,
+                decomm: document.getElementById('newDecomm').value,
+                util: document.getElementById('newUtil').value,
+                status: document.getElementById('newStatus').value,
+                purpose: document.getElementById('newPurpose').value,
+                note: document.getElementById('newNote').value
+            };
+            localStorage.setItem('railphoto_add_form_draft', JSON.stringify(draft));
+        }
+
+        function restoreFormDraft() {
+            let draftRaw = localStorage.getItem('railphoto_add_form_draft');
+            if (!draftRaw) return;
+            try {
+                let d = JSON.parse(draftRaw);
+                if (d.category) document.getElementById('newCategory').value = d.category;
+                if (d.park !== undefined) document.getElementById('newPark').value = d.park;
+                if (d.model !== undefined) document.getElementById('newModel').value = d.model;
+                if (d.modelPrefix !== undefined) document.getElementById('newModelPrefix').value = d.modelPrefix;
+                if (d.gov !== undefined) document.getElementById('newGov').value = d.gov;
+                if (d.num !== undefined) document.getElementById('newNum').value = d.num;
+                if (d.factory !== undefined) document.getElementById('newFactory').value = d.factory;
+                if (d.build !== undefined) document.getElementById('newBuild').value = d.build;
+                if (d.arrive !== undefined) document.getElementById('newArrive').value = d.arrive;
+                if (d.start !== undefined) document.getElementById('newStart').value = d.start;
+                if (d.out !== undefined) document.getElementById('newOut').value = d.out;
+                if (d.decomm !== undefined) document.getElementById('newDecomm').value = d.decomm;
+                if (d.util !== undefined) document.getElementById('newUtil').value = d.util;
+                if (d.status) document.getElementById('newStatus').value = d.status;
+                if (d.purpose) document.getElementById('newPurpose').value = d.purpose;
+                if (d.note !== undefined) document.getElementById('newNote').value = d.note;
+            } catch(e){}
+        }
+
+        function clearFormDraft() {
+            localStorage.removeItem('railphoto_add_form_draft');
+        }
 
         function switchPage(page) {
             document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
@@ -1118,41 +1170,42 @@
             let startTime = document.getElementById('schTimeInput').value || "10:00";
 
             let [h, m] = startTime.split(':').map(Number);
+            let startSec = (h * 3600) + (m * 60);
 
-            function addMins(hrs, mins, add) {
-                let total = hrs * 60 + mins + add;
-                let newH = Math.floor(total / 60) % 24;
-                let newM = total % 60;
-                return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
+            function formatTime(totalSec) {
+                let norm = ((totalSec % 86400) + 86400) % 86400;
+                let hh = Math.floor(norm / 3600);
+                let mm = Math.floor((norm % 3600) / 60);
+                let ss = norm % 60;
+                if (ss === 0) {
+                    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
+                }
+                return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
             }
 
-            // Трафарет: Крутоборка — Сосновый Бор
-            let depKrutoborka = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            let arrDerevenskaya = addMins(h, m, 12);
-            let depDerevenskaya = addMins(h, m, 13);
-            let arrPtich = addMins(h, m, 25);
-            let depPtich = addMins(h, m, 26);
-            let arrZhel = addMins(h, m, 38);
-            let depZhel = addMins(h, m, 39);
-            let arrLelma = addMins(h, m, 50);
-            let depLelma = addMins(h, m, 55);
-            let arrSosnovy = addMins(h, m, 70);
+            // График со сменой направления и двукратным заходом в Лельму[cite: 1]:
+            let t1_arr = startSec + (13 * 60);          // Крутоборка -> Лельма (13 мин)
+            let t1_dep = t1_arr + (2 * 60);             // Лельма (стоянка 2 мин)
+            let t2_arr = t1_dep + (4 * 60);             // Лельма -> Сосновый Бор (4 мин)
+            let t2_dep = t2_arr + (4 * 60);             // Сосновый Бор (стоянка 4 мин)
+            let t3_arr = t2_dep + (4 * 60) + 30;        // Сосновый Бор -> Лельма (4 мин 30 сек)
+            let t3_dep = t3_arr + 150;                  // Лельма (стоянка 2,5 мин / 150 сек)
+            let t4_arr = t3_dep + (9 * 60);             // Лельма -> Крутоборка (9 мин)
 
-            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'ст. Крутоборка — Сосновый Бор'})`;
+            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'ст. Крутоборка — ст. Сосновый Бор — ст. Крутоборка'})`;
 
             let tbody = document.getElementById('schTableBody');
             tbody.innerHTML = `
-                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td><b>${depKrutoborka}</b></td><td>Крутоборка — УП Деревенская</td><td>12 мин</td></tr>
-                <tr><td><b>УП Деревенская</b></td><td>${arrDerevenskaya}</td><td>1 мин</td><td>${depDerevenskaya}</td><td>УП Деревенская — УП Озеро Птичь</td><td>12 мин</td></tr>
-                <tr><td><b>УП Озеро Птичь</b></td><td>${arrPtich}</td><td>1 мин</td><td>${depPtich}</td><td>УП Озеро Птичь — УП Железнодорожная</td><td>12 мин</td></tr>
-                <tr><td><b>УП Железнодорожная</b></td><td>${arrZhel}</td><td>1 мин</td><td>${depZhel}</td><td>УП Железнодорожная — ст. Лельма</td><td>11 мин</td></tr>
-                <tr><td><b>ст. Лельма</b></td><td>${arrLelma}</td><td>5 мин</td><td>${depLelma}</td><td>ст. Лельма — Сосновый Бор</td><td>15 мин</td></tr>
-                <tr><td><b>Сосновый Бор</b></td><td><b>${arrSosnovy}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td><b>${formatTime(startSec)}</b></td><td>Крутоборка — Лельма</td><td>13 мин</td></tr>
+                <tr><td><b>ст. Лельма (туда)</b></td><td>${formatTime(t1_arr)}</td><td>2 мин</td><td>${formatTime(t1_dep)}</td><td>Лельма — Сосновый Бор</td><td>4 мин</td></tr>
+                <tr><td><b>ст. Сосновый Бор</b></td><td>${formatTime(t2_arr)}</td><td>4 мин</td><td>${formatTime(t2_dep)}</td><td>Сосновый Бор — Лельма</td><td>4 мин 30 сек</td></tr>
+                <tr><td><b>ст. Лельма (обратно)</b></td><td>${formatTime(t3_arr)}</td><td>2,5 мин</td><td>${formatTime(t3_dep)}</td><td>Лельма — Крутоборка</td><td>9 мин</td></tr>
+                <tr><td><b>ст. Крутоборка</b></td><td><b>${formatTime(t4_arr)}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             `;
 
             document.getElementById('vuTrainNum').innerText = trip.num;
             document.getElementById('vuDate').innerText = trip.date || new Date().toLocaleDateString('ru-RU');
-            document.getElementById('vuRoute').innerText = trip.route || "ст. Крутоборка — Сосновый Бор";
+            document.getElementById('vuRoute').innerText = trip.route || "ст. Крутоборка — ст. Сосновый Бор — ст. Крутоборка";
 
             let loco = trip.consist.find(c => c.category === 'loco');
             document.getElementById('vuLoco').innerText = loco ? loco.model : "ТУ2 / ТУ7";
@@ -1288,6 +1341,9 @@
             document.getElementById('formModalTitle').innerText = "➕ Добавление нового ПС";
             document.getElementById('formModalSub').innerText = "Заполните данные для внесения локомотива/поезда в базу.";
             document.getElementById('addVehicleForm').reset();
+            
+            restoreFormDraft(); // Восстанавливаем черновик, если он сохранялся
+            
             document.getElementById('addVehicleModal').style.display = 'flex';
         }
 
@@ -1328,6 +1384,7 @@
             } else {
                 vehicleDB.unshift(vehicleData);
                 alert('Новая единица подвижного состава успешно добавлена!');
+                clearFormDraft(); // Очищаем черновик после успешного сохранения
             }
 
             saveDatabaseToStorage();
