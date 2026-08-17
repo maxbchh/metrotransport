@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>RAILPHOTO — Полнофункциональная База Данных, Профиль Сотрудника, ДСП и Аттестация</title>
+    <title>RAILPHOTO — Полнофункциональная Система: База Данных, Управление Табло ДСП и Аттестация</title>
     <style>
         /* ==========================================================================
            1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ТЕМАТИЗАЦИЯ (CSS VARIABLES)
@@ -101,11 +101,6 @@
         .st-trans { 
             background-color: #512e5f !important; 
             color: #ffffff !important; 
-        }
-
-        .st-reserve {
-            background-color: #1e3a5f !important;
-            color: #ffffff !important;
         }
 
         body.light-theme .st-active { 
@@ -217,7 +212,7 @@
 
         .main-wrapper {
             padding: 16px 20px;
-            max-width: 1600px;
+            max-width: 1700px;
             margin: 0 auto;
         }
 
@@ -320,6 +315,11 @@
             filter: brightness(1.1);
         }
 
+        .btn-sm {
+            padding: 3px 8px !important;
+            font-size: 10px !important;
+        }
+
         /* ==========================================================================
            4. Вкладка ФИЛЬТРОВ И КАТЕГОРИЙ (FILTERS & TABS)
            ========================================================================== */
@@ -382,7 +382,7 @@
         }
 
         /* ==========================================================================
-           5. ТАБЛИЦА БАЗЫ ДАННЫХ (DATABASE TABLE)
+           5. ТАБЛИЦА БАЗЫ ДАННЫХ (DATABASE TABLE С РАСШИРЕННЫМИ КОЛОНКАМИ)
            ========================================================================== */
         .table-container {
             width: 100%;
@@ -403,7 +403,7 @@
         table.bp-table th {
             background-color: var(--bp-table-header);
             color: var(--bp-text);
-            padding: 9px 10px;
+            padding: 10px 10px;
             text-align: left;
             border: 1px solid var(--bp-border);
             font-weight: bold;
@@ -433,6 +433,22 @@
             font-weight: bold;
             background: rgba(255, 255, 255, 0.1);
             border: 1px solid var(--bp-border);
+        }
+
+        /* Особое выделение важнейших граф */
+        .col-highlight-out {
+            background: rgba(105, 105, 105, 0.15);
+            font-weight: bold;
+        }
+        .col-highlight-decomm {
+            background: rgba(139, 0, 0, 0.2);
+            font-weight: bold;
+            color: #ff8888;
+        }
+        .col-highlight-scrapped {
+            background: rgba(58, 0, 0, 0.3);
+            font-weight: bold;
+            color: #ffaaaa;
         }
 
         /* ==========================================================================
@@ -587,7 +603,7 @@
         }
 
         /* ==========================================================================
-           7. КОНСТРУКТОР СБОРНОГО ПОЕЗДА И ТАБЛО ДСП (TRAIN BUILDER & BOARDS)
+           7. КОНСТРУКТОР СБОРНОГО ПОЕЗДА И РЕАКТИВНОЕ ТАБЛО СТАНЦИЙ
            ========================================================================== */
         .trip-form-panel {
             background: var(--bp-card-bg);
@@ -688,6 +704,14 @@
             gap: 8px;
             margin-bottom: 14px;
             flex-wrap: wrap;
+            align-items: center;
+            justify-content: space-between;
+        }
+
+        .station-tabs-group {
+            display: flex;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .station-tab-btn {
@@ -732,6 +756,8 @@
             display: flex;
             justify-content: space-between;
             align-items: center;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .board-table {
@@ -856,7 +882,7 @@
             background: var(--bp-card-bg);
             border: 1px solid var(--bp-border);
             width: 95%;
-            max-width: 700px;
+            max-width: 750px;
             padding: 22px;
             border-radius: 6px;
             position: relative;
@@ -1015,31 +1041,27 @@
                 <div style="margin-top:14px; font-weight:bold; font-size:11px; color:var(--bp-text-muted);">
                     ЗАКРЕПЛЁННЫЕ БЫСТРЫЕ МЕТКИ:
                 </div>
-                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;" id="profBadgesContainer">
-                    <!-- Заполняется динамически -->
-                </div>
+                <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;" id="profBadgesContainer"></div>
             </div>
 
-            <!-- Правая колонка: Закреплённые элементы (Имя, должность, инструкции, бланки) -->
+            <!-- Правая колонка: Закреплённые элементы -->
             <div class="pinned-section">
                 <div class="pinned-header">
                     <span>📌 Закреплённые карточки и оперативные памятки ДСП</span>
                     <span style="font-size:11px; font-weight:normal; color:var(--bp-text-muted);">Нажмите 📌 для управления</span>
                 </div>
 
-                <div class="pinned-grid" id="pinnedCardsGrid">
-                    <!-- Закреплённые карточки генерируются скриптом -->
-                </div>
+                <div class="pinned-grid" id="pinnedCardsGrid"></div>
             </div>
         </div>
     </div>
 
     <!-- ==========================================================================
-       СТРАНИЦА 2: КЛИКАБЕЛЬНАЯ БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА
+       СТРАНИЦА 2: КЛИКАБЕЛЬНАЯ БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА (С ВЫДЕЛЕННЫМИ ГРАФАМИ)
        ========================================================================== -->
     <div id="pageDatabase" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Подвижной состав — База данных</span>
+            <span>Подвижной состав — Расширенная База данных</span>
             <div class="action-buttons no-print">
                 <button class="btn-secondary" onclick="exportDatabase()">💾 Экспорт БД (.json)</button>
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📂 Импорт БД (.json)</button>
@@ -1084,7 +1106,9 @@
                         <th>Бортовой №</th>
                         <th>Статус / Состояние</th>
                         <th>Построен</th>
-                        <th>Списан / Выведен</th>
+                        <th class="col-highlight-out">Вывод из экспл.</th>
+                        <th class="col-highlight-decomm">Списание</th>
+                        <th class="col-highlight-scrapped">Утилизация / Порезка</th>
                         <th>Примечание</th>
                     </tr>
                 </thead>
@@ -1153,21 +1177,28 @@
     </div>
 
     <!-- ==========================================================================
-       СТРАНИЦА 4: ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ (СОСНОВЫЙ БОР, КРУТОБОРКА, ЛЕЛЬМА)
+       СТРАНИЦА 4: РЕАКТИВНЫЕ ТАБЛО СТАНЦИЙ С АВТОМАТИКОЙ И ПОЛНЫМ РЕДАКТИРОВАНИЕМ
        ========================================================================== -->
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>📅 Информационные Табло Станций & График Движения</span>
+            <span>📅 Информационные Табло Станций (Управление Путями, Временем и Автоматикой)</span>
             <div class="action-buttons no-print">
-                <button class="btn-primary" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
+                <button class="btn-primary" onclick="openAddTrainToBoardModal()">➕ Добавить поезд на табло</button>
+                <button class="btn-danger" onclick="clearCurrentStationBoard()">🧹 Очистить табло станции</button>
+                <button class="btn-gold" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
             </div>
         </div>
 
         <!-- Переключатель станций -->
         <div class="station-selector-bar no-print">
-            <button class="station-tab-btn active" id="btnStSosnovy" onclick="selectStationBoard('sosnovy')">🚉 ст. Сосновый Бор</button>
-            <button class="station-tab-btn" id="btnStKrutoborka" onclick="selectStationBoard('krutoborka')">🚉 ст. Крутоборка</button>
-            <button class="station-tab-btn" id="btnStLelma" onclick="selectStationBoard('lelma')">🚉 ст. Лельма</button>
+            <div class="station-tabs-group">
+                <button class="station-tab-btn active" id="btnStSosnovy" onclick="selectStationBoard('sosnovy')">🚉 ст. Сосновый Бор</button>
+                <button class="station-tab-btn" id="btnStKrutoborka" onclick="selectStationBoard('krutoborka')">🚉 ст. Крутоборка</button>
+                <button class="station-tab-btn" id="btnStLelma" onclick="selectStationBoard('lelma')">🚉 ст. Лельма</button>
+            </div>
+            <div style="font-size:11px; color:var(--bp-text-muted);">
+                ⚡ Автоматический расчёт времени отправления активен
+            </div>
         </div>
 
         <!-- Табло текущей станции -->
@@ -1181,11 +1212,12 @@
                     <tr>
                         <th>ПОЕЗД</th>
                         <th>МАРШРУТ СЛЕДОВАНИЯ</th>
-                        <th>ПУТЬ</th>
+                        <th>ПУТЬ ПРИЁМА</th>
                         <th>ПРИБЫТИЕ</th>
                         <th>СТОЯНКА</th>
                         <th>ОТПРАВЛЕНИЕ</th>
                         <th>СТАТУС</th>
+                        <th style="text-align:right;">ДЕЙСТВИЯ ДСП</th>
                     </tr>
                 </thead>
                 <tbody id="boardTableBody"></tbody>
@@ -1264,7 +1296,7 @@
     </div>
 
     <!-- ==========================================================================
-       МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ И НАСТРОЙКА КАРТОЧКИ ПС
+       МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ЕДИНИЦЫ ПС
        ========================================================================== -->
     <div class="modal-overlay" id="vehicleModal">
         <div class="modal-card">
@@ -1421,6 +1453,74 @@
     </div>
 
     <!-- ==========================================================================
+       МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ПОЕЗДА НА ТАБЛО СТАНЦИИ С АВТОМАТИКОЙ
+       ========================================================================== -->
+    <div class="modal-overlay" id="boardTrainModal">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeModal('boardTrainModal')">&times;</span>
+            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;" id="boardModalTitle">Параметры поезда на информационном табло</div>
+            
+            <form onsubmit="saveBoardTrainData(event)">
+                <input type="hidden" id="boardTrainEditIndex">
+                <div class="form-grid">
+                    <div>
+                        <label for="boardTrainNum">№ Поезда:</label>
+                        <input type="text" id="boardTrainNum" required placeholder="601">
+                    </div>
+                    <div>
+                        <label for="boardTrainRoute">Маршрут следования:</label>
+                        <input type="text" id="boardTrainRoute" required placeholder="Крутоборка — Лельма">
+                    </div>
+                    <div>
+                        <label for="boardTrainTrack">Путь приёма / отправления:</label>
+                        <select id="boardTrainTrack">
+                            <option value="1 путь">1 путь</option>
+                            <option value="2 путь">2 путь</option>
+                            <option value="3 путь">3 путь</option>
+                            <option value="4 путь">4 путь</option>
+                            <option value="Главный путь">Главный путь</option>
+                            <option value="Заездной путь">Заездной путь</option>
+                            <option value="Тупиковый путь">Тупиковый путь</option>
+                        </select>
+                    </div>
+                    <div>
+                        <label for="boardTrainArr">Время прибытия:</label>
+                        <input type="time" id="boardTrainArr" onchange="autoCalcBoardDeparture()">
+                    </div>
+                    <div>
+                        <label for="boardTrainStopMin">Время стоянки (в минутах):</label>
+                        <input type="number" id="boardTrainStopMin" value="5" min="0" oninput="autoCalcBoardDeparture()" placeholder="5">
+                    </div>
+                    <div>
+                        <label for="boardTrainDep">Время отправления (Автоматический расчёт):</label>
+                        <input type="time" id="boardTrainDep" style="border-color:var(--bp-accent-gold); font-weight:bold;">
+                    </div>
+                    <div class="form-full">
+                        <label for="boardTrainStatus">Статус на табло:</label>
+                        <select id="boardTrainStatus">
+                            <option value="ПОСАДКА">ПОСАДКА (Мигает)</option>
+                            <option value="ОЖИДАЕТСЯ">ОЖИДАЕТСЯ</option>
+                            <option value="ПРИБЫВАЕТ">ПРИБЫВАЕТ (Мигает)</option>
+                            <option value="В ПУТИ">В ПУТИ</option>
+                            <option value="ГОТОВИТСЯ">ГОТОВИТСЯ</option>
+                            <option value="ОТПРАВЛЕН">ОТПРАВЛЕН</option>
+                            <option value="ЗАДЕРЖИВАЕТСЯ">ЗАДЕРЖИВАЕТСЯ (Красный)</option>
+                        </select>
+                    </div>
+                </div>
+
+                <div style="margin-top:18px; display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--bp-border); padding-top: 12px;">
+                    <span style="font-size:10px; color:var(--bp-text-muted);">* При изменении времени прибытия или минут стоянки отправление рассчитывается автоматически.</span>
+                    <div style="display:flex; gap:8px;">
+                        <button type="button" class="btn-secondary" onclick="closeModal('boardTrainModal')">Отмена</button>
+                        <button type="submit" class="btn-primary">💾 Сохранить на табло</button>
+                    </div>
+                </div>
+            </form>
+        </div>
+    </div>
+
+    <!-- ==========================================================================
        СКРИПТЫ И ЛОГИКА СИСТЕМЫ (JAVASCRIPT LOGIC)
        ========================================================================== -->
     <script>
@@ -1428,7 +1528,7 @@
            ИНИЦИАЛИЗАЦИЯ И ИСХОДНЫЕ ДАННЫЕ СИСТЕМЫ
            ========================================================================== */
         
-        // База данных подвижного состава по умолчанию
+        // Расширенная база данных подвижного состава
         const defaultDB = [
             { 
                 id: "ps_1", 
@@ -1483,8 +1583,8 @@
                 buildDate: "1988-03-15", 
                 outDate: "2015-08-10", 
                 decommDate: "2018-11-01", 
-                scrappedDate: "", 
-                note: "Находится на пути отстоя, ожидает резки" 
+                scrappedDate: "2021-04-12", 
+                note: "Находился на пути отстоя, списан и порезан на металлолом" 
             },
             { 
                 id: "ps_5", 
@@ -1506,13 +1606,13 @@
                 park: "ст. Лельма", 
                 model: "Платформа 750мм", 
                 num: "502", 
-                statusCls: "st-active", 
-                statusText: "Работает", 
+                statusCls: "st-out", 
+                statusText: "Выведен из экспл.", 
                 buildDate: "1975-04-18", 
-                outDate: "", 
+                outDate: "2022-06-01", 
                 decommDate: "", 
                 scrappedDate: "", 
-                note: "Грузовая платформа для путевых работ" 
+                note: "Грузовая платформа, требует ремонта тележек" 
             }
         ];
 
@@ -1529,7 +1629,7 @@
             badges: ["ДСП", "ПТЭ 2026", "СЦБ Разряд 5", "ВУ-45 Инспектор"]
         };
 
-        // Закреплённые карточки и памятки по умолчанию
+        // Закреплённые карточки по умолчанию
         const defaultPinnedNotes = [
             {
                 id: "pin_1",
@@ -1548,35 +1648,35 @@
             }
         ];
 
-        // Данные для табло станций
-        const stationBoardsData = {
+        // Исходные данные табло станций
+        const defaultStationBoardsData = {
             sosnovy: {
                 title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР",
                 trains: [
-                    { num: "601", route: "Крутоборка — Сосновый Бор — Лельма", track: "1 путь", arr: "10:17", stop: "4 мин", dep: "10:21", status: "ПОСАДКА", cls: "status-blink" },
-                    { num: "602", route: "Лельма — Сосновый Бор — Крутоборка", track: "2 путь", arr: "11:05", stop: "5 мин", dep: "11:10", status: "ОЖИДАЕТСЯ", cls: "" },
-                    { num: "7001", route: "Сосновый Бор — Лельма (Пригородный)", track: "1 путь", arr: "12:30", stop: "Формирование", dep: "12:45", status: "ГОТОВИТСЯ", cls: "" }
+                    { num: "601", route: "Крутоборка — Сосновый Бор — Лельма", track: "1 путь", arr: "10:17", stopMin: "4", dep: "10:21", status: "ПОСАДКА" },
+                    { num: "602", route: "Лельма — Сосновый Бор — Крутоборка", track: "2 путь", arr: "11:05", stopMin: "5", dep: "11:10", status: "ОЖИДАЕТСЯ" },
+                    { num: "7001", route: "Сосновый Бор — Лельма (Пригородный)", track: "3 путь", arr: "12:30", stopMin: "15", dep: "12:45", status: "ГОТОВИТСЯ" }
                 ]
             },
             krutoborka: {
                 title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. КРУТОБОРКА",
                 trains: [
-                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "—", stop: "Начальная", dep: "10:00", status: "ОТПРАВЛЕН", cls: "status-arrived" },
-                    { num: "602", route: "Лельма — Крутоборка", track: "2 путь", arr: "11:55", stop: "Конечная", dep: "—", status: "ПРИБЫВАЕТ", cls: "status-blink" },
-                    { num: "801", route: "Крутоборка — Сосновый Бор", track: "3 путь", arr: "—", stop: "Начальная", dep: "14:15", status: "ФОРМИРУЕТСЯ", cls: "" }
+                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "09:50", stopMin: "10", dep: "10:00", status: "ОТПРАВЛЕН" },
+                    { num: "602", route: "Лельма — Крутоборка", track: "2 путь", arr: "11:55", stopMin: "0", dep: "11:55", status: "ПРИБЫВАЕТ" },
+                    { num: "801", route: "Крутоборка — Сосновый Бор", track: "3 путь", arr: "14:00", stopMin: "15", dep: "14:15", status: "ГОТОВИТСЯ" }
                 ]
             },
             lelma: {
                 title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. ЛЕЛЬМА",
                 trains: [
-                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "10:38", stop: "Конечная", dep: "—", status: "В ПУТИ", cls: "status-arrived" },
-                    { num: "602", route: "Лельма — Крутоборка", track: "1 путь", arr: "—", stop: "Начальная", dep: "10:45", status: "ПОСАДКА", cls: "status-blink" },
-                    { num: "904", route: "Лельма — Сосновый Бор (Грузовой)", track: "2 путь", arr: "—", stop: "Начальная", dep: "13:00", status: "ЗАДЕРЖИВАЕТСЯ", cls: "status-delayed" }
+                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "10:38", stopMin: "0", dep: "10:38", status: "В ПУТИ" },
+                    { num: "602", route: "Лельма — Крутоборка", track: "1 путь", arr: "10:30", stopMin: "15", dep: "10:45", status: "ПОСАДКА" },
+                    { num: "904", route: "Лельма — Сосновый Бор (Грузовой)", track: "2 путь", arr: "12:30", stopMin: "30", dep: "13:00", status: "ЗАДЕРЖИВАЕТСЯ" }
                 ]
             }
         };
 
-        // База вопросов для интерактивной аттестации (Включая подробные тесты на ДСП)
+        // Аттестационные тесты
         const testQuestionsData = {
             dsp: [
                 {
@@ -1647,12 +1747,6 @@
                     options: ["Снизить скорость и быть готовым к остановке перед следующим сигналом", "Увеличить скорость", "Продолжить движение с максимальной разрешённой"], 
                     correct: 0,
                     exp: "Жёлтый сигнал разрешает движение с готовностью остановиться у следующего светофора."
-                },
-                { 
-                    q: "Какое действие выполняет машинист при внезапной подаче сигнала остановки?", 
-                    options: ["Применяет экстренное торможение", "Подаёт тифон и продолжает ход", "Запрашивает ДСП"], 
-                    correct: 0,
-                    exp: "При подаче сигнала остановки машинист обязан незамедлительно применить экстренное торможение."
                 }
             ],
             instructor: [
@@ -1661,12 +1755,6 @@
                     options: ["Раз в месяц", "Согласно графику (не реже 1 раза в квартал)", "Раз в год"], 
                     correct: 1,
                     exp: "КИП проводятся по утверждённому графику не реже одного раза в квартал для каждого машиниста."
-                },
-                { 
-                    q: "Какое действие приоритетно при обнаружении неисправности тормозов в пути следования?", 
-                    options: ["Применить экстренное торможение", "Запросить вспомогательный локомотив без остановки", "Подать звуковой сигнал и продолжать движение"], 
-                    correct: 0,
-                    exp: "При отказе или неэффективности тормозов применяется экстренное торможение всеми средствами."
                 }
             ],
             lnp: [
@@ -1675,12 +1763,6 @@
                     options: ["Только внешний вид вагонов", "Готовность поездной бригады, чистоту, наличие противопожарного инвентаря и посадку", "Состояние дизеля локомотива"], 
                     correct: 1,
                     exp: "ЛНП отвечает за готовность поездной бригады, экипировку вагонов, соблюдение правил посадки и безопасность пассажиров."
-                },
-                { 
-                    q: "Кому подчиняется проводник пассажирского вагона в пути следования?", 
-                    options: ["ДСП", "Машинисту локомотива напрямую", "Начальнику пассажирского поезда (ЛНП)"], 
-                    correct: 2,
-                    exp: "Проводники вагонов находятся в прямом подчинении ЛНП."
                 }
             ]
         };
@@ -1689,6 +1771,7 @@
         let vehicleDB = [];
         let profileData = {};
         let pinnedNotesData = [];
+        let stationBoards = {};
         let consistList = [];
         let currentCategoryFilter = 'all';
         let currentStation = 'sosnovy';
@@ -1767,12 +1850,10 @@
             document.getElementById('profDisplayShift').innerText = profileData.shift || "—";
             document.getElementById('profDisplayExamDate').innerText = profileData.examDate || "Сдано";
 
-            // Генерация инициалов для аватарки
             let nameParts = profileData.name ? profileData.name.split(' ') : ["Д", "С", "П"];
             let initials = nameParts.length >= 2 ? (nameParts[0][0] + nameParts[1][0]).toUpperCase() : "ДСП";
             document.getElementById('profAvatarInitials').innerText = initials;
 
-            // Генерация плашек квалификаций
             let badgesContainer = document.getElementById('profBadgesContainer');
             badgesContainer.innerHTML = '';
             (profileData.badges || []).forEach(b => {
@@ -1833,7 +1914,6 @@
             profileData.exp = document.getElementById('editProfExp').value;
             profileData.shift = document.getElementById('editProfShift').value;
 
-            // Обновляем главную закрепленную карточку профиля
             if (pinnedNotesData.length > 0 && pinnedNotesData[0].id === 'pin_1') {
                 pinnedNotesData[0].body = `<b>ФИО:</b> ${profileData.name}<br><b>Должность:</b> ${profileData.role}<br><b>Станция:</b> ${profileData.station}<br><b>Классность:</b> ${profileData.qual}`;
                 savePinnedNotesState();
@@ -1865,7 +1945,7 @@
         }
 
         /* ==========================================================================
-           УПРАВЛЕНИЕ БАЗОЙ ДАННЫХ ПОДВИЖНОГО СОСТАВА
+           УПРАВЛЕНИЕ БАЗОЙ ДАННЫХ ПОДВИЖНОГО СОСТАВА (С ОТДЕЛЬНЫМИ КОЛОНКАМИ)
            ========================================================================== */
         function loadDatabase() {
             let saved = localStorage.getItem('railphoto_full_db');
@@ -1909,11 +1989,6 @@
                 tr.className = v.statusCls;
                 tr.onclick = () => openEditModal(v.id);
 
-                let dateInfo = [];
-                if (v.outDate) dateInfo.push(`Выв: ${v.outDate}`);
-                if (v.decommDate) dateInfo.push(`Спис: ${v.decommDate}`);
-                if (v.scrappedDate) dateInfo.push(`Утил: ${v.scrappedDate}`);
-
                 let catLabel = '🚂 Локомотив';
                 if (v.category === 'pass_car') catLabel = '🚃 Вагон Пасс.';
                 if (v.category === 'cargo_car') catLabel = '📦 Вагон Гр.';
@@ -1925,7 +2000,9 @@
                     <td><b>${v.num}</b></td>
                     <td>${v.statusText || getStatusLabel(v.statusCls)}</td>
                     <td>${v.buildDate || '—'}</td>
-                    <td>${dateInfo.length ? dateInfo.join('<br>') : '—'}</td>
+                    <td class="col-highlight-out">${v.outDate ? v.outDate : '—'}</td>
+                    <td class="col-highlight-decomm">${v.decommDate ? v.decommDate : '—'}</td>
+                    <td class="col-highlight-scrapped">${v.scrappedDate ? v.scrappedDate : '—'}</td>
                     <td>${v.note || '—'}</td>
                 `;
                 tbody.appendChild(tr);
@@ -2104,7 +2181,22 @@
             savedTrips.push({ num, route, driver, lnp, dsp, time, consist: consistList });
             localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
-            alert("Поезд сформирован и передан на информационные табло станций!");
+            // Автоматическая передача поезда на табло текущей станции
+            let newBoardTrain = {
+                num: num,
+                route: route,
+                track: "1 путь",
+                arr: time,
+                stopMin: "5",
+                dep: calculateDepartureTime(time, 5),
+                status: "ПОСАДКА"
+            };
+
+            if (!stationBoards[currentStation]) stationBoards[currentStation] = { title: "", trains: [] };
+            stationBoards[currentStation].trains.push(newBoardTrain);
+            saveStationBoardsState();
+
+            alert("Поезд сформирован и автоматически отправлен на информационное табло!");
             consistList = [];
             renderConsistTrack();
             renderCreatedTripsList();
@@ -2136,8 +2228,22 @@
         }
 
         /* ==========================================================================
-           ТАБЛО СТАНЦИЙ (СОСНОВЫЙ БОР, КРУТОБОРКА, ЛЕЛЬМА) & СПРАВКА ВУ-45
+           ТАБЛО СТАНЦИЙ С ПОЛНЫМ РЕДАКТИРОВАНИЕМ, УДАЛЕНИЕМ И АВТОМАТИКОЙ
            ========================================================================== */
+        function loadStationBoards() {
+            let saved = localStorage.getItem('railphoto_station_boards');
+            if (saved) {
+                try { stationBoards = JSON.parse(saved); } catch(e) { stationBoards = JSON.parse(JSON.stringify(defaultStationBoardsData)); }
+            } else {
+                stationBoards = JSON.parse(JSON.stringify(defaultStationBoardsData));
+            }
+        }
+
+        function saveStationBoardsState() {
+            localStorage.setItem('railphoto_station_boards', JSON.stringify(stationBoards));
+            renderBoard();
+        }
+
         function selectStationBoard(stKey) {
             currentStation = stKey;
             document.querySelectorAll('.station-tab-btn').forEach(b => b.classList.remove('active'));
@@ -2149,40 +2255,147 @@
 
         function renderBoard() {
             let tbody = document.getElementById('boardTableBody');
-            let stData = stationBoardsData[currentStation] || stationBoardsData.sosnovy;
+            let stData = stationBoards[currentStation] || defaultStationBoardsData.sosnovy;
             
             document.getElementById('boardStationTitle').innerText = stData.title;
             tbody.innerHTML = '';
 
-            stData.trains.forEach(t => {
-                let tr = document.createElement('tr');
-                tr.innerHTML = `
-                    <td><b>№${t.num}</b></td>
-                    <td>${t.route}</td>
-                    <td><b style="color:#2ec4b6;">${t.track}</b></td>
-                    <td>${t.arr}</td>
-                    <td>${t.stop}</td>
-                    <td>${t.dep}</td>
-                    <td><span class="${t.cls}">${t.status}</span></td>
-                `;
-                tbody.appendChild(tr);
-            });
+            if (!stData.trains || stData.trains.length === 0) {
+                tbody.innerHTML = `<tr><td colspan="8" style="text-align:center; color:#888; padding:20px;">На табло станции нет активных поездов</td></tr>`;
+                return;
+            }
 
-            // Добавляем созданные поезда пользователей
-            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            savedTrips.forEach(t => {
+            stData.trains.forEach((t, idx) => {
                 let tr = document.createElement('tr');
+                let statusClass = "";
+                if (t.status === "ПОСАДКА" || t.status === "ПРИБЫВАЕТ") statusClass = "status-blink";
+                if (t.status === "ЗАДЕРЖИВАЕТСЯ") statusClass = "status-delayed";
+                if (t.status === "ОТПРАВЛЕН" || t.status === "В ПУТИ") statusClass = "status-arrived";
+
                 tr.innerHTML = `
                     <td><b>№${t.num}</b></td>
                     <td>${t.route}</td>
-                    <td><b style="color:#2ec4b6;">1 путь</b></td>
-                    <td>${t.time}</td>
-                    <td>4 мин</td>
-                    <td>${t.time}</td>
-                    <td><span class="status-blink">ГОТОВ К ОТПРАВЛЕНИЮ</span></td>
+                    <td><b style="color:#2ec4b6;">${t.track || '1 путь'}</b></td>
+                    <td>${t.arr || '—'}</td>
+                    <td>${t.stopMin ? t.stopMin + ' мин' : '0 мин'}</td>
+                    <td><b>${t.dep || '—'}</b></td>
+                    <td><span class="${statusClass}">${t.status}</span></td>
+                    <td style="text-align:right;">
+                        <button class="btn-primary btn-sm" onclick="openEditBoardTrainModal(${idx})">✏️ Изменить</button>
+                        <button class="btn-danger btn-sm" onclick="deleteBoardTrain(${idx})">🗑️ Удалить</button>
+                    </td>
                 `;
                 tbody.appendChild(tr);
             });
+        }
+
+        /* Автоматический расчет времени отправления по прибытию + минут стоянки */
+        function calculateDepartureTime(arrTime, stopMin) {
+            if (!arrTime) return "";
+            let parts = arrTime.split(":");
+            if (parts.length < 2) return arrTime;
+            
+            let h = parseInt(parts[0], 10);
+            let m = parseInt(parts[1], 10);
+            let addedMin = parseInt(stopMin, 10) || 0;
+
+            let totalMin = h * 60 + m + addedMin;
+            let newH = Math.floor(totalMin / 60) % 24;
+            let newM = totalMin % 60;
+
+            let hStr = newH < 10 ? "0" + newH : "" + newH;
+            let mStr = newM < 10 ? "0" + newM : "" + newM;
+            return `${hStr}:${mStr}`;
+        }
+
+        function autoCalcBoardDeparture() {
+            let arrTime = document.getElementById('boardTrainArr').value;
+            let stopMin = document.getElementById('boardTrainStopMin').value;
+            let depInput = document.getElementById('boardTrainDep');
+            
+            depInput.value = calculateDepartureTime(arrTime, stopMin);
+        }
+
+        function openAddTrainToBoardModal() {
+            document.getElementById('boardModalTitle').innerText = '➕ Добавить поезд на табло станции';
+            document.getElementById('boardTrainEditIndex').value = '';
+            document.getElementById('boardTrainNum').value = '60' + Math.floor(Math.random() * 9 + 1);
+            document.getElementById('boardTrainRoute').value = 'Сосновый Бор — Лельма';
+            document.getElementById('boardTrainTrack').value = '1 путь';
+            
+            let now = new Date();
+            let hStr = now.getHours() < 10 ? "0" + now.getHours() : now.getHours();
+            let mStr = now.getMinutes() < 10 ? "0" + now.getMinutes() : now.getMinutes();
+            let timeStr = `${hStr}:${mStr}`;
+
+            document.getElementById('boardTrainArr').value = timeStr;
+            document.getElementById('boardTrainStopMin').value = '5';
+            document.getElementById('boardTrainDep').value = calculateDepartureTime(timeStr, 5);
+            document.getElementById('boardTrainStatus').value = 'ПОСАДКА';
+
+            document.getElementById('boardTrainModal').style.display = 'flex';
+        }
+
+        function openEditBoardTrainModal(idx) {
+            let stData = stationBoards[currentStation];
+            if (!stData || !stData.trains[idx]) return;
+
+            let t = stData.trains[idx];
+            document.getElementById('boardModalTitle').innerText = `✏️ Редактирование поезда №${t.num} на табло`;
+            document.getElementById('boardTrainEditIndex').value = idx;
+            document.getElementById('boardTrainNum').value = t.num;
+            document.getElementById('boardTrainRoute').value = t.route;
+            document.getElementById('boardTrainTrack').value = t.track || '1 путь';
+            document.getElementById('boardTrainArr').value = t.arr || '';
+            document.getElementById('boardTrainStopMin').value = t.stopMin || '5';
+            document.getElementById('boardTrainDep').value = t.dep || calculateDepartureTime(t.arr, t.stopMin);
+            document.getElementById('boardTrainStatus').value = t.status || 'ПОСАДКА';
+
+            document.getElementById('boardTrainModal').style.display = 'flex';
+        }
+
+        function saveBoardTrainData(e) {
+            e.preventDefault();
+            let idxStr = document.getElementById('boardTrainEditIndex').value;
+            let trainData = {
+                num: document.getElementById('boardTrainNum').value,
+                route: document.getElementById('boardTrainRoute').value,
+                track: document.getElementById('boardTrainTrack').value,
+                arr: document.getElementById('boardTrainArr').value,
+                stopMin: document.getElementById('boardTrainStopMin').value,
+                dep: document.getElementById('boardTrainDep').value,
+                status: document.getElementById('boardTrainStatus').value
+            };
+
+            if (!stationBoards[currentStation]) {
+                stationBoards[currentStation] = { title: "Табло Станции", trains: [] };
+            }
+
+            if (idxStr !== '') {
+                let idx = parseInt(idxStr, 10);
+                stationBoards[currentStation].trains[idx] = trainData;
+            } else {
+                stationBoards[currentStation].trains.push(trainData);
+            }
+
+            saveStationBoardsState();
+            closeModal('boardTrainModal');
+        }
+
+        function deleteBoardTrain(idx) {
+            if (confirm("Удалить этот поезд с информационного табло станции?")) {
+                stationBoards[currentStation].trains.splice(idx, 1);
+                saveStationBoardsState();
+            }
+        }
+
+        function clearCurrentStationBoard() {
+            if (confirm(`Вы действительно хотите очистить ВСЕ поезда с табло станции "${currentStation}"?`)) {
+                if (stationBoards[currentStation]) {
+                    stationBoards[currentStation].trains = [];
+                    saveStationBoardsState();
+                }
+            }
         }
 
         function loadScheduleTrainSelect() {
@@ -2293,7 +2506,6 @@
                 resBox.style.color = "#2ec4b6";
                 resBox.innerText = `🎉 Аттестация по квалификации "${getRoleTitle(role)}" успешно пройдена! Верно: ${score}/${qList.length}. Допуск подтверждён.`;
                 
-                // Обновляем запись в профиле
                 profileData.examDate = "Сдано " + new Date().toLocaleDateString();
                 saveProfileState();
             } else {
@@ -2333,6 +2545,7 @@
         window.addEventListener('DOMContentLoaded', () => {
             loadProfileData();
             loadDatabase();
+            loadStationBoards();
             renderProfile();
             renderPinnedNotes();
             renderTable();
