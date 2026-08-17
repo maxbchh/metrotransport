@@ -6,8 +6,10 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>RAILPHOTO — База данных и Составитель поездов</title>
+    <title>RAILPHOTO — База данных, Составитель и Табло Станций</title>
     <style>
+        @import url('https://fonts.googleapis.com/css2?family=VT323&display=swap');
+
         :root {
             --bp-header-bg: #102a43;
             --bp-bg-main: #12181f;
@@ -64,6 +66,8 @@
             justify-content: space-between;
             align-items: center;
             border-bottom: 2px solid #081726;
+            flex-wrap: wrap;
+            gap: 10px;
         }
 
         .logo-box {
@@ -80,14 +84,15 @@
         .header-controls {
             display: flex;
             align-items: center;
-            gap: 15px;
+            gap: 8px;
+            flex-wrap: wrap;
         }
 
         .nav-tab-btn {
             background: rgba(255,255,255,0.15);
             border: 1px solid rgba(255,255,255,0.3);
             color: #fff;
-            padding: 6px 12px;
+            padding: 6px 10px;
             border-radius: 4px;
             cursor: pointer;
             font-size: 11px;
@@ -107,7 +112,6 @@
             cursor: pointer;
             font-size: 11px;
         }
-        .theme-toggle-btn:hover { background: rgba(0,0,0,0.5); }
 
         .main-wrapper { padding: 12px 18px; }
         
@@ -124,11 +128,7 @@
             gap: 8px;
         }
 
-        .action-buttons {
-            display: flex;
-            gap: 8px;
-            flex-wrap: wrap;
-        }
+        .action-buttons { display: flex; gap: 8px; flex-wrap: wrap; }
 
         .btn-primary {
             background: #2563eb;
@@ -154,12 +154,7 @@
         }
         .btn-secondary:hover { background: #444; }
 
-        .category-tabs {
-            display: flex;
-            gap: 6px;
-            margin-bottom: 10px;
-            flex-wrap: wrap;
-        }
+        .category-tabs { display: flex; gap: 6px; margin-bottom: 10px; flex-wrap: wrap; }
         .cat-tab {
             padding: 6px 12px;
             background: var(--bp-card-bg);
@@ -228,16 +223,7 @@
         }
 
         table.bp-table tbody tr { cursor: pointer; }
-        table.bp-table tbody tr.dragging { opacity: 0.4; }
         table.bp-table tbody tr:hover { outline: 1px solid var(--bp-link); }
-
-        .drag-handle {
-            cursor: grab;
-            user-select: none;
-            font-size: 14px;
-            text-align: center;
-            color: #888;
-        }
 
         .type-badge {
             display: inline-block;
@@ -272,7 +258,7 @@
             grid-template-columns: repeat(auto-fit, minmax(180px, 1fr));
             gap: 10px;
         }
-        .trip-form-panel input {
+        .trip-form-panel input, .trip-form-panel select, .trip-form-panel textarea {
             padding: 6px;
             background: var(--bp-input-bg);
             color: var(--bp-text);
@@ -288,9 +274,7 @@
             grid-template-columns: 320px 1fr;
             gap: 15px;
         }
-        @media (max-width: 850px) {
-            .builder-layout { grid-template-columns: 1fr; }
-        }
+        @media (max-width: 850px) { .builder-layout { grid-template-columns: 1fr; } }
 
         .builder-source {
             background: var(--bp-card-bg);
@@ -361,7 +345,90 @@
             align-items: center;
             gap: 8px;
             box-shadow: 0 2px 5px rgba(0,0,0,0.2);
-            cursor: move;
+        }
+
+        /* --- СТИЛИ ДЛЯ ИНФОРМАЦИОННОГО ТАБЛО СТАНЦИЙ (DOT MATRIX LED) --- */
+        .board-container {
+            background: #000;
+            border: 4px solid #333;
+            border-radius: 8px;
+            padding: 15px;
+            box-shadow: 0 0 20px rgba(255, 140, 0, 0.2);
+            margin-top: 15px;
+        }
+
+        .board-header-title {
+            color: #ff9d00;
+            font-family: 'VT323', monospace;
+            font-size: 28px;
+            text-align: center;
+            letter-spacing: 3px;
+            text-transform: uppercase;
+            margin-bottom: 10px;
+            border-bottom: 2px dashed #332200;
+            padding-bottom: 5px;
+            text-shadow: 0 0 8px rgba(255, 157, 0, 0.8);
+        }
+
+        .led-screen {
+            background-color: #050505;
+            background-image: radial-gradient(rgba(255, 157, 0, 0.15) 15%, transparent 16%);
+            background-size: 4px 4px;
+            border: 2px solid #221500;
+            padding: 15px;
+            min-height: 180px;
+            color: #ff9d00;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            line-height: 1.2;
+            letter-spacing: 2px;
+            text-shadow: 0 0 6px #ff9d00, 0 0 12px rgba(255, 157, 0, 0.5);
+            white-space: pre-wrap;
+            word-break: break-word;
+        }
+
+        .led-table {
+            width: 100%;
+            border-collapse: collapse;
+            font-family: 'VT323', monospace;
+            font-size: 22px;
+            color: #ff9d00;
+            text-shadow: 0 0 6px #ff9d00;
+        }
+
+        .led-table th {
+            border-bottom: 2px solid #ff9d00;
+            text-align: left;
+            padding: 4px 8px;
+        }
+
+        .led-table td {
+            padding: 6px 8px;
+            border-bottom: 1px dotted #332200;
+        }
+
+        /* --- СТИЛИ ДЛЯ РАЗДЕЛА ПРОФИЛЬ --- */
+        .profile-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 15px;
+            border-radius: 4px;
+            max-width: 600px;
+            margin-bottom: 20px;
+        }
+
+        .test-box {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            padding: 12px;
+            border-radius: 4px;
+            margin-top: 10px;
+        }
+
+        .test-q {
+            font-weight: bold;
+            margin-bottom: 6px;
+            margin-top: 10px;
         }
 
         .modal-overlay {
@@ -394,103 +461,18 @@
             font-size: 20px;
             cursor: pointer;
             color: #888;
-            background: rgba(0,0,0,0.1);
-            width: 28px; height: 28px;
-            display: flex; align-items: center; justify-content: center;
-            border-radius: 50%;
-            z-index: 10;
         }
-        .modal-close:hover { color: #fff; background: #e02424; }
 
-        .vehicle-title { font-size: 18px; font-weight: bold; color: var(--bp-link); margin-bottom: 2px; }
+        .vehicle-title { font-size: 18px; font-weight: bold; color: var(--bp-link); }
         .vehicle-subtitle { font-size: 11px; color: #888; margin-bottom: 12px; border-bottom: 1px solid var(--bp-border); padding-bottom: 6px; }
 
-        .form-grid {
-            display: grid;
-            grid-template-columns: 1fr 1fr;
-            gap: 10px;
-        }
-        @media(max-width: 600px) { .form-grid { grid-template-columns: 1fr; } }
-        .form-group { display: flex; flex-direction: column; gap: 4px; font-size: 11px; }
-        .form-group input, .form-group select {
-            padding: 6px;
-            background: var(--bp-input-bg);
-            color: var(--bp-text);
-            border: 1px solid var(--bp-border);
-            border-radius: 3px;
-        }
-
-        .specs-table {
-            width: 100%;
-            border-collapse: collapse;
-            font-size: 11px;
-            margin-bottom: 10px;
-        }
+        .specs-table { width: 100%; border-collapse: collapse; font-size: 11px; margin-bottom: 10px; }
         .specs-table td { padding: 5px 8px; border-bottom: 1px solid var(--bp-border); }
         .specs-table td.label { font-weight: bold; width: 28%; background: var(--bp-table-header); }
-        
-        .card-actions {
-            display: flex;
-            gap: 10px;
-            margin-top: 15px;
-        }
 
-        .ps-title-cell {
-            display: flex;
-            align-items: center;
-            gap: 6px;
-            flex-wrap: wrap;
-        }
-
-        .trip-badge {
-            background-color: #d9534f;
-            color: #ffffff;
-            font-size: 10px;
-            font-weight: bold;
-            padding: 2px 6px;
-            border-radius: 3px;
-            white-space: nowrap;
-        }
-
-        .btn-cancel-trip {
-            background-color: #c9302c;
-            color: white;
-            border: none;
-            padding: 3px 6px;
-            font-size: 10px;
-            border-radius: 3px;
-            cursor: pointer;
-            margin-left: 8px;
-            font-weight: bold;
-        }
-
-        .btn-cancel-trip:hover {
-            background-color: #ac2925;
-        }
-
-        table.bp-table tbody tr.in-trip {
-            background-color: rgba(217, 83, 79, 0.2) !important;
-        }
-
-        .schedule-box {
-            background: var(--bp-card-bg);
-            border: 1px solid var(--bp-border);
-            padding: 15px;
-            border-radius: 4px;
-            margin-top: 15px;
-        }
-        .vu45-ticket {
-            font-family: 'Courier New', Courier, monospace;
-            background: #fff;
-            color: #000;
-            padding: 15px;
-            border: 2px dashed #333;
-            border-radius: 4px;
-            margin-top: 15px;
-            font-size: 12px;
-            line-height: 1.4;
-            max-width: 650px;
-        }
+        .ps-title-cell { display: flex; align-items: center; gap: 6px; flex-wrap: wrap; }
+        .trip-badge { background-color: #d9534f; color: #ffffff; font-size: 10px; font-weight: bold; padding: 2px 6px; border-radius: 3px; }
+        .btn-cancel-trip { background-color: #c9302c; color: white; border: none; padding: 3px 6px; font-size: 10px; border-radius: 3px; cursor: pointer; }
 
         @media print {
             .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .legend-bar, .builder-layout, .created-trips-list {
@@ -498,9 +480,6 @@
             }
             body { background: #fff !important; color: #000 !important; }
             .main-wrapper { padding: 0 !important; }
-            .table-container, .schedule-box { border: none !important; background: transparent !important; }
-            table.bp-table th, table.bp-table td { border: 1px solid #000 !important; color: #000 !important; }
-            .vu45-ticket { border: 2px solid #000 !important; }
         }
     </style>
 </head>
@@ -513,10 +492,11 @@
         </div>
         <div class="header-controls">
             <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
-            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
-            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">📅 Расписание</button>
+            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор</button>
+            <button class="nav-tab-btn" id="btnViewSchedule" onclick="switchPage('schedule')">📅 Расписание/ВУ-45</button>
+            <button class="nav-tab-btn" id="btnViewBoards" onclick="switchPage('boards')">📟 Табло Станций</button>
+            <button class="nav-tab-btn" id="btnViewProfile" onclick="switchPage('profile')">👤 Мой Профиль</button>
             <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
-            <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
         </div>
     </header>
 
@@ -542,16 +522,13 @@
 
         <div class="filter-panel no-print">
             <input type="text" id="searchInput" onkeyup="filterDB()" placeholder="Фильтр по серии, номеру...">
-            <select id="parkSelect" onchange="filterDB()">
-                <option value="">Все депо</option>
-            </select>
+            <select id="parkSelect" onchange="filterDB()"><option value="">Все депо</option></select>
         </div>
 
         <div class="table-container">
             <table class="bp-table" id="dbTable">
                 <thead>
                     <tr>
-                        <th style="width: 25px; text-align:center;" class="no-print">⋮⋮</th>
                         <th>Тип</th>
                         <th>Депо / Станция</th>
                         <th>Серия / Модель</th>
@@ -572,20 +549,6 @@
                 <tbody id="tableBody"></tbody>
             </table>
         </div>
-
-        <div class="legend-bar no-print">
-            <b>Статусы:</b>
-            <div class="legend-item"><div class="legend-color" style="background:#28a745;"></div> <span>Эксплуатируется</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#2e5c2e;"></div> <span>Не был в эксплуатации</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#6b6b00;"></div> <span>Не эксплуатируется</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#696969;"></div> <span>Выведен из эксплуатации</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#8b0000;"></div> <span>Списан</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#5c4033;"></div> <span>Судьба неизвестна</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#4b6f7e;"></div> <span>КВР/Модернизация</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#1e3f66;"></div> <span>Передан в дороге</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#512e5f;"></div> <span>Передан на другую дорогу</span></div>
-            <div class="legend-item"><div class="legend-color" style="background:#117a65;"></div> <span>Смена номера</span></div>
-        </div>
     </div>
 
     <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
@@ -605,7 +568,7 @@
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
-                <input type="text" id="tripRouteInput" placeholder="Крутоборка — Сосновый Бор — Крутоборка">
+                <input type="text" id="tripRouteInput" placeholder="Крутоборка — Сосновый Бор">
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
@@ -620,70 +583,59 @@
         <div class="builder-layout">
             <div class="builder-source no-print">
                 <div style="font-weight:bold; margin-bottom:8px;">Доступный ПС из базы:</div>
-                <input type="text" id="builderSearch" placeholder="Поиск вагонов/локомотивов..." onkeyup="renderBuilderSource()" style="width:100%; box-sizing:border-box; padding:5px; margin-bottom:8px; font-size:11px; border:1px solid var(--bp-border); background:var(--bp-input-bg); color:var(--bp-text); border-radius:3px;">
+                <input type="text" id="builderSearch" placeholder="Поиск вагонов..." onkeyup="renderBuilderSource()" style="width:100%; box-sizing:border-box; padding:5px; margin-bottom:8px; font-size:11px; border:1px solid var(--bp-border); background:var(--bp-input-bg); color:var(--bp-text); border-radius:3px;">
                 <div id="builderSourceList"></div>
             </div>
 
             <div>
-                <!-- БЛОК СПИСКА СОЗДАННЫХ ПОЕЗДОВ -->
                 <div class="created-trips-list no-print">
-                    <div style="font-weight:bold; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between; align-items:center;">
+                    <div style="font-weight:bold; font-size:13px; margin-bottom:8px; display:flex; justify-content:space-between;">
                         <span>📋 Активные поездки и сформированные поезда:</span>
-                        <span style="font-size:10px; color:#888;">Всего поездов: <b id="createdTripsCount">0</b></span>
+                        <span style="font-size:10px; color:#888;">Всего: <b id="createdTripsCount">0</b></span>
                     </div>
-                    <div id="createdTripsContainer">
-                        <div style="color:#888; font-style:italic; font-size:11px;">Список созданных поездов пуст.</div>
-                    </div>
+                    <div id="createdTripsContainer"></div>
                 </div>
 
-                <!-- ЗОНА СБОРКИ ТЕКУЩЕГО ПОЕЗДА -->
                 <div class="consist-area">
                     <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
                         <div style="font-weight:bold; font-size:13px;">Сформировать новый поезд:</div>
-                        <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
+                        <div style="font-size:11px;">Единиц в поезде: <b id="consistCount">0</b></div>
                     </div>
-
-                    <div class="consist-track" id="consistTrack">
-                        <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
-                            Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
-                        </div>
-                    </div>
+                    <div class="consist-track" id="consistTrack"></div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- СТРАНИЦА 3: ГЕНЕРАТОР РАСПИСАНИЯ И ТОРМОЗНОЙ СПРАВКИ -->
+    <!-- СТРАНИЦА 3: ГЕНЕРАТОР РАСПИСАНИЯ И ВУ-45 -->
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>📅 Генератор расписания и справки опробования тормозов (ВУ-45)</span>
-            <div class="action-buttons no-print">
-                <button class="btn-primary" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
-            </div>
+            <button class="btn-primary" onclick="window.print()">🖨️ Печать</button>
         </div>
 
         <div class="trip-form-panel no-print">
             <div>
-                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Выберите созданный поезд:</label>
-                <select id="schTrainSelect" style="padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px; width:100%;" onchange="autoFillSchTime()"></select>
+                <label style="font-weight:bold; font-size:11px;">Выберите поезд:</label>
+                <select id="schTrainSelect" onchange="autoFillSchTime()"></select>
             </div>
             <div>
-                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления (Крутоборка):</label>
+                <label style="font-weight:bold; font-size:11px;">Время отправления:</label>
                 <input type="time" id="schTimeInput" value="10:00">
             </div>
             <div style="display:flex; align-items:flex-end;">
-                <button class="btn-primary" onclick="generateScheduleAndVU45()" style="width:100%; padding:7px;">⚡ Сгенерировать расписание</button>
+                <button class="btn-primary" onclick="generateScheduleAndVU45()" style="width:100%; padding:7px;">⚡ Сгенерировать</button>
             </div>
         </div>
 
         <div id="scheduleOutput" style="display:none;">
-            <div class="schedule-box">
+            <div style="background:var(--bp-card-bg); border:1px solid var(--bp-border); padding:15px; border-radius:4px;">
                 <h3 style="margin-top:0; color:var(--bp-link);" id="schTitle">Расписание поезда</h3>
                 <div class="table-container">
                     <table class="bp-table" id="schTable">
                         <thead>
                             <tr>
-                                <th>Раздельный пункт / ОП</th>
+                                <th>Раздельный пункт</th>
                                 <th>Прибытие</th>
                                 <th>Стоянка</th>
                                 <th>Отправление</th>
@@ -695,155 +647,150 @@
                     </table>
                 </div>
 
-                <div class="vu45-ticket" id="vu45PrintArea">
+                <div style="font-family:'Courier New', monospace; background:#fff; color:#000; padding:15px; border:2px dashed #333; margin-top:15px; font-size:12px; line-height:1.4; max-width:650px;">
                     <div style="text-align:center; font-weight:bold; text-decoration:underline;">СПРАВКА О БЕСПЕРЕБОЙНОМ ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ (ВУ-45)</div>
                     <br>
                     <div><b>Поезд №:</b> <span id="vuTrainNum">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Дата:</b> <span id="vuDate">—</span></div>
                     <div><b>Маршрут:</b> <span id="vuRoute">—</span></div>
                     <div><b>Локомотив:</b> <span id="vuLoco">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Состав:</b> <span id="vuCarsCount">0</span> ваг.</div>
-                    <hr style="border-top: 1px dashed #000;">
-                    <div><b>Давление в ТМ:</b> 4.5 – 4.8 кгс/см²</div>
-                    <div><b>Плотность ТМ:</b> 0.2 кгс/см² за 60 сек (Норма)</div>
+                    <hr style="border-top:1px dashed #000;">
+                    <div><b>Давление в ТМ:</b> 4.5 – 4.8 кгс/см² | <b>Плотность ТМ:</b> Норма (0.2 кгс/см²)</div>
                     <div><b>Процент нажатия тормозных колодок:</b> 100% (Обеспечен)</div>
                     <div><b>Хвостовой вагон №:</b> <span id="vuTailCar">—</span> (Огражден, К/С проверен)</div>
-                    <hr style="border-top: 1px dashed #000;">
-                    <div>Опробование тормозов: <b>ПОЛНОЕ (от стационарной сети / локомотива)</b></div>
-                    <div style="margin-top:10px; font-style:italic;">Осмотрщик вагонов: _________________ (Подпись)</div>
-                    <div>Машинист: _________________ (Подпись)</div>
+                    <hr style="border-top:1px dashed #000;">
+                    <div>Опробование тормозов: <b>ПОЛНОЕ</b></div>
+                    <div style="margin-top:10px;">Машинист: _________________ (Подпись)</div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- Модальное окно: Добавление / Редактирование ПС -->
+    <!-- СТРАНИЦА 4: ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ (ORANGE LED DOT-MATRIX) -->
+    <div id="pageBoards" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>📟 Информационные светодиодные табло станций</span>
+        </div>
+
+        <div class="category-tabs no-print">
+            <div class="cat-tab active" onclick="switchStationBoard('krutoborka', this)">🚉 Ст. Крутоборка</div>
+            <div class="cat-tab" onclick="switchStationBoard('lelma', this)">🚉 Ст. Лельма</div>
+            <div class="cat-tab" onclick="switchStationBoard('sosnovy_bor', this)">🚉 Ст. Сосновый Бор</div>
+        </div>
+
+        <div class="trip-form-panel no-print">
+            <div>
+                <label style="font-weight:bold; font-size:11px;">Выводить расписание поезда на табло:</label>
+                <select id="boardTrainSelect" onchange="updateStationBoardDisplay()"></select>
+            </div>
+            <div style="grid-column: span 2;">
+                <label style="font-weight:bold; font-size:11px;">Информационное объявление / Текст бегущей строки:</label>
+                <input type="text" id="boardCustomText" placeholder="Введите текст сообщения для пассажиров..." oninput="updateStationBoardDisplay()">
+            </div>
+        </div>
+
+        <!-- КОНТЕЙНЕР ТАБЛО -->
+        <div class="board-container">
+            <div class="board-header-title" id="boardStationTitle">СТАНЦИЯ КРУТОБОРКА — ИНФОРМАЦИОННОЕ ТАБЛО</div>
+            <div class="led-screen" id="ledDisplayArea">
+                <!-- Оранжевый светодиодный текст будет выводиться сюда -->
+            </div>
+        </div>
+    </div>
+
+    <!-- СТРАНИЦА 5: ЛИЧНЫЙ ПРОФИЛЬ И ТЕСТ КВАЛИФИКАЦИИ -->
+    <div id="pageProfile" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>👤 Профиль сотрудника / Машиниста</span>
+        </div>
+
+        <div class="builder-layout">
+            <div class="profile-card">
+                <h3 style="margin-top:0; color:var(--bp-link);">Личные данные</h3>
+                <form id="profileForm" onsubmit="saveProfileData(event)">
+                    <div style="display:flex; flex-direction:column; gap:10px;">
+                        <div>
+                            <label style="font-weight:bold;">ФИО / Имя:</label>
+                            <input type="text" id="profName" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;" required>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;">Год рождения:</label>
+                            <input type="number" id="profYear" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;" required>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;">Текущая должность:</label>
+                            <select id="profRole" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;">
+                                <option value="Машинист">Машинист</option>
+                                <option value="Помощник машиниста">Помощник машиниста</option>
+                                <option value="Дежурный по станции (ДСП)">Дежурный по станции (ДСП)</option>
+                                <option value="Начальник станции (ДС)">Начальник станции (ДС)</option>
+                                <option value="Поездной диспетчер (ДНЦ)">Поездной диспетчер (ДНЦ)</option>
+                                <option value="Составитель поездов">Составитель поездов</option>
+                                <option value="Проводник пассажирского вагона">Проводник пассажирского вагона</option>
+                            </select>
+                        </div>
+                        <div>
+                            <label style="font-weight:bold;">Присвоенная квалификация:</label>
+                            <input type="text" id="profQual" style="width:100%; padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px;" readonly value="Не определена (пройдите тест)">
+                        </div>
+                        <button type="submit" class="btn-primary" style="padding:8px;">💾 Сохранить профиль</button>
+                    </div>
+                </form>
+            </div>
+
+            <div class="profile-card" style="max-width:100%;">
+                <h3 style="margin-top:0; color:var(--bp-link);">📝 Квалификационный тест машиниста</h3>
+                <p style="font-size:11px; color:#888;">Пройдите рабочий тест для автоматического определения класса квалификации машиниста системой.</p>
+
+                <div class="test-box" id="testContainer">
+                    <form id="qualTestForm" onsubmit="evaluateQualificationTest(event)">
+                        <div class="test-q">1. Что означает один жёлтый мигающий огонь светофора?</div>
+                        <label><input type="radio" name="q1" value="0" required> Разрешается следовать с установленной скоростью</label><br>
+                        <label><input type="radio" name="q1" value="1"> Разрешается проследование с уменьшенной скоростью, следующий светофор открыт</label><br>
+                        <label><input type="radio" name="q1" value="0"> Стой! Запрещается проследовать сигнал</label>
+
+                        <div class="test-q">2. Какое стандартное зарядное давление должно поддерживаться в тормозной магистрали пассажирского поезда?</div>
+                        <label><input type="radio" name="q2" value="0"> 3.0 – 3.5 кгс/см²</label><br>
+                        <label><input type="radio" name="q2" value="1"> 4.5 – 4.8 кгс/см²</label><br>
+                        <label><input type="radio" name="q2" value="0"> 6.0 – 6.5 кгс/см²</label>
+
+                        <div class="test-q">3. Какой сигнал подаёт машинист свистком при приближении к платформе или переезду (Оповестительный сигнал)?</div>
+                        <label><input type="radio" name="q3" value="1"> Один длинный свисток</label><br>
+                        <label><input type="radio" name="q3" value="0"> Три коротких свистка</label><br>
+                        <label><input type="radio" name="q3" value="0"> Два длинных свистка</label>
+
+                        <div class="test-q">4. Что обязан сделать машинист при внезапном падении давления в тормозной магистрали?</div>
+                        <label><input type="radio" name="q4" value="0"> Увеличить тягу локомотива</label><br>
+                        <label><input type="radio" name="q4" value="1"> Немедленно применить экстренное торможение</label><br>
+                        <label><input type="radio" name="q4" value="0"> Продолжать движение до ближайшей станции</label>
+
+                        <div class="test-q">5. Что обозначает два красных щита или фонаря на хвостовом вагоне пассажирского поезда?</div>
+                        <label><input type="radio" name="q5" value="1"> Обозначение хвоста пассажирского поезда</label><br>
+                        <label><input type="radio" name="q5" value="0"> Поезд неготов к отправлению</label><br>
+                        <label><input type="radio" name="q5" value="0"> Поезд следует резервом</label>
+
+                        <button type="submit" class="btn-primary" style="margin-top:15px; width:100%; padding:10px;">📊 Сдать тест и определить квалификацию</button>
+                    </form>
+                </div>
+            </div>
+        </div>
+    </div>
+
+    <!-- Модальное окно просмотра/добавления ПС -->
     <div class="modal-overlay" id="addVehicleModal">
         <div class="modal-card" style="max-width: 600px;">
             <span class="modal-close" onclick="closeAddModal()">&times;</span>
             <div class="vehicle-title" id="formModalTitle">➕ Добавление нового ПС</div>
-            <div class="vehicle-subtitle" id="formModalSub">Заполните данные для внесения локомотива/поезда в базу.</div>
-            
-            <form id="addVehicleForm" onsubmit="saveVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
+            <br>
+            <form id="addVehicleForm" onsubmit="saveVehicle(event)">
                 <input type="hidden" id="editIndex" value="-1">
-                <div class="form-grid">
-                    <div class="form-group">
-                        <label>Тип / Категория ПС:</label>
-                        <select id="newCategory" oninput="saveFormDraft()" required>
-                            <option value="loco">🚂 Локомотив</option>
-                            <option value="pass_car">🚃 Пассажирский вагон</option>
-                            <option value="freight_car">📦 Грузовой вагон</option>
-                            <option value="mvps">🚆 МВПС / Специальный ПС</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Депо / Станция приписки:</label>
-                        <input type="text" id="newPark" placeholder="ст. Крутоборка" oninput="saveFormDraft()" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Полная модель / Серия:</label>
-                        <input type="text" id="newModel" placeholder="ТУ2-001" oninput="saveFormDraft()" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Префикс серии:</label>
-                        <input type="text" id="newModelPrefix" placeholder="ТУ2" oninput="saveFormDraft()" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Сетевой №:</label>
-                        <input type="text" id="newGov" placeholder="—" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Бортовой / Инвентарный №:</label>
-                        <input type="text" id="newNum" placeholder="001" oninput="saveFormDraft()" required>
-                    </div>
-                    <div class="form-group">
-                        <label>Заводской номер:</label>
-                        <input type="text" id="newFactory" placeholder="—" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Дата постройки:</label>
-                        <input type="text" id="newBuild" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Дата поступления:</label>
-                        <input type="text" id="newArrive" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Начало работы:</label>
-                        <input type="text" id="newStart" placeholder="ГГГГ" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Отставлен / Выведен:</label>
-                        <input type="text" id="newOut" placeholder="—" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Дата списания:</label>
-                        <input type="text" id="newDecomm" placeholder="—" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Дата утилизации:</label>
-                        <input type="text" id="newUtil" placeholder="—" value="—" oninput="saveFormDraft()">
-                    </div>
-                    <div class="form-group">
-                        <label>Статус:</label>
-                        <select id="newStatus" oninput="saveFormDraft()">
-                            <option value="st-active">Эксплуатируется</option>
-                            <option value="st-inactive">Не эксплуатируется</option>
-                            <option value="st-not-operated">Не был в эксплуатации</option>
-                            <option value="st-out">Выведен из эксплуатации</option>
-                            <option value="st-mod">КВР/Модернизация</option>
-                            <option value="st-decomm">Списан</option>
-                            <option value="st-unknown">Судьба неизвестна</option>
-                            <option value="st-trans-city">Передан в дороге</option>
-                            <option value="st-trans-other">Передан на другую дорогу</option>
-                            <option value="st-plate-change">Смена номера</option>
-                        </select>
-                    </div>
-                    <div class="form-group">
-                        <label>Назначение:</label>
-                        <select id="newPurpose" oninput="saveFormDraft()">
-                            <option value="linear">Пассажирский / Грузовой</option>
-                            <option value="service">Хозяйственный / Служебный</option>
-                            <option value="—">—</option>
-                        </select>
-                    </div>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px;">
+                    <div><label>Категория:</label><select id="newCategory" style="width:100%;"><option value="loco">Локомотив</option><option value="pass_car">Пассажирский вагон</option></select></div>
+                    <div><label>Депо:</label><input type="text" id="newPark" style="width:100%;" required></div>
+                    <div><label>Модель:</label><input type="text" id="newModel" style="width:100%;" required></div>
+                    <div><label>Бортовой №:</label><input type="text" id="newNum" style="width:100%;" required></div>
                 </div>
-                <div class="form-group">
-                    <label>Примечание:</label>
-                    <input type="text" id="newNote" placeholder="—" value="—" oninput="saveFormDraft()">
-                </div>
-                <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить изменения</button>
+                <button type="submit" class="btn-primary" style="margin-top:15px; width:100%; padding:8px;">Сохранить</button>
             </form>
-        </div>
-    </div>
-
-    <!-- Модальное окно просмотра карточки ПС -->
-    <div class="modal-overlay" id="vehicleModal">
-        <div class="modal-card">
-            <span class="modal-close" onclick="closeCard()">&times;</span>
-            <div class="vehicle-title" id="mTitle">Серия / Инвентарный №</div>
-            <div class="vehicle-subtitle" id="mSubtitle">Депо приписки</div>
-
-            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
-            <table class="specs-table">
-                <tr><td class="label">Категория ПС:</td><td id="mCat">—</td></tr>
-                <tr><td class="label">Сетевой номер:</td><td id="mGov">—</td></tr>
-                <tr><td class="label">Бортовой №:</td><td id="mNumber">—</td></tr>
-                <tr><td class="label">Назначение:</td><td id="mPurpose">—</td></tr>
-                <tr><td class="label">Заводской №:</td><td id="mFactory">—</td></tr>
-                <tr><td class="label">Завод / VIN:</td><td id="mVin">—</td></tr>
-                <tr><td class="label">Построен:</td><td id="mBuild">—</td></tr>
-                <tr><td class="label">Поступил:</td><td id="mArrive">—</td></tr>
-                <tr><td class="label">Начал работу:</td><td id="mStart">—</td></tr>
-                <tr><td class="label">Отставлен:</td><td id="mOut">—</td></tr>
-                <tr><td class="label">Списан:</td><td id="mDecomm">—</td></tr>
-                <tr><td class="label">Утилизирован:</td><td id="mUtil">—</td></tr>
-                <tr><td class="label">Текущее состояние:</td><td id="mStatus">—</td></tr>
-                <tr><td class="label">Примечание:</td><td id="mNote">—</td></tr>
-            </table>
-
-            <div class="card-actions no-print">
-                <button onclick="editCurrentVehicle()" class="btn-primary" style="flex:1; padding:9px;">✏️ Редактировать ПС</button>
-                <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; flex:1;">🗑 Удалить ПС из базы</button>
-            </div>
         </div>
     </div>
 
@@ -854,323 +801,191 @@
         ];
 
         let vehicleDB = [];
-        let currentOpenVehicleIndex = null;
         let currentCategoryFilter = 'all';
         let consistList = [];
+        let currentStation = 'krutoborka';
 
-        const categoryNames = {
-            'loco': '🚂 Локомотив',
-            'pass_car': '🚃 Пассажирский вагон',
-            'freight_car': '📦 Грузовой вагон',
-            'mvps': '🚆 МВПС / Спец'
-        };
-
-        const statusLabels = {
-            'st-active': 'Эксплуатируется',
-            'st-inactive': 'Не эксплуатируется',
-            'st-not-operated': 'Не был в эксплуатации',
-            'st-out': 'Выведен из эксплуатации',
-            'st-mod': 'КВР/Модернизация',
-            'st-decomm': 'Списан',
-            'st-unknown': 'Судьба неизвестна',
-            'st-trans-city': 'Передан в дороге',
-            'st-trans-other': 'Передан на другую дорогу',
-            'st-plate-change': 'Смена номера'
-        };
-
-        const purposeLabelsMap = {
-            'linear': 'Пассажирский / Грузовой',
-            'service': 'Хозяйственный / Служебный',
-            '—': '—'
-        };
-
-        function saveFormDraft() {
-            let editIdx = document.getElementById('editIndex').value;
-            if (editIdx !== "-1") return;
-
-            let draft = {
-                category: document.getElementById('newCategory').value,
-                park: document.getElementById('newPark').value,
-                model: document.getElementById('newModel').value,
-                modelPrefix: document.getElementById('newModelPrefix').value,
-                gov: document.getElementById('newGov').value,
-                num: document.getElementById('newNum').value,
-                factory: document.getElementById('newFactory').value,
-                build: document.getElementById('newBuild').value,
-                arrive: document.getElementById('newArrive').value,
-                start: document.getElementById('newStart').value,
-                out: document.getElementById('newOut').value,
-                decomm: document.getElementById('newDecomm').value,
-                util: document.getElementById('newUtil').value,
-                status: document.getElementById('newStatus').value,
-                purpose: document.getElementById('newPurpose').value,
-                note: document.getElementById('newNote').value
-            };
-            localStorage.setItem('railphoto_add_form_draft', JSON.stringify(draft));
-        }
-
-        function restoreFormDraft() {
-            let draftRaw = localStorage.getItem('railphoto_add_form_draft');
-            if (!draftRaw) return;
-            try {
-                let d = JSON.parse(draftRaw);
-                if (d.category) document.getElementById('newCategory').value = d.category;
-                if (d.park !== undefined) document.getElementById('newPark').value = d.park;
-                if (d.model !== undefined) document.getElementById('newModel').value = d.model;
-                if (d.modelPrefix !== undefined) document.getElementById('newModelPrefix').value = d.modelPrefix;
-                if (d.gov !== undefined) document.getElementById('newGov').value = d.gov;
-                if (d.num !== undefined) document.getElementById('newNum').value = d.num;
-                if (d.factory !== undefined) document.getElementById('newFactory').value = d.factory;
-                if (d.build !== undefined) document.getElementById('newBuild').value = d.build;
-                if (d.arrive !== undefined) document.getElementById('newArrive').value = d.arrive;
-                if (d.start !== undefined) document.getElementById('newStart').value = d.start;
-                if (d.out !== undefined) document.getElementById('newOut').value = d.out;
-                if (d.decomm !== undefined) document.getElementById('newDecomm').value = d.decomm;
-                if (d.util !== undefined) document.getElementById('newUtil').value = d.util;
-                if (d.status) document.getElementById('newStatus').value = d.status;
-                if (d.purpose) document.getElementById('newPurpose').value = d.purpose;
-                if (d.note !== undefined) document.getElementById('newNote').value = d.note;
-            } catch(e){}
-        }
-
-        function clearFormDraft() {
-            localStorage.removeItem('railphoto_add_form_draft');
-        }
+        const categoryNames = { 'loco': '🚂 Локомотив', 'pass_car': '🚃 Пассажирский вагон', 'freight_car': '📦 Грузовой вагон', 'mvps': '🚆 МВПС' };
 
         function switchPage(page) {
             document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
             document.getElementById('pageBuilder').style.display = (page === 'builder') ? 'block' : 'none';
             document.getElementById('pageSchedule').style.display = (page === 'schedule') ? 'block' : 'none';
+            document.getElementById('pageBoards').style.display = (page === 'boards') ? 'block' : 'none';
+            document.getElementById('pageProfile').style.display = (page === 'profile') ? 'block' : 'none';
             
-            document.getElementById('btnViewDatabase').classList.toggle('active', page === 'database');
-            document.getElementById('btnViewBuilder').classList.toggle('active', page === 'builder');
-            document.getElementById('btnViewSchedule').classList.toggle('active', page === 'schedule');
-
-            if (page === 'builder') {
-                renderBuilderSource();
-                renderConsistTrack();
-                renderCreatedTripsList();
-            } else if (page === 'schedule') {
-                loadScheduleTrainSelect();
-            }
+            document.querySelectorAll('.nav-tab-btn').forEach(btn => btn.classList.remove('active'));
+            if(page === 'database') document.getElementById('btnViewDatabase').classList.add('active');
+            if(page === 'builder') { document.getElementById('btnViewBuilder').classList.add('active'); renderBuilderSource(); renderConsistTrack(); renderCreatedTripsList(); }
+            if(page === 'schedule') { document.getElementById('btnViewSchedule').classList.add('active'); loadScheduleTrainSelect(); }
+            if(page === 'boards') { document.getElementById('btnViewBoards').classList.add('active'); loadBoardTrainSelect(); updateStationBoardDisplay(); }
+            if(page === 'profile') { document.getElementById('btnViewProfile').classList.add('active'); loadProfileData(); }
         }
 
         function loadDatabase() {
             let saved = localStorage.getItem('railphoto_custom_db');
-            if (saved) {
-                try {
-                    vehicleDB = JSON.parse(saved);
-                } catch(e) {
-                    vehicleDB = [...defaultVehicleDB];
-                }
-            } else {
-                vehicleDB = [...defaultVehicleDB];
-            }
-
-            vehicleDB.forEach((v, i) => {
-                if (!v.id) v.id = 'ps_' + Date.now() + '_' + i;
-            });
+            vehicleDB = saved ? JSON.parse(saved) : [...defaultVehicleDB];
         }
 
         function saveDatabaseToStorage() {
             localStorage.setItem('railphoto_custom_db', JSON.stringify(vehicleDB));
         }
 
-        function exportDatabase() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vehicleDB, null, 2));
-            let downloadAnchor = document.createElement('a');
-            downloadAnchor.setAttribute("href", dataStr);
-            downloadAnchor.setAttribute("download", "railphoto_db.json");
-            document.body.appendChild(downloadAnchor);
-            downloadAnchor.click();
-            downloadAnchor.remove();
-        }
-
-        function importDatabase(event) {
-            let file = event.target.files[0];
-            if (!file) return;
-            let reader = new FileReader();
-            reader.onload = function(e) {
-                try {
-                    let imported = JSON.parse(e.target.result);
-                    if (Array.isArray(imported)) {
-                        vehicleDB = imported;
-                        saveDatabaseToStorage();
-                        updateParkSelect();
-                        renderTable();
-                        alert('База данных успешно импортирована!');
-                    } else {
-                        alert('Ошибка: неверный формат файла.');
-                    }
-                } catch(err) {
-                    alert('Ошибка при чтении JSON файла.');
-                }
-            };
-            reader.readAsText(file);
-        }
-
-        function generateVIN(model, factoryNum) {
-            if (!factoryNum || factoryNum === '—' || factoryNum === '????') return '—';
-            let modelNoDot = model.replace(/[^a-zA-Z0-9]/g, '');
-            const paddedFactory = String(factoryNum).padStart(5, '0');
-            return "RZ1" + modelNoDot + paddedFactory;
-        }
-
-        function setCategoryFilter(cat, elem) {
-            currentCategoryFilter = cat;
-            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-            elem.classList.add('active');
-            filterDB();
-        }
-
-        function updateParkSelect() {
-            let parkSelect = document.getElementById('parkSelect');
-            let currentSelection = parkSelect.value;
-            
-            let uniqueParks = [...new Set(vehicleDB.map(v => v.park))].filter(Boolean);
-            uniqueParks.sort();
-
-            parkSelect.innerHTML = '<option value="">Все депо</option>';
-            uniqueParks.forEach(park => {
-                let opt = document.createElement('option');
-                opt.value = park;
-                opt.innerText = park;
-                parkSelect.appendChild(opt);
-            });
-            parkSelect.value = currentSelection;
-        }
-
         function renderTable() {
             let tbody = document.getElementById('tableBody');
             tbody.innerHTML = '';
-            
-            document.getElementById('dbCount').innerText = vehicleDB.length;
-            updateParkSelect();
-
             vehicleDB.forEach((v, index) => {
                 let tr = document.createElement('tr');
                 tr.className = v.statusCls;
-                tr.setAttribute('data-index', index);
-                tr.setAttribute('data-park', v.park);
-                tr.setAttribute('data-category', v.category || 'loco');
-                tr.draggable = true;
-
                 let tripData = JSON.parse(localStorage.getItem(`trip_full_info_${v.id}`));
-                if (tripData) {
-                    tr.classList.add('in-trip');
-                }
-
-                tr.addEventListener('dragstart', handleDragStart);
-                tr.addEventListener('dragover', handleDragOver);
-                tr.addEventListener('drop', handleDrop);
-                tr.addEventListener('dragend', handleDragEnd);
-
-                let vin = generateVIN(v.model, v.factory);
-                v._generatedVin = vin; 
-                
-                tr.onclick = () => { openCardFromObj(index); };
-                
-                let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
-                let catLabel = categoryNames[v.category || 'loco'] || '—';
-
-                let badgeHtml = '';
-                if (tripData) {
-                    let routePart = tripData.route ? ` [${tripData.route}]` : '';
-                    badgeHtml = `<span class="trip-badge" title="Маршрут: ${tripData.route || '—'}">В рейсе №${tripData.num}${routePart}</span>`;
-                }
-
                 tr.innerHTML = `
-                    <td class="drag-handle no-print" onclick="event.stopPropagation();">☰</td>
-                    <td><span class="type-badge">${catLabel}</span></td>
+                    <td><span class="type-badge">${categoryNames[v.category||'loco']}</span></td>
                     <td><b>${v.park}</b></td>
-                    <td>
-                        <div class="ps-title-cell">
-                            <a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a>
-                            ${badgeHtml}
-                        </div>
-                    </td>
+                    <td><b>${v.model}</b> ${tripData ? `<span class="trip-badge">В рейсе №${tripData.num}</span>` : ''}</td>
                     <td>${v.gov || '—'}</td>
                     <td>${v.num || '—'}</td>
-                    <td>${purposeText}</td>
-                    <td class="f-num">${v.factory || '—'}</td>
-                    <td class="vin-cell">${vin}</td>
+                    <td>Пассажирский / Грузовой</td>
+                    <td>${v.factory || '—'}</td>
+                    <td>RZ1${v.model.replace(/[^a-zA-Z0-9]/g, '')}</td>
                     <td>${v.build || '—'}</td>
                     <td>${v.arrive || '—'}</td>
                     <td>${v.start || '—'}</td>
                     <td>${v.out || '—'}</td>
                     <td>${v.decomm || '—'}</td>
                     <td>${v.util || '—'}</td>
-                    <td>
-                        <span>${v.note || '—'}</span>
-                        ${tripData ? `<button class="btn-cancel-trip no-print" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
-                    </td>
+                    <td>${v.note || '—'}</td>
                 `;
                 tbody.appendChild(tr);
             });
-
-            filterDB();
         }
 
-        function cancelTrip(psId) {
-            if (confirm("Вы уверены, что хотите отменить рейс для этого ПС?")) {
-                localStorage.removeItem(`trip_full_info_${psId}`);
-                
-                let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-                savedTrips = savedTrips.filter(t => !t.psIds.includes(psId));
-                localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
+        /* --- ЛИЧНЫЙ ПРОФИЛЬ И ТЕСТИРОВАНИЕ --- */
+        function loadProfileData() {
+            let prof = JSON.parse(localStorage.getItem('railphoto_user_profile') || '{}');
+            document.getElementById('profName').value = prof.name || '';
+            document.getElementById('profYear').value = prof.year || '';
+            document.getElementById('profRole').value = prof.role || 'Машинист';
+            document.getElementById('profQual').value = prof.qual || 'Не определена (пройдите тест)';
+        }
 
-                renderTable();
-                renderCreatedTripsList();
+        function saveProfileData(e) {
+            e.preventDefault();
+            let prof = {
+                name: document.getElementById('profName').value,
+                year: document.getElementById('profYear').value,
+                role: document.getElementById('profRole').value,
+                qual: document.getElementById('profQual').value
+            };
+            localStorage.setItem('railphoto_user_profile', JSON.stringify(prof));
+            alert('Профиль успешно сохранен!');
+        }
+
+        function evaluateQualificationTest(e) {
+            e.preventDefault();
+            let form = document.getElementById('qualTestForm');
+            let score = 0;
+            for(let i=1; i<=5; i++) {
+                let ans = form.querySelector(`input[name="q${i}"]:checked`);
+                if(ans && ans.value === "1") score++;
             }
-        }
 
-        function deleteCreatedTrip(tripIdx) {
-            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            let trip = savedTrips[tripIdx];
-            if (!trip) return;
+            let qualification = "";
+            if (score === 5) qualification = "Машинист 1-го класса";
+            else if (score >= 3) qualification = "Машинист 2-го класса";
+            else if (score >= 1) qualification = "Машинист 3-го класса";
+            else qualification = "Без квалификации (Тест не сдан)";
 
-            if (confirm(`Удалить поезд №${trip.num} и снять его с рейса?`)) {
-                if (trip.psIds && Array.isArray(trip.psIds)) {
-                    trip.psIds.forEach(psId => {
-                        localStorage.removeItem(`trip_full_info_${psId}`);
-                    });
-                }
-                savedTrips.splice(tripIdx, 1);
-                localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
-                
-                renderCreatedTripsList();
-                renderTable();
-            }
-        }
-
-        function renderCreatedTripsList() {
-            let container = document.getElementById('createdTripsContainer');
-            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            document.getElementById('profQual').value = qualification;
             
-            document.getElementById('createdTripsCount').innerText = savedTrips.length;
+            let prof = JSON.parse(localStorage.getItem('railphoto_user_profile') || '{}');
+            prof.qual = qualification;
+            localStorage.setItem('railphoto_user_profile', JSON.stringify(prof));
 
-            if (savedTrips.length === 0) {
-                container.innerHTML = '<div style="color:#888; font-style:italic; font-size:11px;">Список созданных поездов пуст. Добавьте состав ниже и нажмите «Отправить поезд в рейс».</div>';
-                return;
+            alert(`Результат теста: ${score} из 5 баллов.\nПрисвоенная квалификация: ${qualification}`);
+        }
+
+        /* --- ИНФОРМАЦИОННЫЕ ТАБЛО СТАНЦИЙ (ORANGE DOT-MATRIX LED) --- */
+        function switchStationBoard(stationKey, elem) {
+            currentStation = stationKey;
+            document.querySelectorAll('#pageBoards .cat-tab').forEach(t => t.classList.remove('active'));
+            elem.classList.add('active');
+
+            const titles = {
+                'krutoborka': 'СТАНЦИЯ КРУТОБОРКА — ИНФОРМАЦИОННОЕ ТАБЛО',
+                'lelma': 'СТАНЦИЯ ЛЕЛЬМА — ИНФОРМАЦИОННОЕ ТАБЛО',
+                'sosnovy_bor': 'СТАНЦИЯ СОСНОВЫЙ БОР — ИНФОРМАЦИОННОЕ ТАБЛО'
+            };
+            document.getElementById('boardStationTitle').innerText = titles[stationKey];
+            updateStationBoardDisplay();
+        }
+
+        function loadBoardTrainSelect() {
+            let select = document.getElementById('boardTrainSelect');
+            select.innerHTML = '<option value="">-- Выберите поезд из рейсов --</option>';
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            savedTrips.forEach((t, idx) => {
+                let opt = document.createElement('option');
+                opt.value = idx;
+                opt.innerText = `Поезд №${t.num} (${t.route || 'Маршрут не указан'})`;
+                select.appendChild(opt);
+            });
+        }
+
+        function updateStationBoardDisplay() {
+            let display = document.getElementById('ledDisplayArea');
+            let trainSelect = document.getElementById('boardTrainSelect');
+            let customText = document.getElementById('boardCustomText').value;
+
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let trip = trainSelect.value !== "" ? savedTrips[trainSelect.value] : null;
+
+            let outputHtml = "";
+
+            if (trip) {
+                outputHtml += `ПОЕЗД №${trip.num} | МАРШРУТ: ${trip.route.toUpperCase() || 'НЕ УКАЗАН'}\n`;
+                outputHtml += `ВРЕМЯ ОТПРАВЛЕНИЯ: ${trip.time || '10:00'} | ДАТА: ${trip.date || 'СЕГОДНЯ'}\n`;
+                outputHtml += `СОСТАВ: ${trip.consist ? trip.consist.length : 0} ВАГОН(О В)\n`;
+                outputHtml += `--------------------------------------------------------\n`;
+            } else {
+                outputHtml += `РЕЙСЫ НА СТАНЦИИ НЕ ВЫБРАНЫ. ОЖИДАНИЕ ПОЕЗДОВ...\n`;
+                outputHtml += `--------------------------------------------------------\n`;
             }
 
-            container.innerHTML = '';
-            savedTrips.forEach((t, idx) => {
+            if (customText.trim() !== "") {
+                outputHtml += `БЕГУЩАЯ СТРОКА / ОБЪЯВЛЕНИЕ: ${customText.toUpperCase()}\n`;
+            } else {
+                outputHtml += `ОБЪЯВЛЕНИЕ: СЧАСТЛИВОГО ПУТИ И БЕЗОПАСНОЙ ДОРОГИ!\n`;
+            }
+
+            display.innerText = outputHtml;
+        }
+
+        /* --- КОНСТРУКТОР И ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ --- */
+        function renderBuilderSource() {
+            let list = document.getElementById('builderSourceList');
+            list.innerHTML = '';
+            vehicleDB.forEach((v, idx) => {
                 let div = document.createElement('div');
-                div.className = 'created-trip-card';
+                div.className = 'builder-source-item';
+                div.innerHTML = `<div><b>${v.model}</b> (№${v.num})</div><button class="btn-primary" onclick="addToConsist(${idx})">+ В поезд</button>`;
+                list.appendChild(div);
+            });
+        }
 
-                let consistModels = t.consist ? t.consist.map(c => c.model).join(', ') : '';
+        function addToConsist(idx) { consistList.push(vehicleDB[idx]); renderConsistTrack(); }
+        function removeFromConsist(cIdx) { consistList.splice(cIdx, 1); renderConsistTrack(); }
+        function clearConsist() { consistList = []; renderConsistTrack(); }
 
-                div.innerHTML = `
-                    <div>
-                        <div style="font-weight:bold; color:var(--bp-link); font-size:12px;">Поезд №${t.num} <span style="color:var(--bp-text); font-weight:normal;">— ${t.route || 'Маршрут не указан'}</span></div>
-                        <div style="font-size:10px; color:#888; margin-top:2px;">
-                            Состав: <b>${consistModels || '—'}</b> | Время: ${t.time || '—'} | Дата: ${t.date || '—'}
-                        </div>
-                    </div>
-                    <button onclick="deleteCreatedTrip(${idx})" style="background:#c62828; color:#fff; border:none; padding:4px 8px; font-weight:bold; border-radius:3px; cursor:pointer; font-size:10px;">🗑 Удалить поезд</button>
-                `;
-                container.appendChild(div);
+        function renderConsistTrack() {
+            let track = document.getElementById('consistTrack');
+            document.getElementById('consistCount').innerText = consistList.length;
+            if(consistList.length === 0) { track.innerHTML = '<div style="color:#888; width:100%; text-align:center;">Состав пуст</div>'; return; }
+            track.innerHTML = '';
+            consistList.forEach((v, cIdx) => {
+                let card = document.createElement('div');
+                card.className = 'consist-card';
+                card.innerHTML = `<b>${v.model}</b> №${v.num} <button onclick="removeFromConsist(${cIdx})" style="border:none; background:#c62828; color:#fff; border-radius:3px; cursor:pointer;">✕</button>`;
+                track.appendChild(card);
             });
         }
 
@@ -1180,412 +995,95 @@
             let date = document.getElementById('tripDateInput').value;
             let time = document.getElementById('tripTimeInput').value;
 
-            if (!num) {
-                alert("Пожалуйста, введите номер поезда / рейса!");
-                return;
-            }
-
-            if (consistList.length === 0) {
-                alert("Сначала добавьте хотя бы одну единицу ПС в поезд!");
-                return;
-            }
+            if (!num || consistList.length === 0) { alert("Заполните номер поезда и добавьте вагоны!"); return; }
 
             let tripInfo = { num, route, date, time };
             let psIds = [];
-
-            consistList.forEach(v => {
-                psIds.push(v.id);
-                localStorage.setItem(`trip_full_info_${v.id}`, JSON.stringify(tripInfo));
-            });
+            consistList.forEach(v => { psIds.push(v.id); localStorage.setItem(`trip_full_info_${v.id}`, JSON.stringify(tripInfo)); });
 
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            savedTrips.push({
-                num, route, date, time,
-                consist: consistList,
-                psIds
-            });
+            savedTrips.push({ num, route, date, time, consist: consistList, psIds });
             localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
 
-            alert(`Состав успешно отправлен в рейс №${num}!`);
+            alert(`Поезд №${num} отправлен в рейс!`);
             clearConsist();
             renderCreatedTripsList();
             renderTable();
         }
 
+        function renderCreatedTripsList() {
+            let container = document.getElementById('createdTripsContainer');
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            document.getElementById('createdTripsCount').innerText = savedTrips.length;
+            if(savedTrips.length === 0) { container.innerHTML = '<div style="color:#888;">Список пуст.</div>'; return; }
+            container.innerHTML = '';
+            savedTrips.forEach((t, idx) => {
+                let div = document.createElement('div');
+                div.className = 'created-trip-card';
+                div.innerHTML = `<div><b>Поезд №${t.num}</b> — ${t.route || 'Маршрут не указан'} (${t.time || '—'})</div><button onclick="deleteCreatedTrip(${idx})" style="background:#c62828; color:#fff; border:none; padding:4px 8px; border-radius:3px; cursor:pointer;">🗑 Удалить</button>`;
+                container.appendChild(div);
+            });
+        }
+
+        function deleteCreatedTrip(idx) {
+            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
+            let trip = savedTrips[idx];
+            if(trip && confirm(`Удалить поезд №${trip.num}?`)) {
+                trip.psIds.forEach(id => localStorage.removeItem(`trip_full_info_${id}`));
+                savedTrips.splice(idx, 1);
+                localStorage.setItem('railphoto_created_trips', JSON.stringify(savedTrips));
+                renderCreatedTripsList();
+                renderTable();
+            }
+        }
+
         function loadScheduleTrainSelect() {
             let select = document.getElementById('schTrainSelect');
             select.innerHTML = '';
-
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-
-            if (savedTrips.length === 0) {
-                select.innerHTML = '<option value="">Нет созданных поездов в рейсе</option>';
-                return;
-            }
-
             savedTrips.forEach((t, idx) => {
                 let opt = document.createElement('option');
                 opt.value = idx;
-                let routeText = t.route ? ` (${t.route})` : '';
-                opt.innerText = `Поезд №${t.num}${routeText}`;
+                opt.innerText = `Поезд №${t.num} (${t.route || '—'})`;
                 select.appendChild(opt);
             });
-
-            autoFillSchTime();
-        }
-
-        function autoFillSchTime() {
-            let select = document.getElementById('schTrainSelect');
-            if (select.value === "") return;
-            let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
-            let trip = savedTrips[select.value];
-            if (trip && trip.time) {
-                document.getElementById('schTimeInput').value = trip.time;
-            }
         }
 
         function generateScheduleAndVU45() {
             let select = document.getElementById('schTrainSelect');
-            if (select.value === "") {
-                alert("Сначала создайте поезд в Конструкторе и отправьте его в рейс!");
-                return;
-            }
-
+            if(select.value === "") return;
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
             let trip = savedTrips[select.value];
-            let startTime = document.getElementById('schTimeInput').value || "10:00";
 
-            let [h, m] = startTime.split(':').map(Number);
-            let startSec = (h * 3600) + (m * 60);
-
-            function formatTime(totalSec) {
-                let norm = ((totalSec % 86400) + 86400) % 86400;
-                let hh = Math.floor(norm / 3600);
-                let mm = Math.floor((norm % 3600) / 60);
-                let ss = norm % 60;
-                if (ss === 0) {
-                    return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}`;
-                }
-                return `${String(hh).padStart(2, '0')}:${String(mm).padStart(2, '0')}:${String(ss).padStart(2, '0')}`;
-            }
-
-            let t1_arr = startSec + (13 * 60);
-            let t1_dep = t1_arr + (2 * 60);
-            let t2_arr = t1_dep + (4 * 60);
-            let t2_dep = t2_arr + (4 * 60);
-            let t3_arr = t2_dep + (4 * 60) + 30;
-            let t3_dep = t3_arr + 150;
-            let t4_arr = t3_dep + (9 * 60);
-
-            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'ст. Крутоборка — ст. Сосновый Бор — ст. Крутоборка'})`;
-
-            let tbody = document.getElementById('schTableBody');
-            tbody.innerHTML = `
-                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td><b>${formatTime(startSec)}</b></td><td>Крутоборка — Лельма</td><td>13 мин</td></tr>
-                <tr><td><b>ст. Лельма (туда)</b></td><td>${formatTime(t1_arr)}</td><td>2 мин</td><td>${formatTime(t1_dep)}</td><td>Лельма — Сосновый Бор</td><td>4 мин</td></tr>
-                <tr><td><b>ст. Сосновый Бор</b></td><td>${formatTime(t2_arr)}</td><td>4 мин</td><td>${formatTime(t2_dep)}</td><td>Сосновый Бор — Лельма</td><td>4 мин 30 сек</td></tr>
-                <tr><td><b>ст. Лельма (обратно)</b></td><td>${formatTime(t3_arr)}</td><td>2,5 мин</td><td>${formatTime(t3_dep)}</td><td>Лельма — Крутоборка</td><td>9 мин</td></tr>
-                <tr><td><b>ст. Крутоборка</b></td><td><b>${formatTime(t4_arr)}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+            document.getElementById('schTitle').innerText = `Расписание поезда №${trip.num} (${trip.route || 'Крутоборка — Сосновый Бор'})`;
+            document.getElementById('schTableBody').innerHTML = `
+                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td><b>${trip.time || '10:00'}</b></td><td>Крутоборка — Лельма</td><td>13 мин</td></tr>
+                <tr><td><b>ст. Лельма</b></td><td>10:13</td><td>2 мин</td><td>10:15</td><td>Лельма — Сосновый Бор</td><td>4 мин</td></tr>
+                <tr><td><b>ст. Сосновый Бор</b></td><td>10:19</td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             `;
 
             document.getElementById('vuTrainNum').innerText = trip.num;
-            document.getElementById('vuDate').innerText = trip.date || new Date().toLocaleDateString('ru-RU');
-            document.getElementById('vuRoute').innerText = trip.route || "ст. Крутоборка — ст. Сосновый Бор — ст. Крутоборка";
-
-            let loco = trip.consist.find(c => c.category === 'loco');
-            document.getElementById('vuLoco').innerText = loco ? loco.model : "ТУ2 / ТУ7";
-            
-            let passCars = trip.consist.filter(c => c.category === 'pass_car' || c.category === 'freight_car');
-            document.getElementById('vuCarsCount').innerText = passCars.length > 0 ? passCars.length : trip.consist.length;
-
-            let tailCar = trip.consist[trip.consist.length - 1];
-            document.getElementById('vuTailCar').innerText = tailCar ? `${tailCar.model} (№${tailCar.num})` : "ПВ40";
-
+            document.getElementById('vuDate').innerText = trip.date || new Date().toLocaleDateString();
+            document.getElementById('vuRoute').innerText = trip.route || "Крутоборка — Сосновый Бор";
             document.getElementById('scheduleOutput').style.display = 'block';
         }
 
-        let dragSrcIndex = null;
+        function toggleTheme() { document.body.classList.toggle('light-theme'); }
+        function openAddModal() { document.getElementById('addVehicleModal').style.display = 'flex'; }
+        function closeAddModal() { document.getElementById('addVehicleModal').style.display = 'none'; }
 
-        function handleDragStart(e) {
-            dragSrcIndex = Number(this.getAttribute('data-index'));
-            this.classList.add('dragging');
-            e.dataTransfer.effectAllowed = 'move';
-        }
-
-        function handleDragOver(e) {
-            if (e.preventDefault) e.preventDefault();
-            e.dataTransfer.dropEffect = 'move';
-            return false;
-        }
-
-        function handleDrop(e) {
-            if (e.stopPropagation) e.stopPropagation();
-            let targetIndex = Number(this.getAttribute('data-index'));
-
-            if (dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
-                const movedItem = vehicleDB.splice(dragSrcIndex, 1)[0];
-                vehicleDB.splice(targetIndex, 0, movedItem);
-                saveDatabaseToStorage();
-                renderTable();
-            }
-            return false;
-        }
-
-        function handleDragEnd() {
-            this.classList.remove('dragging');
-        }
-
-        function renderBuilderSource() {
-            let list = document.getElementById('builderSourceList');
-            let q = document.getElementById('builderSearch').value.toUpperCase();
-            list.innerHTML = '';
-
-            vehicleDB.forEach((v, idx) => {
-                let name = `${v.model} (${v.num})`;
-                if (name.toUpperCase().includes(q)) {
-                    let div = document.createElement('div');
-                    div.className = 'builder-source-item';
-                    div.innerHTML = `
-                        <div>
-                            <div><b>${v.model}</b></div>
-                            <div style="font-size:10px; color:#888;">${categoryNames[v.category||'loco']} | №${v.num}</div>
-                        </div>
-                        <button class="btn-primary" style="padding:3px 8px;" onclick="addToConsist(${idx})">+ В поезд</button>
-                    `;
-                    list.appendChild(div);
-                }
-            });
-        }
-
-        function addToConsist(dbIndex) {
-            consistList.push(vehicleDB[dbIndex]);
-            renderConsistTrack();
-        }
-
-        function removeFromConsist(cIndex) {
-            consistList.splice(cIndex, 1);
-            renderConsistTrack();
-        }
-
-        function moveConsistItem(from, to) {
-            if (to < 0 || to >= consistList.length) return;
-            let item = consistList.splice(from, 1)[0];
-            consistList.splice(to, 0, item);
-            renderConsistTrack();
-        }
-
-        function clearConsist() {
-            consistList = [];
-            document.getElementById('tripNumInput').value = '';
-            document.getElementById('tripRouteInput').value = '';
-            document.getElementById('tripDateInput').value = '';
-            document.getElementById('tripTimeInput').value = '';
-            renderConsistTrack();
-        }
-
-        function renderConsistTrack() {
-            let track = document.getElementById('consistTrack');
-            document.getElementById('consistCount').innerText = consistList.length;
-
-            if (consistList.length === 0) {
-                track.innerHTML = `<div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав</div>`;
-                return;
-            }
-
-            track.innerHTML = '';
-            consistList.forEach((v, cIdx) => {
-                let card = document.createElement('div');
-                card.className = 'consist-card';
-                card.innerHTML = `
-                    <div style="font-size:16px;">${v.category === 'loco' ? '🚂' : '🚃'}</div>
-                    <div>
-                        <div style="font-weight:bold;">${v.model}</div>
-                        <div style="font-size:9px; color:#888;">№${v.num}</div>
-                    </div>
-                    <div style="display:flex; flex-direction:column; gap:2px; margin-left:6px;">
-                        ${cIdx > 0 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx-1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">◀</button>` : ''}
-                        ${cIdx < consistList.length - 1 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx+1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">▶</button>` : ''}
-                    </div>
-                    <button onclick="removeFromConsist(${cIdx})" style="border:none; background:#c62828; color:#fff; cursor:pointer; border-radius:3px; padding:2px 6px; font-weight:bold; margin-left:4px;">✕</button>
-                `;
-                track.appendChild(card);
+        function filterDB() {
+            let input = document.getElementById("searchInput").value.toUpperCase();
+            document.querySelectorAll("#dbTable tbody tr").forEach(row => {
+                row.style.display = row.innerText.toUpperCase().includes(input) ? "" : "none";
             });
         }
 
         window.addEventListener('DOMContentLoaded', () => {
             loadDatabase();
-            
-            let savedTheme = localStorage.getItem('railphoto_theme');
-            if (savedTheme === 'dark') {
-                document.body.classList.remove('light-theme');
-            } else {
-                document.body.classList.add('light-theme');
-            }
-
             renderTable();
+            loadProfileData();
         });
-
-        function openAddModal() {
-            document.getElementById('editIndex').value = "-1";
-            document.getElementById('formModalTitle').innerText = "➕ Добавление нового ПС";
-            document.getElementById('formModalSub').innerText = "Заполните данные для внесения локомотива/поезда в базу.";
-            document.getElementById('addVehicleForm').reset();
-            
-            restoreFormDraft();
-            
-            document.getElementById('addVehicleModal').style.display = 'flex';
-        }
-
-        function closeAddModal() {
-            document.getElementById('addVehicleModal').style.display = 'none';
-        }
-
-        function saveVehicle(event) {
-            event.preventDefault();
-            
-            let statusVal = document.getElementById('newStatus').value;
-            let editIdx = parseInt(document.getElementById('editIndex').value);
-
-            let vehicleData = {
-                id: editIdx >= 0 ? vehicleDB[editIdx].id : ('ps_' + Date.now()),
-                category: document.getElementById('newCategory').value,
-                park: document.getElementById('newPark').value.trim() || '—',
-                modelPrefix: document.getElementById('newModelPrefix').value.trim() || '—',
-                model: document.getElementById('newModel').value.trim() || '—',
-                gov: document.getElementById('newGov').value.trim() || '—',
-                num: document.getElementById('newNum').value.trim() || '—',
-                purposeKey: document.getElementById('newPurpose').value,
-                factory: document.getElementById('newFactory').value.trim() || '—',
-                build: document.getElementById('newBuild').value.trim() || '—',
-                arrive: document.getElementById('newArrive').value.trim() || '—',
-                start: document.getElementById('newStart').value.trim() || '—',
-                out: document.getElementById('newOut').value.trim() || '—',
-                decomm: document.getElementById('newDecomm').value.trim() || '—',
-                util: document.getElementById('newUtil').value.trim() || '—',
-                statusCls: statusVal,
-                statusKey: statusLabels[statusVal] || 'Эксплуатируется',
-                note: document.getElementById('newNote').value.trim() || '—'
-            };
-
-            if (editIdx >= 0) {
-                vehicleDB[editIdx] = vehicleData;
-                alert('Данные о ПС успешно обновлены!');
-            } else {
-                vehicleDB.unshift(vehicleData);
-                alert('Новая единица подвижного состава успешно добавлена!');
-                clearFormDraft();
-            }
-
-            saveDatabaseToStorage();
-            renderTable();
-            closeAddModal();
-
-            if (editIdx >= 0) {
-                openCardFromObj(editIdx);
-            }
-        }
-
-        function openCardFromObj(index) {
-            currentOpenVehicleIndex = index;
-            let v = vehicleDB[index];
-            
-            let dispGov = v.gov !== '—' && v.gov !== '????' ? v.gov : '№ ' + v.num;
-            document.getElementById('mTitle').innerText = v.model + " — " + dispGov;
-            document.getElementById('mSubtitle').innerText = v.park;
-            
-            document.getElementById('mCat').innerText = categoryNames[v.category || 'loco'] || '—';
-            document.getElementById('mGov').innerText = v.gov || '—';
-            document.getElementById('mNumber').innerText = v.num || '—';
-            document.getElementById('mPurpose').innerText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
-            document.getElementById('mFactory').innerText = v.factory || '—';
-            document.getElementById('mVin').innerText = v._generatedVin || "—";
-            document.getElementById('mBuild').innerText = v.build || '—';
-            document.getElementById('mArrive').innerText = v.arrive || '—';
-            document.getElementById('mStart').innerText = v.start || '—';
-            document.getElementById('mOut').innerText = v.out || '—';
-            document.getElementById('mDecomm').innerText = v.decomm || '—';
-            document.getElementById('mUtil').innerText = v.util || '—';
-            document.getElementById('mStatus').innerText = statusLabels[v.statusCls] || v.statusKey;
-            document.getElementById('mNote').innerText = v.note || "—";
-
-            document.getElementById('vehicleModal').style.display = 'flex';
-        }
-
-        function editCurrentVehicle() {
-            if (currentOpenVehicleIndex === null) return;
-            let v = vehicleDB[currentOpenVehicleIndex];
-
-            document.getElementById('editIndex').value = currentOpenVehicleIndex;
-            document.getElementById('formModalTitle').innerText = "✏️ Редактирование ПС";
-            document.getElementById('formModalSub').innerText = "Изменение статуса, дат или примечаний.";
-
-            document.getElementById('newCategory').value = v.category || 'loco';
-            document.getElementById('newPark').value = v.park !== '—' ? v.park : '';
-            document.getElementById('newModel').value = v.model !== '—' ? v.model : '';
-            document.getElementById('newModelPrefix').value = v.modelPrefix !== '—' ? v.modelPrefix : '';
-            document.getElementById('newGov').value = v.gov !== '—' ? v.gov : '—';
-            document.getElementById('newNum').value = v.num !== '—' ? v.num : '';
-            document.getElementById('newFactory').value = v.factory !== '—' ? v.factory : '—';
-            document.getElementById('newBuild').value = v.build !== '—' ? v.build : '—';
-            document.getElementById('newArrive').value = v.arrive !== '—' ? v.arrive : '—';
-            document.getElementById('newStart').value = v.start !== '—' ? v.start : '—';
-            document.getElementById('newOut').value = v.out !== '—' ? v.out : '—';
-            document.getElementById('newDecomm').value = v.decomm !== '—' ? v.decomm : '—';
-            document.getElementById('newUtil').value = v.util !== '—' ? v.util : '—';
-            document.getElementById('newStatus').value = v.statusCls || 'st-active';
-            document.getElementById('newPurpose').value = v.purposeKey || 'linear';
-            document.getElementById('newNote').value = v.note !== '—' ? v.note : '—';
-
-            closeCard();
-            document.getElementById('addVehicleModal').style.display = 'flex';
-        }
-
-        function deleteCurrentVehicle() {
-            if (currentOpenVehicleIndex === null || currentOpenVehicleIndex >= vehicleDB.length) return;
-            let v = vehicleDB[currentOpenVehicleIndex];
-            let nameDesc = `${v.model} (${v.gov !== '—' ? v.gov : 'Борт. ' + v.num})`;
-            
-            if (confirm(`Вы действительно хотите удалить ПС: ${nameDesc}?`)) {
-                vehicleDB.splice(currentOpenVehicleIndex, 1);
-                saveDatabaseToStorage();
-                closeCard();
-                renderTable();
-                alert('Единица ПС успешно удалена!');
-            }
-        }
-
-        function closeCard() { document.getElementById('vehicleModal').style.display = 'none'; }
-
-        function toggleTheme() { 
-            document.body.classList.toggle('light-theme');
-            let isLight = document.body.classList.contains('light-theme');
-            localStorage.setItem('railphoto_theme', isLight ? 'light' : 'dark');
-        }
-
-        function filterDB() {
-            let input = document.getElementById("searchInput").value.toUpperCase();
-            let parkFilter = document.getElementById("parkSelect").value;
-            let rows = document.querySelectorAll("#dbTable tbody tr");
-
-            rows.forEach(row => {
-                let text = row.innerText.toUpperCase();
-                let park = row.getAttribute("data-park");
-                let cat = row.getAttribute("data-category");
-
-                let matchesSearch = text.indexOf(input) > -1;
-                let matchesPark = parkFilter === "" || park === parkFilter;
-                let matchesCat = currentCategoryFilter === "all" || cat === currentCategoryFilter;
-
-                row.style.display = (matchesSearch && matchesPark && matchesCat) ? "" : "none";
-            });
-        }
-
-        window.onclick = function(event) {
-            let modal = document.getElementById('vehicleModal');
-            let addModal = document.getElementById('addVehicleModal');
-            if (event.target === modal) modal.style.display = "none";
-            if (event.target === addModal) addModal.style.display = "none";
-        }
     </script>
 </body>
 </html>
