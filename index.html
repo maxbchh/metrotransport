@@ -327,6 +327,12 @@
         }
         .specs-table td { padding: 5px 8px; border-bottom: 1px solid var(--bp-border); }
         .specs-table td.label { font-weight: bold; width: 28%; background: var(--bp-table-header); }
+        
+        .card-actions {
+            display: flex;
+            gap: 10px;
+            margin-top: 15px;
+        }
     </style>
 </head>
 <body class="light-theme">
@@ -400,16 +406,18 @@
         </div>
     </div>
 
+    <!-- Модальное окно: Добавление / Редактирование ПС -->
     <div class="modal-overlay" id="addVehicleModal">
-        <div class="modal-card" style="max-width: 550px;">
+        <div class="modal-card" style="max-width: 600px;">
             <span class="modal-close" onclick="closeAddModal()">&times;</span>
-            <div class="vehicle-title">➕ Добавление нового ПС</div>
-            <div class="vehicle-subtitle">Заполните данные для внесения локомотива/поезда в базу. Вы можете написать любое новое депо.</div>
+            <div class="vehicle-title" id="formModalTitle">➕ Добавление нового ПС</div>
+            <div class="vehicle-subtitle" id="formModalSub">Заполните данные для внесения локомотива/поезда в базу.</div>
             
-            <form id="addVehicleForm" onsubmit="saveNewVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
+            <form id="addVehicleForm" onsubmit="saveVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
+                <input type="hidden" id="editIndex" value="-1">
                 <div class="form-grid">
                     <div class="form-group">
-                        <label>Депо приписки (можно ввести свое):</label>
+                        <label>Депо приписки:</label>
                         <input type="text" id="newPark" placeholder="ТЧ-1 Минск-Сортировочный" required>
                     </div>
                     <div class="form-group">
@@ -441,6 +449,22 @@
                         <input type="text" id="newArrive" placeholder="ДД.ММ.ГГГГ" value="—">
                     </div>
                     <div class="form-group">
+                        <label>Начало работы:</label>
+                        <input type="text" id="newStart" placeholder="ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Отставлен / Выведен:</label>
+                        <input type="text" id="newOut" placeholder="ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата списания:</label>
+                        <input type="text" id="newDecomm" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
+                        <label>Дата утилизации:</label>
+                        <input type="text" id="newUtil" placeholder="ДД.ММ.ГГГГ" value="—">
+                    </div>
+                    <div class="form-group">
                         <label>Статус:</label>
                         <select id="newStatus">
                             <option value="st-active">Эксплуатируется</option>
@@ -468,11 +492,12 @@
                     <label>Примечание:</label>
                     <input type="text" id="newNote" placeholder="—" value="—">
                 </div>
-                <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить и добавить в базу</button>
+                <button type="submit" class="btn-primary" style="padding:10px; margin-top:5px;">Сохранить изменения</button>
             </form>
         </div>
     </div>
 
+    <!-- Модальное окно просмотра карточки ПС -->
     <div class="modal-overlay" id="vehicleModal">
         <div class="modal-card">
             <span class="modal-close" onclick="closeCard()">&times;</span>
@@ -504,7 +529,10 @@
                 <tr><td class="label">Примечание:</td><td id="mNote">—</td></tr>
             </table>
 
-            <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; width:100%; margin-top:10px;">🗑 Удалить ПС из базы</button>
+            <div class="card-actions">
+                <button onclick="editCurrentVehicle()" class="btn-primary" style="flex:1; padding:9px;">✏️ Редактировать ПС</button>
+                <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; flex:1;">🗑 Удалить ПС из базы</button>
+            </div>
         </div>
     </div>
 
@@ -513,7 +541,7 @@
             { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Эксплуатируется с пассажирскими поездами" },
             { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
             { park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой двухсекционный тепловоз" },
-            { park: "ТЧ-3 Барановичи", modelPrefix: "ВЛ80С", model: "ВЛ80С-540", gov: "11823901", num: "540", purposeKey: "linear", factory: "540", build: "15.08.1985", arrive: "20.08.1985", start: "1985", out: "08.2025", decomm: "—", util: "—", statusCls: "st-mod", statusKey: "КВР/Модернизация", note: "Проходит капительный ремонт" }
+            { park: "ТЧ-3 Барановичи", modelPrefix: "ВЛ80С", model: "ВЛ80С-540", gov: "11823901", num: "540", purposeKey: "linear", factory: "540", build: "15.08.1985", arrive: "20.08.1985", start: "1985", out: "08.2025", decomm: "—", util: "—", statusCls: "st-mod", statusKey: "КВР/Модернизация", note: "Проходит капитальный ремонт" }
         ];
 
         let vehicleDB = [];
@@ -599,7 +627,6 @@
             let parkSelect = document.getElementById('parkSelect');
             let currentSelection = parkSelect.value;
             
-            // Получаем уникальные депо из текущей базы
             let uniqueParks = [...new Set(vehicleDB.map(v => v.park))].filter(Boolean);
             uniqueParks.sort();
 
@@ -639,18 +666,18 @@
                     <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
                     <td><b>${v.park}</b></td>
                     <td><a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a></td>
-                    <td>${v.gov}</td>
-                    <td>${v.num}</td>
+                    <td>${v.gov || '—'}</td>
+                    <td>${v.num || '—'}</td>
                     <td>${purposeText}</td>
-                    <td class="f-num">${v.factory}</td>
+                    <td class="f-num">${v.factory || '—'}</td>
                     <td class="vin-cell">${vin}</td>
-                    <td>${v.build}</td>
-                    <td>${v.arrive}</td>
-                    <td>${v.start}</td>
-                    <td>${v.out}</td>
-                    <td>${v.decomm}</td>
-                    <td>${v.util}</td>
-                    <td>${v.note}</td>
+                    <td>${v.build || '—'}</td>
+                    <td>${v.arrive || '—'}</td>
+                    <td>${v.start || '—'}</td>
+                    <td>${v.out || '—'}</td>
+                    <td>${v.decomm || '—'}</td>
+                    <td>${v.util || '—'}</td>
+                    <td>${v.note || '—'}</td>
                 `;
                 tbody.appendChild(tr);
             });
@@ -670,43 +697,57 @@
         });
 
         function openAddModal() {
+            document.getElementById('editIndex').value = "-1";
+            document.getElementById('formModalTitle').innerText = "➕ Добавление нового ПС";
+            document.getElementById('formModalSub').innerText = "Заполните данные для внесения локомотива/поезда в базу.";
+            document.getElementById('addVehicleForm').reset();
             document.getElementById('addVehicleModal').style.display = 'flex';
         }
+
         function closeAddModal() {
             document.getElementById('addVehicleModal').style.display = 'none';
         }
 
-        function saveNewVehicle(event) {
+        function saveVehicle(event) {
             event.preventDefault();
             
             let statusVal = document.getElementById('newStatus').value;
+            let editIdx = parseInt(document.getElementById('editIndex').value);
 
-            let newBus = {
-                park: document.getElementById('newPark').value.trim(),
-                modelPrefix: document.getElementById('newModelPrefix').value.trim(),
-                model: document.getElementById('newModel').value.trim(),
-                gov: document.getElementById('newGov').value.trim(),
-                num: document.getElementById('newNum').value.trim(),
+            let vehicleData = {
+                park: document.getElementById('newPark').value.trim() || '—',
+                modelPrefix: document.getElementById('newModelPrefix').value.trim() || '—',
+                model: document.getElementById('newModel').value.trim() || '—',
+                gov: document.getElementById('newGov').value.trim() || '—',
+                num: document.getElementById('newNum').value.trim() || '—',
                 purposeKey: document.getElementById('newPurpose').value,
-                factory: document.getElementById('newFactory').value.trim(),
-                build: document.getElementById('newBuild').value.trim(),
-                arrive: document.getElementById('newArrive').value.trim(),
-                start: "2026",
-                out: "—",
-                decomm: "—",
-                util: "—",
+                factory: document.getElementById('newFactory').value.trim() || '—',
+                build: document.getElementById('newBuild').value.trim() || '—',
+                arrive: document.getElementById('newArrive').value.trim() || '—',
+                start: document.getElementById('newStart').value.trim() || '—',
+                out: document.getElementById('newOut').value.trim() || '—',
+                decomm: document.getElementById('newDecomm').value.trim() || '—',
+                util: document.getElementById('newUtil').value.trim() || '—',
                 statusCls: statusVal,
                 statusKey: statusLabels[statusVal] || 'Эксплуатируется',
-                note: document.getElementById('newNote').value.trim()
+                note: document.getElementById('newNote').value.trim() || '—'
             };
 
-            vehicleDB.unshift(newBus); 
+            if (editIdx >= 0) {
+                vehicleDB[editIdx] = vehicleData;
+                alert('Данные о ПС успешно обновлены!');
+            } else {
+                vehicleDB.unshift(vehicleData);
+                alert('Новая единица подвижного состава успешно добавлена!');
+            }
+
             saveDatabaseToStorage();
-            
             renderTable();
             closeAddModal();
-            document.getElementById('addVehicleForm').reset();
-            alert('Новая единица подвижного состава успешно добавлена!');
+
+            if (editIdx >= 0) {
+                openCardFromObj(editIdx);
+            }
         }
 
         function openCardFromObj(index) {
@@ -717,21 +758,49 @@
             document.getElementById('mTitle').innerText = v.model + " — " + dispGov;
             document.getElementById('mSubtitle').innerText = v.park;
             
-            document.getElementById('mGov').innerText = v.gov;
-            document.getElementById('mNumber').innerText = v.num;
+            document.getElementById('mGov').innerText = v.gov || '—';
+            document.getElementById('mNumber').innerText = v.num || '—';
             document.getElementById('mPurpose').innerText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
-            document.getElementById('mFactory').innerText = v.factory;
+            document.getElementById('mFactory').innerText = v.factory || '—';
             document.getElementById('mVin').innerText = v._generatedVin || "—";
-            document.getElementById('mBuild').innerText = v.build;
-            document.getElementById('mArrive').innerText = v.arrive;
-            document.getElementById('mStart').innerText = v.start;
-            document.getElementById('mOut').innerText = v.out;
-            document.getElementById('mDecomm').innerText = v.decomm;
-            document.getElementById('mUtil').innerText = v.util;
+            document.getElementById('mBuild').innerText = v.build || '—';
+            document.getElementById('mArrive').innerText = v.arrive || '—';
+            document.getElementById('mStart').innerText = v.start || '—';
+            document.getElementById('mOut').innerText = v.out || '—';
+            document.getElementById('mDecomm').innerText = v.decomm || '—';
+            document.getElementById('mUtil').innerText = v.util || '—';
             document.getElementById('mStatus').innerText = statusLabels[v.statusCls] || v.statusKey;
             document.getElementById('mNote').innerText = v.note || "—";
 
             document.getElementById('vehicleModal').style.display = 'flex';
+        }
+
+        function editCurrentVehicle() {
+            if (currentOpenVehicleIndex === null) return;
+            let v = vehicleDB[currentOpenVehicleIndex];
+
+            document.getElementById('editIndex').value = currentOpenVehicleIndex;
+            document.getElementById('formModalTitle').innerText = "✏️ Редактирование ПС";
+            document.getElementById('formModalSub').innerText = "Изменение статуса, дат или примечаний.";
+
+            document.getElementById('newPark').value = v.park !== '—' ? v.park : '';
+            document.getElementById('newModel').value = v.model !== '—' ? v.model : '';
+            document.getElementById('newModelPrefix').value = v.modelPrefix !== '—' ? v.modelPrefix : '';
+            document.getElementById('newGov').value = v.gov !== '—' ? v.gov : '—';
+            document.getElementById('newNum').value = v.num !== '—' ? v.num : '';
+            document.getElementById('newFactory').value = v.factory !== '—' ? v.factory : '—';
+            document.getElementById('newBuild').value = v.build !== '—' ? v.build : '—';
+            document.getElementById('newArrive').value = v.arrive !== '—' ? v.arrive : '—';
+            document.getElementById('newStart').value = v.start !== '—' ? v.start : '—';
+            document.getElementById('newOut').value = v.out !== '—' ? v.out : '—';
+            document.getElementById('newDecomm').value = v.decomm !== '—' ? v.decomm : '—';
+            document.getElementById('newUtil').value = v.util !== '—' ? v.util : '—';
+            document.getElementById('newStatus').value = v.statusCls || 'st-active';
+            document.getElementById('newPurpose').value = v.purposeKey || 'linear';
+            document.getElementById('newNote').value = v.note !== '—' ? v.note : '—';
+
+            closeCard();
+            document.getElementById('addVehicleModal').style.display = 'flex';
         }
 
         function deleteCurrentVehicle() {
