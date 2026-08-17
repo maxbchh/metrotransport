@@ -83,6 +83,21 @@
             gap: 15px;
         }
 
+        .nav-tab-btn {
+            background: rgba(255,255,255,0.15);
+            border: 1px solid rgba(255,255,255,0.3);
+            color: #fff;
+            padding: 6px 12px;
+            border-radius: 4px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+        }
+        .nav-tab-btn.active {
+            background: #2563eb;
+            border-color: #3b82f6;
+        }
+
         .theme-toggle-btn {
             background: rgba(0,0,0,0.3);
             border: 1px solid rgba(255,255,255,0.3);
@@ -139,6 +154,29 @@
         }
         .btn-secondary:hover { background: #444; }
 
+        /* Вкладки подкатегорий */
+        .category-tabs {
+            display: flex;
+            gap: 6px;
+            margin-bottom: 10px;
+            flex-wrap: wrap;
+        }
+        .cat-tab {
+            padding: 6px 12px;
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 3px;
+            cursor: pointer;
+            font-size: 11px;
+            font-weight: bold;
+            color: var(--bp-text);
+        }
+        .cat-tab.active {
+            background: var(--bp-link);
+            color: #fff;
+            border-color: var(--bp-link);
+        }
+
         .filter-panel {
             background: var(--bp-card-bg);
             border: 1px solid var(--bp-border);
@@ -191,11 +229,21 @@
         }
 
         table.bp-table tbody tr { cursor: pointer; }
+        table.bp-table tbody tr.dragging { opacity: 0.4; }
         table.bp-table tbody tr:hover { outline: 1px solid var(--bp-link); }
 
+        .drag-handle {
+            cursor: grab;
+            user-select: none;
+            font-size: 14px;
+            text-align: center;
+            color: #888;
+        }
+        .drag-handle:active { cursor: grabbing; }
+
         .table-thumb {
-            width: 45px;
-            height: 30px;
+            width: 35px;
+            height: 24px;
             background: #111;
             border: 1px solid var(--bp-border);
             border-radius: 2px;
@@ -205,9 +253,17 @@
             font-size: 10px;
             color: #777;
             overflow: hidden;
-            cursor: pointer;
         }
-        .table-thumb:hover { border-color: var(--bp-link); }
+
+        .type-badge {
+            display: inline-block;
+            padding: 2px 6px;
+            border-radius: 3px;
+            font-size: 9px;
+            font-weight: bold;
+            background: rgba(255,255,255,0.1);
+            border: 1px solid var(--bp-border);
+        }
 
         .legend-bar {
             display: flex;
@@ -221,6 +277,68 @@
         }
         .legend-item { display: flex; align-items: center; gap: 5px; }
         .legend-color { width: 12px; height: 12px; border-radius: 2px; }
+
+        /* Конструктор поездов */
+        .builder-layout {
+            display: grid;
+            grid-template-columns: 320px 1fr;
+            gap: 15px;
+        }
+        @media (max-width: 850px) {
+            .builder-layout { grid-template-columns: 1fr; }
+        }
+
+        .builder-source {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-border);
+            padding: 10px;
+            border-radius: 4px;
+            max-height: 70vh;
+            overflow-y: auto;
+        }
+
+        .builder-source-item {
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            padding: 8px;
+            margin-bottom: 6px;
+            border-radius: 3px;
+            display: flex;
+            justify-content: space-between;
+            align-items: center;
+        }
+
+        .consist-area {
+            background: var(--bp-card-bg);
+            border: 2px dashed var(--bp-border);
+            padding: 15px;
+            border-radius: 4px;
+            min-height: 300px;
+        }
+
+        .consist-track {
+            display: flex;
+            flex-wrap: wrap;
+            gap: 8px;
+            align-items: center;
+            min-height: 100px;
+            padding: 10px;
+            background: var(--bp-input-bg);
+            border: 1px solid var(--bp-border);
+            border-radius: 4px;
+        }
+
+        .consist-card {
+            background: var(--bp-card-bg);
+            border: 1px solid var(--bp-link);
+            padding: 8px 12px;
+            border-radius: 4px;
+            display: flex;
+            align-items: center;
+            gap: 8px;
+            box-shadow: 0 2px 5px rgba(0,0,0,0.2);
+            cursor: move;
+        }
 
         .modal-overlay {
             display: none;
@@ -343,12 +461,15 @@
             <span style="font-size:15px; font-weight:bold; margin-left:8px;">База данных ПС</span>
         </div>
         <div class="header-controls">
-            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Сменить тему</button>
+            <button class="nav-tab-btn active" id="btnViewDatabase" onclick="switchPage('database')">📚 База данных</button>
+            <button class="nav-tab-btn" id="btnViewBuilder" onclick="switchPage('builder')">🚂 Конструктор поездов</button>
+            <button class="theme-toggle-btn" onclick="toggleTheme()">🌓 Тема</button>
             <div style="font-size:11px; color:#c8e6c9;"><span>ПС в базе</span>: <b id="dbCount">0</b></div>
         </div>
     </header>
 
-    <div class="main-wrapper">
+    <!-- СТРАНИЦА 1: БАЗА ДАННЫХ -->
+    <div id="pageDatabase" class="main-wrapper">
         <div class="page-header">
             <span>Белорусская железная дорога — Подвижной состав</span>
             <div class="action-buttons">
@@ -357,6 +478,15 @@
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importDatabase(event)">
                 <button class="btn-primary" onclick="openAddModal()">➕ Добавить ПС</button>
             </div>
+        </div>
+
+        <!-- Вкладки категорий -->
+        <div class="category-tabs">
+            <div class="cat-tab active" onclick="setCategoryFilter('all', this)">Все варианты</div>
+            <div class="cat-tab" onclick="setCategoryFilter('loco', this)">🚂 Локомотивы</div>
+            <div class="cat-tab" onclick="setCategoryFilter('pass_car', this)">🚃 Пассажирские вагоны</div>
+            <div class="cat-tab" onclick="setCategoryFilter('freight_car', this)">📦 Грузовые вагоны</div>
+            <div class="cat-tab" onclick="setCategoryFilter('mvps', this)">🚆 МВПС / Специальный</div>
         </div>
 
         <div class="filter-panel">
@@ -370,7 +500,9 @@
             <table class="bp-table" id="dbTable">
                 <thead>
                     <tr>
+                        <th style="width: 25px; text-align:center;">⋮⋮</th>
                         <th style="width: 40px;">Фото</th>
+                        <th>Тип</th>
                         <th>Депо приписки</th>
                         <th>Серия / Модель</th>
                         <th>Сетевой номер</th>
@@ -406,6 +538,37 @@
         </div>
     </div>
 
+    <!-- СТРАНИЦА 2: КОНСТРУКТОР СБОРНОГО ПОЕЗДА -->
+    <div id="pageBuilder" class="main-wrapper" style="display:none;">
+        <div class="page-header">
+            <span>Составление сборного поезда для следования</span>
+            <div class="action-buttons">
+                <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
+            </div>
+        </div>
+
+        <div class="builder-layout">
+            <div class="builder-source">
+                <div style="font-weight:bold; margin-bottom:8px;">Доступный ПС из базы:</div>
+                <input type="text" id="builderSearch" placeholder="Поиск вагонов/локомотивов..." onkeyup="renderBuilderSource()" style="width:100%; box-sizing:border-box; padding:5px; margin-bottom:8px; font-size:11px; border:1px solid var(--bp-border); background:var(--bp-input-bg); color:var(--bp-text); border-radius:3px;">
+                <div id="builderSourceList"></div>
+            </div>
+
+            <div class="consist-area">
+                <div style="display:flex; justify-content:space-between; align-items:center; margin-bottom:10px;">
+                    <div style="font-weight:bold; font-size:13px;">Сформированный поезд:</div>
+                    <div style="font-size:11px; background:var(--bp-input-bg); padding:4px 8px; border:1px solid var(--bp-border); border-radius:3px;">Единиц в поезде: <b id="consistCount">0</b></div>
+                </div>
+
+                <div class="consist-track" id="consistTrack">
+                    <div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">
+                        Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав
+                    </div>
+                </div>
+            </div>
+        </div>
+    </div>
+
     <!-- Модальное окно: Добавление / Редактирование ПС -->
     <div class="modal-overlay" id="addVehicleModal">
         <div class="modal-card" style="max-width: 600px;">
@@ -416,6 +579,15 @@
             <form id="addVehicleForm" onsubmit="saveVehicle(event)" style="display: flex; flex-direction: column; gap: 10px;">
                 <input type="hidden" id="editIndex" value="-1">
                 <div class="form-grid">
+                    <div class="form-group">
+                        <label>Тип / Категория ПС:</label>
+                        <select id="newCategory" required>
+                            <option value="loco">🚂 Локомотив</option>
+                            <option value="pass_car">🚃 Пассажирский вагон</option>
+                            <option value="freight_car">📦 Грузовой вагон</option>
+                            <option value="mvps">🚆 МВПС / Специальный ПС</option>
+                        </select>
+                    </div>
                     <div class="form-group">
                         <label>Депо приписки:</label>
                         <input type="text" id="newPark" placeholder="ТЧ-1 Минск-Сортировочный" required>
@@ -514,6 +686,7 @@
 
             <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
             <table class="specs-table">
+                <tr><td class="label">Категория ПС:</td><td id="mCat">—</td></tr>
                 <tr><td class="label">Сетевой номер:</td><td id="mGov">—</td></tr>
                 <tr><td class="label">Бортовой №:</td><td id="mNumber">—</td></tr>
                 <tr><td class="label">Назначение:</td><td id="mPurpose">—</td></tr>
@@ -538,14 +711,24 @@
 
     <script>
         const defaultVehicleDB = [
-            { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Эксплуатируется с пассажирскими поездами" },
-            { park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
-            { park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой двухсекционный тепловоз" },
-            { park: "ТЧ-3 Барановичи", modelPrefix: "ВЛ80С", model: "ВЛ80С-540", gov: "11823901", num: "540", purposeKey: "linear", factory: "540", build: "15.08.1985", arrive: "20.08.1985", start: "1985", out: "08.2025", decomm: "—", util: "—", statusCls: "st-mod", statusKey: "КВР/Модернизация", note: "Проходит капитальный ремонт" }
+            { category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский электровоз" },
+            { category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
+            { category: "loco", park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой тепловоз" },
+            { category: "freight_car", park: "ВЧД-1 Минск", modelPrefix: "11-280", model: "Крытый вагон 11-280", gov: "52841029", num: "1029", purposeKey: "linear", factory: "884", build: "12.04.2010", arrive: "15.04.2010", start: "2010", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Универсальный крытый вагон" },
+            { category: "pass_car", park: "ЛВЧ-1 Минск", modelPrefix: "61-4177", model: "Купейный вагон 61-4177", gov: "01784920", num: "4920", purposeKey: "linear", factory: "310", build: "18.09.2018", arrive: "20.09.2018", start: "2018", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский купейный вагон СМК" }
         ];
 
         let vehicleDB = [];
         let currentOpenVehicleIndex = null;
+        let currentCategoryFilter = 'all';
+        let consistList = []; // Поезд сборный
+
+        const categoryNames = {
+            'loco': '🚂 Локомотив',
+            'pass_car': '🚃 Пассажирский вагон',
+            'freight_car': '📦 Грузовой вагон',
+            'mvps': '🚆 МВПС / Спец'
+        };
 
         const statusLabels = {
             'st-active': 'Эксплуатируется',
@@ -565,6 +748,19 @@
             'service': 'Хозяйственный / Служебный',
             '—': '—'
         };
+
+        function switchPage(page) {
+            document.getElementById('pageDatabase').style.display = (page === 'database') ? 'block' : 'none';
+            document.getElementById('pageBuilder').style.display = (page === 'builder') ? 'block' : 'none';
+            
+            document.getElementById('btnViewDatabase').classList.toggle('active', page === 'database');
+            document.getElementById('btnViewBuilder').classList.toggle('active', page === 'builder');
+
+            if (page === 'builder') {
+                renderBuilderSource();
+                renderConsistTrack();
+            }
+        }
 
         function loadDatabase() {
             let saved = localStorage.getItem('railphoto_custom_db');
@@ -623,6 +819,13 @@
             return "RZ1" + modelNoDot + paddedFactory;
         }
 
+        function setCategoryFilter(cat, elem) {
+            currentCategoryFilter = cat;
+            document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
+            elem.classList.add('active');
+            filterDB();
+        }
+
         function updateParkSelect() {
             let parkSelect = document.getElementById('parkSelect');
             let currentSelection = parkSelect.value;
@@ -650,20 +853,29 @@
             vehicleDB.forEach((v, index) => {
                 let tr = document.createElement('tr');
                 tr.className = v.statusCls;
+                tr.setAttribute('data-index', index);
                 tr.setAttribute('data-park', v.park);
-                
+                tr.setAttribute('data-category', v.category || 'loco');
+                tr.draggable = true;
+
+                // Drag and drop события для строк таблицы
+                tr.addEventListener('dragstart', handleDragStart);
+                tr.addEventListener('dragover', handleDragOver);
+                tr.addEventListener('drop', handleDrop);
+                tr.addEventListener('dragend', handleDragEnd);
+
                 let vin = generateVIN(v.model, v.factory);
                 v._generatedVin = vin; 
                 
-                tr.onclick = () => {
-                    openCardFromObj(index);
-                };
+                tr.onclick = () => { openCardFromObj(index); };
                 
                 let purposeText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
-                let statusText = statusLabels[v.statusCls] || v.statusKey;
-                
+                let catLabel = categoryNames[v.category || 'loco'] || '—';
+
                 tr.innerHTML = `
+                    <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
                     <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
+                    <td><span class="type-badge">${catLabel}</span></td>
                     <td><b>${v.park}</b></td>
                     <td><a href="#" onclick="event.stopPropagation(); openCardFromObj(${index}); return false;"><b>${v.model}</b></a></td>
                     <td>${v.gov || '—'}</td>
@@ -680,6 +892,114 @@
                     <td>${v.note || '—'}</td>
                 `;
                 tbody.appendChild(tr);
+            });
+
+            filterDB();
+        }
+
+        /* Логика Drag and Drop перетаскивания строк таблицы */
+        let dragSrcIndex = null;
+
+        function handleDragStart(e) {
+            dragSrcIndex = Number(this.getAttribute('data-index'));
+            this.classList.add('dragging');
+            e.dataTransfer.effectAllowed = 'move';
+        }
+
+        function handleDragOver(e) {
+            if (e.preventDefault) e.preventDefault();
+            e.dataTransfer.dropEffect = 'move';
+            return false;
+        }
+
+        function handleDrop(e) {
+            if (e.stopPropagation) e.stopPropagation();
+            let targetIndex = Number(this.getAttribute('data-index'));
+
+            if (dragSrcIndex !== null && dragSrcIndex !== targetIndex) {
+                const movedItem = vehicleDB.splice(dragSrcIndex, 1)[0];
+                vehicleDB.splice(targetIndex, 0, movedItem);
+                saveDatabaseToStorage();
+                renderTable();
+            }
+            return false;
+        }
+
+        function handleDragEnd() {
+            this.classList.remove('dragging');
+        }
+
+        /* Конструктор поездов (Сборный поезд) */
+        function renderBuilderSource() {
+            let list = document.getElementById('builderSourceList');
+            let q = document.getElementById('builderSearch').value.toUpperCase();
+            list.innerHTML = '';
+
+            vehicleDB.forEach((v, idx) => {
+                let name = `${v.model} (${v.num})`;
+                if (name.toUpperCase().includes(q)) {
+                    let div = document.createElement('div');
+                    div.className = 'builder-source-item';
+                    div.innerHTML = `
+                        <div>
+                            <div><b>${v.model}</b></div>
+                            <div style="font-size:10px; color:#888;">${categoryNames[v.category||'loco']} | №${v.num}</div>
+                        </div>
+                        <button class="btn-primary" style="padding:3px 8px;" onclick="addToConsist(${idx})">+ В поезд</button>
+                    `;
+                    list.appendChild(div);
+                }
+            });
+        }
+
+        function addToConsist(dbIndex) {
+            consistList.push(vehicleDB[dbIndex]);
+            renderConsistTrack();
+        }
+
+        function removeFromConsist(cIndex) {
+            consistList.splice(cIndex, 1);
+            renderConsistTrack();
+        }
+
+        function moveConsistItem(from, to) {
+            if (to < 0 || to >= consistList.length) return;
+            let item = consistList.splice(from, 1)[0];
+            consistList.splice(to, 0, item);
+            renderConsistTrack();
+        }
+
+        function clearConsist() {
+            consistList = [];
+            renderConsistTrack();
+        }
+
+        function renderConsistTrack() {
+            let track = document.getElementById('consistTrack');
+            document.getElementById('consistCount').innerText = consistList.length;
+
+            if (consistList.length === 0) {
+                track.innerHTML = `<div style="color:#888; font-style:italic; width:100%; text-align:center; padding:20px;">Нажмите «+ В поезд» слева, чтобы добавить локомотив или вагоны в состав</div>`;
+                return;
+            }
+
+            track.innerHTML = '';
+            consistList.forEach((v, cIdx) => {
+                let card = document.createElement('div');
+                card.className = 'consist-card';
+                card.innerHTML = `
+                    <div style="font-size:16px;">${v.category === 'loco' ? '🚂' : '🚃'}</div>
+                    <div>
+                        <div style="font-weight:bold;">${v.model}</div>
+                        <div style="font-size:9px; color:#888;">№${v.num}</div>
+                    </div>
+                    <div style="display:flex; flex-direction:column; gap:2px; margin-left:6px;">
+                        ${cIdx > 0 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx-1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">◀</button>` : ''}
+                        ${cIdx < consistList.length - 1 ? `<button onclick="moveConsistItem(${cIdx}, ${cIdx+1})" style="border:none; background:var(--bp-border); color:#fff; cursor:pointer; font-size:8px; border-radius:2px;">▶</button>` : ''}
+                    </div>
+                    <button onclick="removeFromConsist(${cIdx})" style="border:none; background:#c62828; color:#fff; cursor:pointer; border-radius:3px; padding:2px 6px; font-weight:bold; margin-left:4px;">✕</button>
+                `;
+                track.appendChild(card);
             });
         }
 
@@ -715,6 +1035,7 @@
             let editIdx = parseInt(document.getElementById('editIndex').value);
 
             let vehicleData = {
+                category: document.getElementById('newCategory').value,
                 park: document.getElementById('newPark').value.trim() || '—',
                 modelPrefix: document.getElementById('newModelPrefix').value.trim() || '—',
                 model: document.getElementById('newModel').value.trim() || '—',
@@ -758,6 +1079,7 @@
             document.getElementById('mTitle').innerText = v.model + " — " + dispGov;
             document.getElementById('mSubtitle').innerText = v.park;
             
+            document.getElementById('mCat').innerText = categoryNames[v.category || 'loco'] || '—';
             document.getElementById('mGov').innerText = v.gov || '—';
             document.getElementById('mNumber').innerText = v.num || '—';
             document.getElementById('mPurpose').innerText = purposeLabelsMap[v.purposeKey] || v.purposeKey;
@@ -783,6 +1105,7 @@
             document.getElementById('formModalTitle').innerText = "✏️ Редактирование ПС";
             document.getElementById('formModalSub').innerText = "Изменение статуса, дат или примечаний.";
 
+            document.getElementById('newCategory').value = v.category || 'loco';
             document.getElementById('newPark').value = v.park !== '—' ? v.park : '';
             document.getElementById('newModel').value = v.model !== '—' ? v.model : '';
             document.getElementById('newModelPrefix').value = v.modelPrefix !== '—' ? v.modelPrefix : '';
@@ -833,9 +1156,13 @@
             rows.forEach(row => {
                 let text = row.innerText.toUpperCase();
                 let park = row.getAttribute("data-park");
+                let cat = row.getAttribute("data-category");
+
                 let matchesSearch = text.indexOf(input) > -1;
                 let matchesPark = parkFilter === "" || park === parkFilter;
-                row.style.display = (matchesSearch && matchesPark) ? "" : "none";
+                let matchesCat = currentCategoryFilter === "all" || cat === currentCategoryFilter;
+
+                row.style.display = (matchesSearch && matchesPark && matchesCat) ? "" : "none";
             });
         }
 
