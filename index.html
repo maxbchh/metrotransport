@@ -6,7 +6,7 @@
     <meta http-equiv="Cache-Control" content="no-cache, no-store, must-revalidate">
     <meta http-equiv="Pragma" content="no-cache">
     <meta http-equiv="Expires" content="0">
-    <title>RAILPHOTO — База данных подвижного состава</title>
+    <title>RAILPHOTO — База данных и Составитель поездов</title>
     <style>
         :root {
             --bp-header-bg: #102a43;
@@ -240,20 +240,6 @@
         }
         .drag-handle:active { cursor: grabbing; }
 
-        .table-thumb {
-            width: 35px;
-            height: 24px;
-            background: #111;
-            border: 1px solid var(--bp-border);
-            border-radius: 2px;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            font-size: 10px;
-            color: #777;
-            overflow: hidden;
-        }
-
         .type-badge {
             display: inline-block;
             padding: 2px 6px;
@@ -415,47 +401,6 @@
             border-radius: 3px;
         }
 
-        .photo-gallery-grid {
-            display: grid;
-            grid-template-columns: repeat(auto-fill, minmax(140px, 1fr));
-            gap: 10px;
-            margin-bottom: 15px;
-        }
-
-        .busphoto-thumb {
-            background: var(--bp-input-bg);
-            border: 1px solid var(--bp-border);
-            border-radius: 3px;
-            overflow: hidden;
-            cursor: pointer;
-            transition: transform 0.15s, border-color 0.15s;
-        }
-        .busphoto-thumb:hover {
-            border-color: var(--bp-link);
-            transform: translateY(-2px);
-        }
-        .thumb-img-wrapper {
-            height: 95px;
-            background: #111;
-            display: flex;
-            align-items: center;
-            justify-content: center;
-            position: relative;
-            color: #555;
-            font-size: 10px;
-        }
-        .thumb-caption {
-            padding: 5px;
-            font-size: 10px;
-            text-align: center;
-            color: var(--bp-text);
-            background: var(--bp-card-bg);
-            border-top: 1px solid var(--bp-border);
-            white-space: nowrap;
-            overflow: hidden;
-            text-overflow: ellipsis;
-        }
-
         .specs-table {
             width: 100%;
             border-collapse: collapse;
@@ -486,13 +431,6 @@
             padding: 2px 6px;
             border-radius: 3px;
             white-space: nowrap;
-            animation: pulse-badge 2s infinite;
-        }
-
-        @keyframes pulse-badge {
-            0% { opacity: 1; }
-            50% { opacity: 0.7; }
-            100% { opacity: 1; }
         }
 
         .btn-cancel-trip {
@@ -515,7 +453,6 @@
             background-color: rgba(217, 83, 79, 0.2) !important;
         }
 
-        /* Стиль распечатываемой справки ВУ-45 */
         .schedule-box {
             background: var(--bp-card-bg);
             border: 1px solid var(--bp-border);
@@ -535,11 +472,23 @@
             line-height: 1.4;
             max-width: 650px;
         }
+
+        /* Правила печати */
+        @media print {
+            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .legend-bar, .builder-layout {
+                display: none !important;
+            }
+            body { background: #fff !important; color: #000 !important; }
+            .main-wrapper { padding: 0 !important; }
+            .table-container, .schedule-box { border: none !important; background: transparent !important; }
+            table.bp-table th, table.bp-table td { border: 1px solid #000 !important; color: #000 !important; }
+            .vu45-ticket { border: 2px solid #000 !important; }
+        }
     </style>
 </head>
 <body class="light-theme">
 
-    <header>
+    <header class="no-print">
         <div>
             <span class="logo-box">RAILPHOTO</span>
             <span style="font-size:15px; font-weight:bold; margin-left:8px;">База данных ПС</span>
@@ -556,8 +505,8 @@
     <!-- СТРАНИЦА 1: БАЗА ДАННЫХ -->
     <div id="pageDatabase" class="main-wrapper">
         <div class="page-header">
-            <span>Белорусская железная дорога — Подвижной состав</span>
-            <div class="action-buttons">
+            <span>Подвижной состав — База данных</span>
+            <div class="action-buttons no-print">
                 <button class="btn-secondary" onclick="exportDatabase()">💾 Экспорт БД</button>
                 <button class="btn-secondary" onclick="document.getElementById('importFile').click()">📂 Импорт БД</button>
                 <input type="file" id="importFile" style="display:none" accept=".json" onchange="importDatabase(event)">
@@ -565,7 +514,7 @@
             </div>
         </div>
 
-        <div class="category-tabs">
+        <div class="category-tabs no-print">
             <div class="cat-tab active" onclick="setCategoryFilter('all', this)">Все варианты</div>
             <div class="cat-tab" onclick="setCategoryFilter('loco', this)">🚂 Локомотивы</div>
             <div class="cat-tab" onclick="setCategoryFilter('pass_car', this)">🚃 Пассажирские вагоны</div>
@@ -573,7 +522,7 @@
             <div class="cat-tab" onclick="setCategoryFilter('mvps', this)">🚆 МВПС / Специальный</div>
         </div>
 
-        <div class="filter-panel">
+        <div class="filter-panel no-print">
             <input type="text" id="searchInput" onkeyup="filterDB()" placeholder="Фильтр по серии, номеру...">
             <select id="parkSelect" onchange="filterDB()">
                 <option value="">Все депо</option>
@@ -584,10 +533,9 @@
             <table class="bp-table" id="dbTable">
                 <thead>
                     <tr>
-                        <th style="width: 25px; text-align:center;">⋮⋮</th>
-                        <th style="width: 40px;">Фото</th>
+                        <th style="width: 25px; text-align:center;" class="no-print">⋮⋮</th>
                         <th>Тип</th>
-                        <th>Депо приписки</th>
+                        <th>Депо / Станция</th>
                         <th>Серия / Модель</th>
                         <th>Сетевой номер</th>
                         <th>Бортовой №</th>
@@ -607,7 +555,7 @@
             </table>
         </div>
 
-        <div class="legend-bar">
+        <div class="legend-bar no-print">
             <b>Статусы:</b>
             <div class="legend-item"><div class="legend-color" style="background:#28a745;"></div> <span>Эксплуатируется</span></div>
             <div class="legend-item"><div class="legend-color" style="background:#2e5c2e;"></div> <span>Не был в эксплуатации</span></div>
@@ -626,20 +574,20 @@
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>Параметры и составление поезда для следования</span>
-            <div class="action-buttons">
+            <div class="action-buttons no-print">
                 <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
                 <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить состав</button>
             </div>
         </div>
 
-        <div class="trip-form-panel">
+        <div class="trip-form-panel no-print">
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Номер поезда / рейса:</label>
-                <input type="text" id="tripNumInput" placeholder="Например: 601Б / 702">
+                <input type="text" id="tripNumInput" placeholder="Например: 601 / 602">
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Маршрут / Сообщение:</label>
-                <input type="text" id="tripRouteInput" placeholder="Заслоново — Пионерская">
+                <input type="text" id="tripRouteInput" placeholder="Крутоборка — Сосновый Бор">
             </div>
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Дата отправления:</label>
@@ -652,7 +600,7 @@
         </div>
 
         <div class="builder-layout">
-            <div class="builder-source">
+            <div class="builder-source no-print">
                 <div style="font-weight:bold; margin-bottom:8px;">Доступный ПС из базы:</div>
                 <input type="text" id="builderSearch" placeholder="Поиск вагонов/локомотивов..." onkeyup="renderBuilderSource()" style="width:100%; box-sizing:border-box; padding:5px; margin-bottom:8px; font-size:11px; border:1px solid var(--bp-border); background:var(--bp-input-bg); color:var(--bp-text); border-radius:3px;">
                 <div id="builderSourceList"></div>
@@ -677,16 +625,19 @@
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>📅 Генератор расписания и справки опробования тормозов (ВУ-45)</span>
+            <div class="action-buttons no-print">
+                <button class="btn-primary" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
+            </div>
         </div>
 
-        <div class="trip-form-panel">
+        <div class="trip-form-panel no-print">
             <div>
                 <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Выберите созданный поезд:</label>
                 <select id="schTrainSelect" style="padding:6px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border); border-radius:3px; width:100%;" onchange="autoFillSchTime()"></select>
             </div>
             <div>
-                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления (Заслоново):</label>
-                <input type="time" id="schTimeInput" value="11:00">
+                <label style="font-weight:bold; font-size:11px; display:block; margin-bottom:3px;">Время отправления (Крутоборка):</label>
+                <input type="time" id="schTimeInput" value="10:00">
             </div>
             <div style="display:flex; align-items:flex-end;">
                 <button class="btn-primary" onclick="generateScheduleAndVU45()" style="width:100%; padding:7px;">⚡ Сгенерировать расписание</button>
@@ -700,9 +651,9 @@
                     <table class="bp-table" id="schTable">
                         <thead>
                             <tr>
-                                <th>Станция / Разъезд</th>
+                                <th>Раздельный пункт / ОП</th>
                                 <th>Прибытие</th>
-                                <th>Стоянка (мин)</th>
+                                <th>Стоянка</th>
                                 <th>Отправление</th>
                                 <th>Перегон</th>
                                 <th>Время в пути</th>
@@ -725,7 +676,7 @@
                     <div><b>Хвостовой вагон №:</b> <span id="vuTailCar">—</span> (Огражден, К/С проверен)</div>
                     <hr style="border-top: 1px dashed #000;">
                     <div>Опробование тормозов: <b>ПОЛНОЕ (от стационарной сети / локомотива)</b></div>
-                    <div style="margin-top:10px; font-style:italic;">Осмотрщик вагонов (ДЖД): _________________ (Подпись)</div>
+                    <div style="margin-top:10px; font-style:italic;">Осмотрщик вагонов: _________________ (Подпись)</div>
                     <div>Машинист: _________________ (Подпись)</div>
                 </div>
             </div>
@@ -752,36 +703,36 @@
                         </select>
                     </div>
                     <div class="form-group">
-                        <label>Депо приписки:</label>
-                        <input type="text" id="newPark" placeholder="ТЧ-1 Минск-Сортировочный" required>
+                        <label>Депо / Станция приписки:</label>
+                        <input type="text" id="newPark" placeholder="ст. Крутоборка" required>
                     </div>
                     <div class="form-group">
                         <label>Полная модель / Серия:</label>
-                        <input type="text" id="newModel" placeholder="ЧС4Т-598" required>
+                        <input type="text" id="newModel" placeholder="ТУ2-001" required>
                     </div>
                     <div class="form-group">
                         <label>Префикс серии:</label>
-                        <input type="text" id="newModelPrefix" placeholder="ЧС4Т" required>
+                        <input type="text" id="newModelPrefix" placeholder="ТУ2" required>
                     </div>
                     <div class="form-group">
-                        <label>Сетевой / Восьмизначный №:</label>
-                        <input type="text" id="newGov" placeholder="15243819" value="—">
+                        <label>Сетевой №:</label>
+                        <input type="text" id="newGov" placeholder="—" value="—">
                     </div>
                     <div class="form-group">
                         <label>Бортовой / Инвентарный №:</label>
-                        <input type="text" id="newNum" placeholder="598" required>
+                        <input type="text" id="newNum" placeholder="001" required>
                     </div>
                     <div class="form-group">
                         <label>Заводской номер:</label>
-                        <input type="text" id="newFactory" placeholder="36" value="—">
+                        <input type="text" id="newFactory" placeholder="—" value="—">
                     </div>
                     <div class="form-group">
                         <label>Дата постройки:</label>
-                        <input type="text" id="newBuild" placeholder="ДД.ММ.ГГГГ" value="—">
+                        <input type="text" id="newBuild" placeholder="ГГГГ" value="—">
                     </div>
                     <div class="form-group">
                         <label>Дата поступления:</label>
-                        <input type="text" id="newArrive" placeholder="ДД.ММ.ГГГГ" value="—">
+                        <input type="text" id="newArrive" placeholder="ГГГГ" value="—">
                     </div>
                     <div class="form-group">
                         <label>Начало работы:</label>
@@ -789,15 +740,15 @@
                     </div>
                     <div class="form-group">
                         <label>Отставлен / Выведен:</label>
-                        <input type="text" id="newOut" placeholder="ММ.ГГГГ" value="—">
+                        <input type="text" id="newOut" placeholder="—" value="—">
                     </div>
                     <div class="form-group">
                         <label>Дата списания:</label>
-                        <input type="text" id="newDecomm" placeholder="ДД.ММ.ГГГГ" value="—">
+                        <input type="text" id="newDecomm" placeholder="—" value="—">
                     </div>
                     <div class="form-group">
                         <label>Дата утилизации:</label>
-                        <input type="text" id="newUtil" placeholder="ДД.ММ.ГГГГ" value="—">
+                        <input type="text" id="newUtil" placeholder="—" value="—">
                     </div>
                     <div class="form-group">
                         <label>Статус:</label>
@@ -832,20 +783,12 @@
         </div>
     </div>
 
-    <!-- Модальное окно просмотра карточки ПС -->
+    <!-- Модальное окно просмотра карточки ПС (Без фото) -->
     <div class="modal-overlay" id="vehicleModal">
         <div class="modal-card">
             <span class="modal-close" onclick="closeCard()">&times;</span>
             <div class="vehicle-title" id="mTitle">Серия / Инвентарный №</div>
             <div class="vehicle-subtitle" id="mSubtitle">Депо приписки</div>
-
-            <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📷 Фотогалерея ПС:</div>
-            <div class="photo-gallery-grid" id="vCardGallery">
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Спереди (3/4)</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Сзади (3/4)</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Профиль</div></div>
-                <div class="busphoto-thumb"><div class="thumb-img-wrapper">📷<br><span>(Нет фото)</span></div><div class="thumb-caption">Кабина / Салон</div></div>
-            </div>
 
             <div style="font-weight:bold; margin-bottom:6px; font-size:11px;">📋 Информация о единице ПС:</div>
             <table class="specs-table">
@@ -865,7 +808,7 @@
                 <tr><td class="label">Примечание:</td><td id="mNote">—</td></tr>
             </table>
 
-            <div class="card-actions">
+            <div class="card-actions no-print">
                 <button onclick="editCurrentVehicle()" class="btn-primary" style="flex:1; padding:9px;">✏️ Редактировать ПС</button>
                 <button onclick="deleteCurrentVehicle()" style="background:#c62828; color:#fff; border:none; padding:9px 12px; font-weight:bold; border-radius:3px; cursor:pointer; flex:1;">🗑 Удалить ПС из базы</button>
             </div>
@@ -874,18 +817,14 @@
 
     <script>
         const defaultVehicleDB = [
-            { id: "1", category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЧС4Т", model: "ЧС4Т-598", gov: "15243819", num: "598", purposeKey: "linear", factory: "125", build: "03.12.1982", arrive: "15.12.1982", start: "1982", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский электровоз" },
-            { id: "2", category: "loco", park: "ТЧ-1 Минск-Сортировочный", modelPrefix: "ЭП20", model: "ЭП20-045", gov: "15200341", num: "045", purposeKey: "linear", factory: "45", build: "02.12.2015", arrive: "15.12.2015", start: "2015", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Двухсистемный пассажирский электровоз" },
-            { id: "3", category: "loco", park: "ТЧ-8 Орша", modelPrefix: "2ТЭ10У", model: "2ТЭ10У-0112", gov: "12498102", num: "0112", purposeKey: "linear", factory: "112", build: "10.05.1990", arrive: "12.05.1990", start: "1990", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Грузовой тепловоз" },
-            { id: "4", category: "freight_car", park: "ВЧД-1 Минск", modelPrefix: "11-280", model: "Крытый вагон 11-280", gov: "52841029", num: "1029", purposeKey: "linear", factory: "884", build: "12.04.2010", arrive: "15.04.2010", start: "2010", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Универсальный крытый вагон" },
-            { id: "5", category: "pass_car", park: "ЛВЧ-1 Минск", modelPrefix: "61-4177", model: "Купейный вагон 61-4177", gov: "01784920", num: "4920", purposeKey: "linear", factory: "310", build: "18.09.2018", arrive: "20.09.2018", start: "2018", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский купейный вагон СМК" }
+            { id: "1", category: "loco", park: "ст. Крутоборка", modelPrefix: "ТУ2", model: "ТУ2-001", gov: "—", num: "001", purposeKey: "linear", factory: "1", build: "1956", arrive: "1956", start: "1956", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Тепловоз узкой колеи" },
+            { id: "2", category: "pass_car", park: "ст. Крутоборка", modelPrefix: "ПВ40", model: "Пассажирский ПВ40", gov: "—", num: "012", purposeKey: "linear", factory: "12", build: "1980", arrive: "1980", start: "1980", out: "—", decomm: "—", util: "—", statusCls: "st-active", statusKey: "Эксплуатируется", note: "Пассажирский вагон" }
         ];
 
         let vehicleDB = [];
         let currentOpenVehicleIndex = null;
         let currentCategoryFilter = 'all';
         let consistList = [];
-        let createdTripsList = [];
 
         const categoryNames = {
             'loco': '🚂 Локомотив',
@@ -1051,14 +990,11 @@
                 let badgeHtml = '';
                 if (tripData) {
                     let routePart = tripData.route ? ` [${tripData.route}]` : '';
-                    let datePart = tripData.date ? ` ${tripData.date}` : '';
-                    let timePart = tripData.time ? ` в ${tripData.time}` : '';
-                    badgeHtml = `<span class="trip-badge" title="Сообщение: ${tripData.route || '—'}">В рейсе №${tripData.num}${routePart}${datePart}${timePart}</span>`;
+                    badgeHtml = `<span class="trip-badge" title="Маршрут: ${tripData.route || '—'}">В рейсе №${tripData.num}${routePart}</span>`;
                 }
 
                 tr.innerHTML = `
-                    <td class="drag-handle" onclick="event.stopPropagation();">☰</td>
-                    <td><div class="table-thumb" onclick="event.stopPropagation();">📷</div></td>
+                    <td class="drag-handle no-print" onclick="event.stopPropagation();">☰</td>
                     <td><span class="type-badge">${catLabel}</span></td>
                     <td><b>${v.park}</b></td>
                     <td>
@@ -1080,7 +1016,7 @@
                     <td>${v.util || '—'}</td>
                     <td>
                         <span>${v.note || '—'}</span>
-                        ${tripData ? `<button class="btn-cancel-trip" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
+                        ${tripData ? `<button class="btn-cancel-trip no-print" onclick="event.stopPropagation(); cancelTrip('${v.id}')">Отменить рейс</button>` : ''}
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -1138,7 +1074,6 @@
             switchPage('database');
         }
 
-        /* ЛОГИКА ГЕНЕРАЦИИ РАСПИСАНИЯ И ВУ-45 */
         function loadScheduleTrainSelect() {
             let select = document.getElementById('schTrainSelect');
             select.innerHTML = '';
@@ -1180,7 +1115,7 @@
 
             let savedTrips = JSON.parse(localStorage.getItem('railphoto_created_trips') || "[]");
             let trip = savedTrips[select.value];
-            let startTime = document.getElementById('schTimeInput').value || "11:00";
+            let startTime = document.getElementById('schTimeInput').value || "10:00";
 
             let [h, m] = startTime.split(':').map(Number);
 
@@ -1191,34 +1126,36 @@
                 return `${String(newH).padStart(2, '0')}:${String(newM).padStart(2, '0')}`;
             }
 
-            // Трафарет Минской ДЖД
-            let depZaslonovo = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
-            let arrPionerskaya1 = addMins(h, m, 6);
-            let depPionerskaya1 = addMins(h, m, 8);
-            let arrSosnovy = addMins(h, m, 15);
-            let depSosnovy = addMins(h, m, 20);
-            let arrPionerskaya2 = addMins(h, m, 27);
-            let depPionerskaya2 = addMins(h, m, 29);
-            let arrZaslonovo = addMins(h, m, 35);
+            // Трафарет: Крутоборка — Сосновый Бор
+            let depKrutoborka = `${String(h).padStart(2, '0')}:${String(m).padStart(2, '0')}`;
+            let arrDerevenskaya = addMins(h, m, 12);
+            let depDerevenskaya = addMins(h, m, 13);
+            let arrPtich = addMins(h, m, 25);
+            let depPtich = addMins(h, m, 26);
+            let arrZhel = addMins(h, m, 38);
+            let depZhel = addMins(h, m, 39);
+            let arrLelma = addMins(h, m, 50);
+            let depLelma = addMins(h, m, 55);
+            let arrSosnovy = addMins(h, m, 70);
 
-            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'Заслоново — Сосновый Бор'})`;
+            document.getElementById('schTitle').innerText = `Расписание и график движения поезда №${trip.num} (${trip.route || 'ст. Крутоборка — Сосновый Бор'})`;
 
             let tbody = document.getElementById('schTableBody');
             tbody.innerHTML = `
-                <tr><td><b>Заслоново</b></td><td>—</td><td>—</td><td><b>${depZaslonovo}</b></td><td>Заслоново — Пионерская</td><td>6 мин</td></tr>
-                <tr><td><b>Пионерская</b></td><td>${arrPionerskaya1}</td><td>2 мин</td><td>${depPionerskaya1}</td><td>Пионерская — Сосновый Бор</td><td>7 мин</td></tr>
-                <tr><td><b>Сосновый Бор</b></td><td>${arrSosnovy}</td><td>5 мин (обгон)</td><td>${depSosnovy}</td><td>Сосновый Бор — Пионерская</td><td>7 мин</td></tr>
-                <tr><td><b>Пионерская</b></td><td>${arrPionerskaya2}</td><td>2 мин</td><td>${depPionerskaya2}</td><td>Пионерская — Заслоново</td><td>6 мин</td></tr>
-                <tr><td><b>Заслоново</b></td><td><b>${arrZaslonovo}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
+                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>—</td><td><b>${depKrutoborka}</b></td><td>Крутоборка — УП Деревенская</td><td>12 мин</td></tr>
+                <tr><td><b>УП Деревенская</b></td><td>${arrDerevenskaya}</td><td>1 мин</td><td>${depDerevenskaya}</td><td>УП Деревенская — УП Озеро Птичь</td><td>12 мин</td></tr>
+                <tr><td><b>УП Озеро Птичь</b></td><td>${arrPtich}</td><td>1 мин</td><td>${depPtich}</td><td>УП Озеро Птичь — УП Железнодорожная</td><td>12 мин</td></tr>
+                <tr><td><b>УП Железнодорожная</b></td><td>${arrZhel}</td><td>1 мин</td><td>${depZhel}</td><td>УП Железнодорожная — ст. Лельма</td><td>11 мин</td></tr>
+                <tr><td><b>ст. Лельма</b></td><td>${arrLelma}</td><td>5 мин</td><td>${depLelma}</td><td>ст. Лельма — Сосновый Бор</td><td>15 мин</td></tr>
+                <tr><td><b>Сосновый Бор</b></td><td><b>${arrSosnovy}</b></td><td>—</td><td>—</td><td>—</td><td>—</td></tr>
             `;
 
-            // Заполнение справки ВУ-45
             document.getElementById('vuTrainNum').innerText = trip.num;
             document.getElementById('vuDate').innerText = trip.date || new Date().toLocaleDateString('ru-RU');
-            document.getElementById('vuRoute').innerText = trip.route || "Заслоново — Сосновый Бор — Заслоново";
+            document.getElementById('vuRoute').innerText = trip.route || "ст. Крутоборка — Сосновый Бор";
 
             let loco = trip.consist.find(c => c.category === 'loco');
-            document.getElementById('vuLoco').innerText = loco ? loco.model : "ТУ2 / ТУ7А";
+            document.getElementById('vuLoco').innerText = loco ? loco.model : "ТУ2 / ТУ7";
             
             let passCars = trip.consist.filter(c => c.category === 'pass_car' || c.category === 'freight_car');
             document.getElementById('vuCarsCount').innerText = passCars.length > 0 ? passCars.length : trip.consist.length;
