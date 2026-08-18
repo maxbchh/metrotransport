@@ -247,7 +247,7 @@
         .pinned-card-title { font-weight: bold; font-size: 12px; color: var(--bp-text); margin-bottom: 6px; display: flex; align-items: center; justify-content: space-between; }
 
         /* ==========================================================================
-           6. КОНСТРУКТОР, ТАБЛО И ВУ-45
+           6. КОНСТРУКТОР, КАЛЬКУЛЯТОР, ТАБЛО И ВУ-45
            ========================================================================== */
         .trip-form-panel {
             background: var(--bp-card-bg);
@@ -291,6 +291,12 @@
         .schedule-box { background: var(--bp-card-bg); border: 1px solid var(--bp-border); padding: 16px; border-radius: 4px; margin-top: 18px; }
         .vu45-ticket { font-family: 'Courier New', Courier, monospace; background: #ffffff; color: #000000; padding: 18px; border: 2px dashed #000000; border-radius: 4px; margin-top: 18px; font-size: 12px; line-height: 1.5; max-width: 720px; box-shadow: 0 4px 10px rgba(0, 0, 0, 0.15); }
 
+        .calc-panel { background: var(--bp-card-bg); border: 1px solid var(--bp-accent-teal); border-radius: 6px; padding: 16px; margin-top: 16px; }
+        .calc-panel h4 { color: var(--bp-accent-teal); font-size: 14px; margin-bottom: 12px; display: flex; align-items: center; gap: 8px; }
+        .calc-grid { display: grid; grid-template-columns: repeat(auto-fit, minmax(180px, 1fr)); gap: 12px; }
+        .calc-grid label { display: block; font-weight: bold; font-size: 11px; margin-bottom: 4px; }
+        .calc-grid input, .calc-grid select { width: 100%; padding: 7px; background: var(--bp-input-bg); color: var(--bp-text); border: 1px solid var(--bp-border); border-radius: 3px; font-size: 11px; }
+
         .test-card { background: var(--bp-card-bg); border: 1px solid var(--bp-border); padding: 16px; border-radius: 4px; margin-bottom: 16px; }
         .test-question { font-weight: bold; font-size: 13px; margin-bottom: 12px; color: var(--bp-link); }
         .test-option { display: block; margin-bottom: 8px; cursor: pointer; padding: 8px 12px; background: var(--bp-input-bg); border: 1px solid var(--bp-border); border-radius: 3px; }
@@ -316,7 +322,7 @@
         .form-full { grid-column: 1 / -1; }
 
         @media print {
-            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .board-container, .test-card, .station-selector-bar, .stats-summary-bar, .batch-toolbar { display: none !important; }
+            .no-print, header, .action-buttons, .category-tabs, .filter-panel, .trip-form-panel, .board-container, .test-card, .station-selector-bar, .stats-summary-bar, .batch-toolbar, .calc-panel { display: none !important; }
             body { background: #ffffff !important; color: #000000 !important; }
             .main-wrapper { padding: 0 !important; }
             .table-container, .schedule-box { border: none !important; background: transparent !important; box-shadow: none !important; }
@@ -510,7 +516,7 @@
             <div>
                 <label>Станция назначения:</label>
                 <select id="tripToStation">
-                    <option value="Крутоборка">ст. Крутоборка</option>
+                    <option value="Крутоборка" selected>ст. Крутоборка</option>
                     <option value="Лельма">ст. Лельма</option>
                     <option value="Сосновый Бор">ст. Сосновый Бор</option>
                 </select>
@@ -528,6 +534,10 @@
                 <input type="number" id="tripStencilStop" value="5">
             </div>
             <div>
+                <label>Номер пути:</label>
+                <input type="text" id="tripTrack" value="1 путь">
+            </div>
+            <div>
                 <label>Машинист (ФИО):</label>
                 <input type="text" id="tripDriver" value="Петров В.В.">
             </div>
@@ -537,7 +547,53 @@
             </div>
         </div>
 
-        <div class="builder-layout">
+        <!-- КАЛЬКУЛЯТОР ВРЕМЕНИ ДВИЖЕНИЯ ПО УЧАСТКАМ -->
+        <div class="calc-panel no-print">
+            <h4>🧮 Калькулятор времени прибытия/отправления по участкам (Крутоборка — Лельма — Сосновый Бор)</h4>
+            <div class="calc-grid">
+                <div>
+                    <label>Откуда:</label>
+                    <select id="calcFromStation">
+                        <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                        <option value="Лельма">ст. Лельма</option>
+                        <option value="Крутоборка">ст. Крутоборка</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Куда:</label>
+                    <select id="calcToStation">
+                        <option value="Крутоборка" selected>ст. Крутоборка</option>
+                        <option value="Лельма">ст. Лельма</option>
+                        <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                    </select>
+                </div>
+                <div>
+                    <label>Время старта:</label>
+                    <input type="time" id="calcStartTime" value="12:00">
+                </div>
+                <div>
+                    <label>Время хода между ст. (мин):</label>
+                    <input type="number" id="calcRunMins" value="20">
+                </div>
+                <div>
+                    <label>Стоянка (мин):</label>
+                    <input type="number" id="calcStopMins" value="5">
+                </div>
+                <div>
+                    <label>Приёмо-отправочный путь:</label>
+                    <input type="text" id="calcTrack" value="1 путь">
+                </div>
+                <div style="display:flex; align-items:flex-end; gap:6px;">
+                    <button class="btn-primary" style="width:100%; height:32px;" onclick="calculateRouteTime()">Рассчитать</button>
+                </div>
+            </div>
+            <div id="calcOutput" style="margin-top:12px; font-weight:bold; color:var(--bp-link); display:none;"></div>
+            <div style="margin-top:8px;">
+                <button class="btn-gold btn-sm" id="btnPushCalcToBoard" style="display:none;" onclick="pushCalcToBoard()">📤 Вывести расчёт на Информационное Табло</button>
+            </div>
+        </div>
+
+        <div class="builder-layout" style="margin-top:18px;">
             <div class="builder-source">
                 <h4 style="margin-bottom:10px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Доступный ПС из базы</h4>
                 <div id="builderSourceList"></div>
@@ -558,9 +614,9 @@
                 </div>
 
                 <div id="stencilResultBox" style="margin-top:14px; display:none; background:var(--bp-card-bg); border:1px solid var(--bp-border); padding:12px; border-radius:4px;">
-                    <h4 style="color:var(--bp-accent-gold); margin-bottom:8px;">⏱ Сгенерированное расписание по трафарету:</h4>
+                    <h4 style="color:var(--bp-accent-gold); margin-bottom:8px;">⏱ Сгенерированное расписание сборного маршрута по трафарету:</h4>
                     <div id="stencilResultTable"></div>
-                    <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="pushStencilToSchedule()">📤 Вывести на Информационное Табло Станций</button>
+                    <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="pushStencilToSchedule()">📤 Вывести расписание на Информационное Табло Станций</button>
                 </div>
 
                 <div id="vu45Container" style="display:none;">
@@ -613,7 +669,7 @@
         </div>
 
         <div class="schedule-box">
-            <h3 style="margin-bottom:12px; font-size:14px;">Полная сводная ведомость движения по участку Сосновый Бор — Лельма — Крутоборка</h3>
+            <h3 style="margin-bottom:12px; font-size:14px;">Полная сводная ведомость движения по участкам Сосновый Бор — Лельма — Крутоборка</h3>
             <div class="table-container">
                 <table class="bp-table">
                     <thead>
@@ -893,14 +949,14 @@
         ];
         let schedules = JSON.parse(localStorage.getItem('rp_schedules')) || [
             { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Сосновый Бор", to: "Крутоборка", depTime: "08:30", arrTime: "09:25", track: "1 путь", days: "Ежедневно", timetable: [
-                { station: "Сосновый Бор", arr: "—", dep: "08:30", stop: "0 мин" },
-                { station: "Лельма", arr: "08:55", dep: "09:00", stop: "5 мин" },
-                { station: "Крутоборка", arr: "09:25", dep: "—", stop: "—" }
+                { station: "Сосновый Бор", arr: "—", dep: "08:30", stop: "0 мин", track: "1 путь" },
+                { station: "Лельма", arr: "08:55", dep: "09:00", stop: "5 мин", track: "1 путь" },
+                { station: "Крутоборка", arr: "09:25", dep: "—", stop: "—", track: "1 путь" }
             ]},
             { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Крутоборка", to: "Сосновый Бор", depTime: "10:15", arrTime: "11:10", track: "2 путь", days: "Ежедневно", timetable: [
-                { station: "Крутоборка", arr: "—", dep: "10:15", stop: "0 мин" },
-                { station: "Лельма", arr: "10:40", dep: "10:45", stop: "5 мин" },
-                { station: "Сосновый Бор", arr: "11:10", dep: "—", stop: "—" }
+                { station: "Крутоборка", arr: "—", dep: "10:15", stop: "0 мин", track: "2 путь" },
+                { station: "Лельма", arr: "10:40", dep: "10:45", stop: "5 мин", track: "1 путь" },
+                { station: "Сосновый Бор", arr: "11:10", dep: "—", stop: "—", track: "2 путь" }
             ]}
         ];
 
@@ -911,6 +967,7 @@
         let selectedConsist = [];
         let currentBoardStation = 'Сосновый Бор';
         let generatedStencilSchedule = null;
+        let lastCalculatedData = null;
 
         function saveData() {
             localStorage.setItem('rp_db', JSON.stringify(db));
@@ -959,6 +1016,57 @@
                     <div class="pinned-card-body">${n.body.replace(/\n/g, '<br>')}</div>
                 </div>
             `).join('');
+        }
+
+        function openEditProfileModal() {
+            document.getElementById('editProfName').value = profile.name;
+            document.getElementById('editProfRole').value = profile.role;
+            document.getElementById('editProfTabNum').value = profile.tabNum;
+            document.getElementById('editProfStation').value = profile.station;
+            document.getElementById('editProfQual').value = profile.qual;
+            document.getElementById('editProfExp').value = profile.exp;
+            document.getElementById('modalProfile').style.display = 'flex';
+        }
+
+        function closeProfileModal() { document.getElementById('modalProfile').style.display = 'none'; }
+
+        function saveProfileForm(e) {
+            e.preventDefault();
+            profile.name = document.getElementById('editProfName').value;
+            profile.role = document.getElementById('editProfRole').value;
+            profile.tabNum = document.getElementById('editProfTabNum').value;
+            profile.station = document.getElementById('editProfStation').value;
+            profile.qual = document.getElementById('editProfQual').value;
+            profile.exp = document.getElementById('editProfExp').value;
+            saveData();
+            closeProfileModal();
+            renderProfile();
+        }
+
+        function openAddPinnedNoteModal() {
+            document.getElementById('noteTitle').value = '';
+            document.getElementById('noteBody').value = '';
+            document.getElementById('modalPinnedNote').style.display = 'flex';
+        }
+
+        function closePinnedNoteModal() { document.getElementById('modalPinnedNote').style.display = 'none'; }
+
+        function savePinnedNote(e) {
+            e.preventDefault();
+            pinnedNotes.push({
+                id: 'n-' + Date.now(),
+                title: document.getElementById('noteTitle').value,
+                body: document.getElementById('noteBody').value
+            });
+            saveData();
+            closePinnedNoteModal();
+            renderProfile();
+        }
+
+        function deletePinnedNote(id) {
+            pinnedNotes = pinnedNotes.filter(n => n.id !== id);
+            saveData();
+            renderProfile();
         }
 
         function setCategoryFilter(cat) {
@@ -1245,7 +1353,7 @@
             renderTable();
         }
 
-        /* === КОНСТРУКТОР, АВТОРАСЧЕТ ТРАФАРЕТА И ГЕНЕРАЦИЯ ВУ-45 === */
+        /* === КОНСТРУКТОР, КАЛЬКУЛЯТОР, АВТОРАСЧЕТ И ГЕНЕРАЦИЯ ВУ-45 === */
         function renderBuilder() {
             const srcList = document.getElementById('builderSourceList');
             srcList.innerHTML = '';
@@ -1309,42 +1417,126 @@
             document.getElementById('metricBrakes').innerText = brakes.toFixed(1);
         }
 
-        /* 1. Вспомогательные функции для формата времени */
+        /* ВСПОМОГАТЕЛЬНЫЕ ФУНКЦИИ ВРЕМЕНИ */
         function parseTime(tStr) {
+            if (!tStr) return 0;
             const [h, m] = tStr.split(':').map(Number);
-            return h * 60 + m;
+            return (h * 60) + m;
         }
 
         function formatTime(mins) {
             mins = mins % (24 * 60);
+            if (mins < 0) mins += 24 * 60;
             const h = Math.floor(mins / 60).toString().padStart(2, '0');
             const m = (mins % 60).toString().padStart(2, '0');
             return `${h}:${m}`;
         }
 
-        /* 2. АВТОРАСЧЕТ ВРЕМЕНИ ПО ТРАФАРЕТУ */
+        function getRouteStations(fromSt, toSt) {
+            let sIdx = LINE_STATIONS.indexOf(fromSt);
+            let eIdx = LINE_STATIONS.indexOf(toSt);
+            if (sIdx === -1 || eIdx === -1) return [];
+
+            if (sIdx < eIdx) {
+                return LINE_STATIONS.slice(sIdx, eIdx + 1);
+            } else if (sIdx > eIdx) {
+                return LINE_STATIONS.slice(eIdx, sIdx + 1).reverse();
+            } else {
+                return [fromSt];
+            }
+        }
+
+        /* КАЛЬКУЛЯТОР ВРЕМЕНИ ДВИЖЕНИЯ ПО УЧАСТКАМ */
+        function calculateRouteTime() {
+            const fromSt = document.getElementById('calcFromStation').value;
+            const toSt = document.getElementById('calcToStation').value;
+            const startTimeStr = document.getElementById('calcStartTime').value;
+            const runMins = parseInt(document.getElementById('calcRunMins').value) || 20;
+            const stopMins = parseInt(document.getElementById('calcStopMins').value) || 5;
+            const trackName = document.getElementById('calcTrack').value || "1 путь";
+
+            if (fromSt === toSt) {
+                alert('Станция отправления и прибытия не могут совпадать!');
+                return;
+            }
+
+            let route = getRouteStations(fromSt, toSt);
+            let curMins = parseTime(startTimeStr);
+            let timetable = [];
+
+            route.forEach((st, idx) => {
+                if (idx === 0) {
+                    timetable.push({ station: st, arr: "—", dep: formatTime(curMins), stop: "0 мин", track: trackName });
+                } else {
+                    curMins += runMins;
+                    let arrTime = curMins;
+                    if (idx === route.length - 1) {
+                        timetable.push({ station: st, arr: formatTime(arrTime), dep: "—", stop: "—", track: trackName });
+                    } else {
+                        let depTime = arrTime + stopMins;
+                        curMins = depTime;
+                        timetable.push({ station: st, arr: formatTime(arrTime), dep: formatTime(depTime), stop: stopMins + " мин", track: trackName });
+                    }
+                }
+            });
+
+            const depTime = timetable[0].dep;
+            const arrTime = timetable[timetable.length - 1].arr;
+
+            lastCalculatedData = {
+                num: document.getElementById('tripNum').value || "№ 600",
+                cat: document.getElementById('tripCategory').value || "Пригородный",
+                from: fromSt,
+                to: toSt,
+                depTime: depTime,
+                arrTime: arrTime,
+                track: trackName,
+                timetable: timetable
+            };
+
+            const outDiv = document.getElementById('calcOutput');
+            outDiv.style.display = 'block';
+            outDiv.innerHTML = `✅ Расчёт завершён! Маршрут: ${fromSt} ➔ ${toSt} | Отправление: <b>${depTime}</b> | Прибытие: <b>${arrTime}</b> (Станций: ${route.length})`;
+            document.getElementById('btnPushCalcToBoard').style.display = 'inline-block';
+        }
+
+        function pushCalcToBoard() {
+            if (!lastCalculatedData) return;
+
+            const newItem = {
+                id: 'sch-' + Date.now(),
+                num: lastCalculatedData.num,
+                cat: lastCalculatedData.cat,
+                from: lastCalculatedData.from,
+                to: lastCalculatedData.to,
+                depTime: lastCalculatedData.depTime,
+                arrTime: lastCalculatedData.arrTime,
+                track: lastCalculatedData.track,
+                days: "Ежедневно",
+                timetable: lastCalculatedData.timetable
+            };
+
+            schedules.push(newItem);
+            saveData();
+            alert(`Поезд ${newItem.num} (${newItem.from} — ${newItem.to}) успешно выведен на Информационное Табло Станций!`);
+            switchPage('schedule');
+        }
+
+        /* АВТОРАСЧЕТ ВРЕМЕНИ ПО ТРАФАРЕТУ ДЛЯ СБОРНОГО МАРШРУТА */
         function calculateTimeByStencil() {
             const fromSt = document.getElementById('tripFromStation').value;
             const toSt = document.getElementById('tripToStation').value;
             const startTimeStr = document.getElementById('tripStartTime').value;
-            const interval = parseInt(document.getElementById('tripStencilInterval').value) || 20;
+            const interval = parseInt(document.getElementById('tripStencilInterval').value) || 25;
             const stopDuration = parseInt(document.getElementById('tripStencilStop').value) || 5;
+            const trackName = document.getElementById('tripTrack').value || "1 путь";
 
             if (fromSt === toSt) {
                 alert('Станция отправления и назначения не должны совпадать!');
                 return;
             }
 
-            let startIndex = LINE_STATIONS.indexOf(fromSt);
-            let endIndex = LINE_STATIONS.indexOf(toSt);
-            let route = [];
-
-            if (startIndex < endIndex) {
-                route = LINE_STATIONS.slice(startIndex, endIndex + 1);
-            } else {
-                route = LINE_STATIONS.slice(endIndex, startIndex + 1).reverse();
-            }
-
+            let route = getRouteStations(fromSt, toSt);
             let currentTime = parseTime(startTimeStr);
             let timetable = [];
 
@@ -1354,7 +1546,8 @@
                         station: st,
                         arr: "—",
                         dep: formatTime(currentTime),
-                        stop: "0 мин"
+                        stop: "0 мин",
+                        track: trackName
                     });
                 } else {
                     currentTime += interval;
@@ -1364,7 +1557,8 @@
                             station: st,
                             arr: formatTime(arrTime),
                             dep: "—",
-                            stop: "—"
+                            stop: "—",
+                            track: trackName
                         });
                     } else {
                         let depTime = arrTime + stopDuration;
@@ -1373,7 +1567,8 @@
                             station: st,
                             arr: formatTime(arrTime),
                             dep: formatTime(depTime),
-                            stop: stopDuration + " мин"
+                            stop: stopDuration + " мин",
+                            track: trackName
                         });
                     }
                 }
@@ -1386,18 +1581,19 @@
                 to: toSt,
                 depTime: timetable[0].dep,
                 arrTime: timetable[timetable.length - 1].arr,
+                track: trackName,
                 timetable: timetable
             };
 
             let tableHtml = `
                 <table class="bp-table" style="width:100%;">
                     <thead>
-                        <tr><th>Станция</th><th>Прибытие</th><th>Стоянка</th><th>Отправление</th></tr>
+                        <tr><th>Станция</th><th>Прибытие</th><th>Стоянка</th><th>Отправление</th><th>Путь</th></tr>
                     </thead>
                     <tbody>
             `;
             timetable.forEach(row => {
-                tableHtml += `<tr><td><b>${row.station}</b></td><td>${row.arr}</td><td>${row.stop}</td><td>${row.dep}</td></tr>`;
+                tableHtml += `<tr><td><b>${row.station}</b></td><td>${row.arr}</td><td>${row.stop}</td><td>${row.dep}</td><td>${row.track}</td></tr>`;
             });
             tableHtml += `</tbody></table>`;
 
@@ -1405,7 +1601,7 @@
             document.getElementById('stencilResultBox').style.display = 'block';
         }
 
-        /* 3. АВТОМАТИЧЕСКИЙ ВЫВОД СГЕНЕРИРОВАННОГО РАСПИСАНИЯ НА ТАБЛО */
+        /* АВТОМАТИЧЕСКИЙ ВЫВОД СГЕНЕРИРОВАННОГО РАСПИСАНИЯ НА ТАБЛО */
         function pushStencilToSchedule() {
             if (!generatedStencilSchedule) {
                 alert('Сначала выполните авторасчёт по трафарету!');
@@ -1420,18 +1616,18 @@
                 to: generatedStencilSchedule.to,
                 depTime: generatedStencilSchedule.depTime,
                 arrTime: generatedStencilSchedule.arrTime,
-                track: "1 путь",
+                track: generatedStencilSchedule.track,
                 days: "Ежедневно",
                 timetable: generatedStencilSchedule.timetable
             };
 
             schedules.push(newItem);
             saveData();
-            alert(`Поезд ${newItem.num} успешно выведен на информационное табло станций!`);
+            alert(`Поезд ${newItem.num} (${newItem.from} — ${newItem.to}) успешно выведен на информационное табло станций!`);
             switchPage('schedule');
         }
 
-        /* 4. ГЕНЕРАЦИЯ ВУ-45 С РАСПИСАНИЕМ И ТОРМОЗАМИ */
+        /* ГЕНЕРАЦИЯ ВУ-45 С РАСПИСАНИЕМ И ТОРМОЗАМИ */
         function generateVU45Ticket() {
             if (selectedConsist.length === 0) {
                 alert('Сначала сформируйте поезд из доступных вагонов!');
@@ -1459,10 +1655,10 @@
             const loco = selectedConsist[0] ? selectedConsist[0].series : "ТУ2-113";
 
             let scheduleTableHtml = `<table style="width:100%; border-collapse:collapse; margin-top:6px; font-size:11px;" border="1">
-                <tr><th>Станция</th><th>Прибытие</th><th>Стоянка</th><th>Отправление</th></tr>`;
+                <tr><th>Станция</th><th>Прибытие</th><th>Стоянка</th><th>Отправление</th><th>Путь</th></tr>`;
             
             generatedStencilSchedule.timetable.forEach(r => {
-                scheduleTableHtml += `<tr style="text-align:center;"><td>${r.station}</td><td>${r.arr}</td><td>${r.stop}</td><td>${r.dep}</td></tr>`;
+                scheduleTableHtml += `<tr style="text-align:center;"><td>${r.station}</td><td>${r.arr}</td><td>${r.stop}</td><td>${r.dep}</td><td>${r.track}</td></tr>`;
             });
             scheduleTableHtml += `</table>`;
 
@@ -1477,7 +1673,7 @@
                 <div><b>Требуемое тормозное нажатие:</b> ${reqBrakes} тс</div>
                 <div><b>Фактическое тормозное нажатие:</b> ${brakes.toFixed(1)} тс</div>
                 <div><b>Давление в тормозной магистрали:</b> ${pressure} кгс/см²</div>
-                <div style="margin-top:10px;"><b>РАСПИСАНИЕ ПОЕЗДА ПО ТРАФАРЕТУ:</b></div>
+                <div style="margin-top:10px;"><b>РАСПИСАНИЕ ПОЕЗДА ПО ТРАФАРЕТУ (СБОРНЫЙ МАРШРУТ):</b></div>
                 ${scheduleTableHtml}
                 <br>
                 <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
@@ -1518,6 +1714,7 @@
                     let arrTime = '—';
                     let depTime = '—';
                     let stopDuration = '10 мин';
+                    let trackName = s.track || '1 путь';
 
                     if (s.timetable && Array.isArray(s.timetable)) {
                         const stInfo = s.timetable.find(t => t.station === currentBoardStation);
@@ -1525,6 +1722,7 @@
                             arrTime = stInfo.arr;
                             depTime = stInfo.dep;
                             stopDuration = stInfo.stop !== '—' ? stInfo.stop : '0 мин';
+                            if (stInfo.track) trackName = stInfo.track;
                         }
                     } else {
                         const isDeparture = s.from === currentBoardStation;
@@ -1539,7 +1737,7 @@
                         <td>${arrTime}</td>
                         <td>${stopDuration}</td>
                         <td>${depTime}</td>
-                        <td><b>${s.track}</b></td>
+                        <td><b>${trackName}</b></td>
                         <td><span class="status-blink">ПОСАДКА / ГОТОВ</span></td>
                     `;
                     bBody.appendChild(tr);
@@ -1571,13 +1769,12 @@
             const toSt = document.getElementById('schTo').value;
             const depTime = document.getElementById('schDepTime').value;
             const arrTime = document.getElementById('schArrTime').value;
+            const trackName = document.getElementById('schTrack').value || "1 путь";
 
-            let startIndex = LINE_STATIONS.indexOf(fromSt);
-            let endIndex = LINE_STATIONS.indexOf(toSt);
+            let route = getRouteStations(fromSt, toSt);
             let timetable = [];
 
-            if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
-                let route = startIndex < endIndex ? LINE_STATIONS.slice(startIndex, endIndex + 1) : LINE_STATIONS.slice(endIndex, startIndex + 1).reverse();
+            if (route.length > 1) {
                 let startMins = parseTime(depTime);
                 let endMins = parseTime(arrTime);
                 let totalDiff = endMins >= startMins ? endMins - startMins : (endMins + 24 * 60) - startMins;
@@ -1585,12 +1782,12 @@
 
                 route.forEach((st, idx) => {
                     if (idx === 0) {
-                        timetable.push({ station: st, arr: "—", dep: depTime, stop: "0 мин" });
+                        timetable.push({ station: st, arr: "—", dep: depTime, stop: "0 мин", track: trackName });
                     } else if (idx === route.length - 1) {
-                        timetable.push({ station: st, arr: arrTime, dep: "—", stop: "—" });
+                        timetable.push({ station: st, arr: arrTime, dep: "—", stop: "—", track: trackName });
                     } else {
                         let currentArr = startMins + step * idx;
-                        timetable.push({ station: st, arr: formatTime(currentArr), dep: formatTime(currentArr + 5), stop: "5 мин" });
+                        timetable.push({ station: st, arr: formatTime(currentArr), dep: formatTime(currentArr + 5), stop: "5 мин", track: trackName });
                     }
                 });
             }
@@ -1603,7 +1800,7 @@
                 to: toSt,
                 depTime: depTime,
                 arrTime: arrTime,
-                track: document.getElementById('schTrack').value,
+                track: trackName,
                 days: document.getElementById('schDays').value,
                 timetable: timetable
             };
@@ -1676,76 +1873,43 @@
         function renderAnalytics() {
             const total = db.length || 1;
             const stContainer = document.getElementById('analyticsStatusProgress');
-            stContainer.innerHTML = '';
-
-            Object.keys(STATUS_MAP).forEach(st => {
-                const count = db.filter(x => x.status === st).length;
-                if (count > 0) {
-                    const pct = Math.round((count / total) * 100);
-                    stContainer.innerHTML += `
-                        <div class="progress-item">
-                            <div class="progress-label"><span>${STATUS_MAP[st]}</span><span>${count} шт. (${pct}%)</span></div>
-                            <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;"></div></div>
-                        </div>
-                    `;
-                }
-            });
-
             const gContainer = document.getElementById('analyticsGaugeProgress');
+
+            const statusCounts = {};
+            db.forEach(x => { statusCounts[x.status] = (statusCounts[x.status] || 0) + 1; });
+
+            let stHtml = '';
+            for (let st in STATUS_MAP) {
+                const count = statusCounts[st] || 0;
+                const pct = Math.round((count / total) * 100);
+                stHtml += `
+                    <div class="progress-item">
+                        <div class="progress-label"><span>${STATUS_MAP[st]}</span><span>${count} шт. (${pct}%)</span></div>
+                        <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;"></div></div>
+                    </div>
+                `;
+            }
+            stContainer.innerHTML = stHtml;
+
             const g750 = db.filter(x => x.gauge === '750').length;
             const g1520 = db.filter(x => x.gauge === '1520').length;
+            const pct750 = Math.round((g750 / total) * 100);
+            const pct1520 = Math.round((g1520 / total) * 100);
 
             gContainer.innerHTML = `
                 <div class="progress-item">
-                    <div class="progress-label"><span>Узкая колея (750 мм)</span><span>${g750} шт.</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width:${Math.round((g750/total)*100)}%;"></div></div>
+                    <div class="progress-label"><span>Узкая колея (750 мм)</span><span>${g750} шт. (${pct750}%)</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width:${pct750}%; background:var(--bp-accent-gold);"></div></div>
                 </div>
                 <div class="progress-item">
-                    <div class="progress-label"><span>Широкая колея (1520 мм)</span><span>${g1520} шт.</span></div>
-                    <div class="progress-bg"><div class="progress-fill" style="width:${Math.round((g1520/total)*100)}%; background:var(--bp-accent-gold);"></div></div>
+                    <div class="progress-label"><span>Широкая колея (1520 мм)</span><span>${g1520} шт. (${pct1520}%)</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width:${pct1520}%; background:var(--bp-accent-teal);"></div></div>
                 </div>
             `;
         }
 
-        function openAddPinnedNoteModal() { document.getElementById('modalPinnedNote').style.display = 'flex'; }
-        function closePinnedNoteModal() { document.getElementById('modalPinnedNote').style.display = 'none'; }
-        function savePinnedNote(e) {
-            e.preventDefault();
-            pinnedNotes.push({ id: 'n-' + Date.now(), title: document.getElementById('noteTitle').value, body: document.getElementById('noteBody').value });
-            saveData();
-            closePinnedNoteModal();
-            renderProfile();
-        }
-        function deletePinnedNote(id) {
-            pinnedNotes = pinnedNotes.filter(x => x.id !== id);
-            saveData();
-            renderProfile();
-        }
-
-        function openEditProfileModal() {
-            document.getElementById('editProfName').value = profile.name;
-            document.getElementById('editProfRole').value = profile.role;
-            document.getElementById('editProfTabNum').value = profile.tabNum;
-            document.getElementById('editProfStation').value = profile.station;
-            document.getElementById('editProfQual').value = profile.qual;
-            document.getElementById('editProfExp').value = profile.exp;
-            document.getElementById('modalProfile').style.display = 'flex';
-        }
-        function closeProfileModal() { document.getElementById('modalProfile').style.display = 'none'; }
-        function saveProfileForm(e) {
-            e.preventDefault();
-            profile.name = document.getElementById('editProfName').value;
-            profile.role = document.getElementById('editProfRole').value;
-            profile.tabNum = document.getElementById('editProfTabNum').value;
-            profile.station = document.getElementById('editProfStation').value;
-            profile.qual = document.getElementById('editProfQual').value;
-            profile.exp = document.getElementById('editProfExp').value;
-            saveData();
-            closeProfileModal();
-            renderProfile();
-        }
-
-        // Запуск инициализации при загрузке страницы
+        // Инициализация загрузки страницы
+        renderTable();
         renderProfile();
     </script>
 </body>
