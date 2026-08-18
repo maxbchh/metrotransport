@@ -478,22 +478,9 @@
             outline: 1px solid var(--bp-link);
         }
 
-
-        /* ДОПОЛНЕНИЕ: КЛИКАБЕЛЬНЫЕ КАРТОЧКИ ПС В БАЗЕ */
-        table.bp-table tbody tr.vehicle-row-clickable {
+        /* КЛИКАБЕЛЬНЫЕ СТРОКИ И ЯЧЕЙКИ В БАЗЕ ДАННЫХ */
+        table.bp-table tbody tr {
             cursor: pointer;
-        }
-        table.bp-table tbody tr.vehicle-row-clickable td {
-            transition: background-color 0.15s ease, box-shadow 0.15s ease;
-        }
-        table.bp-table tbody tr.vehicle-row-clickable:hover td {
-            box-shadow: inset 0 0 0 9999px rgba(37, 99, 235, 0.08);
-        }
-        .vehicle-click-hint {
-            color: var(--bp-link);
-            font-size: 9px;
-            margin-left: 5px;
-            opacity: 0.8;
         }
 
         .type-badge {
@@ -1092,7 +1079,6 @@
 </head>
 <body class="light-theme">
 
-    <!-- ХЕДЕР И НАВИГАЦИОННАЯ ПАНЕЛЬ -->
     <header class="no-print">
         <div>
             <span class="logo-box">RAILPHOTO</span>
@@ -1109,7 +1095,6 @@
         </div>
     </header>
 
-    <!-- СТРАНИЦА 1: ПРОФИЛЬ СОТРУДНИКА -->
     <div id="pageProfile" class="main-wrapper">
         <div class="page-header">
             <span>👤 Персональный Профиль Сотрудника / Дежурного по Станции</span>
@@ -1126,7 +1111,6 @@
                     <div class="profile-name" id="profDisplayName">Иванов Иван Иванович</div>
                     <div class="profile-role-badge" id="profDisplayRole">Дежурный по станции (ДСП)</div>
                 </div>
-
                 <ul class="profile-info-list">
                     <li class="profile-info-item">
                         <span class="profile-info-label">Табельный №:</span>
@@ -1153,7 +1137,6 @@
                         <span class="profile-info-value" style="color:var(--bp-link);" id="profDisplayExamDate">Сдано (Действительно)</span>
                     </li>
                 </ul>
-
                 <div style="margin-top:14px; font-weight:bold; font-size:11px; color:var(--bp-text-muted);">БЫСТРЫЕ МЕТКИ:</div>
                 <div style="display:flex; gap:6px; flex-wrap:wrap; margin-top:8px;" id="profBadgesContainer"></div>
             </div>
@@ -1168,7 +1151,6 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 2: БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА -->
     <div id="pageDatabase" class="main-wrapper" style="display:none;">
         <div class="page-header">
             <span>Подвижной состав — Полная База Данных с Редактированием</span>
@@ -1182,11 +1164,6 @@
             </div>
         </div>
 
-        <div class="no-print" style="margin:-4px 0 12px 0; padding:8px 10px; background:rgba(37,99,235,0.08); border:1px solid var(--bp-border); border-radius:4px; color:var(--bp-text-muted); font-size:10px;">
-            💡 <b style="color:var(--bp-text);">Карточка ПС:</b> нажмите на любую строку базы (или дважды кликните по ней), чтобы открыть и настроить конкретную единицу — состояние, даты постройки/ввода/вывода/списания/утилизации, завод, историю ремонтов и примечания.
-        </div>
-
-        <!-- Виджеты общей статистики парка -->
         <div class="stats-summary-bar no-print">
             <div class="stat-card">
                 <div class="stat-card-title">Всего в базе</div>
@@ -1226,66 +1203,69 @@
 
         <div class="filter-panel no-print">
             <div>
-                <input type="text" id="searchInput" onkeyup="renderTable()" placeholder="Поиск по серии, номеру, депо, заводу...">
+                <input type="text" id="filterSearch" placeholder="🔍 Поиск по серии, номеру, заводу, ТЧ..." oninput="renderTable()">
             </div>
             <div>
-                <select id="statusFilter" onchange="renderTable()">
-                    <option value="all">Все статусы</option>
-                    <option value="st-active">Работает / Эксплуатируется</option>
+                <select id="filterStatus" onchange="renderTable()">
+                    <option value="all">-- Все статусы --</option>
+                    <option value="st-active">В эксплуатации (Действует)</option>
                     <option value="st-not-operated">Не эксплуатируется</option>
-                    <option value="st-inactive">Консервация / Запас</option>
-                    <option value="st-mod">КР / КРП / Модернизация</option>
+                    <option value="st-inactive">В запасе / Консервация</option>
                     <option value="st-out">Выведен из эксплуатации</option>
                     <option value="st-decomm">Списан</option>
-                    <option value="st-scrapped">Утилизирован / Порезан</option>
-                    <option value="st-trans">Передан в другое депо/город</option>
-                    <option value="st-museum">Музейный / Памятник</option>
+                    <option value="st-scrapped">Порезан / Утилизирован</option>
+                    <option value="st-mod">Модернизация / КРП</option>
+                    <option value="st-trans">Передан / Передислокация</option>
+                    <option value="st-museum">Музейный экспонат</option>
                 </select>
             </div>
             <div>
-                <select id="sortSelect" onchange="renderTable()">
-                    <option value="num_asc">Сортировка: По номеру (↑)</option>
-                    <option value="num_desc">Сортировка: По номеру (↓)</option>
-                    <option value="model_asc">Сортировка: По серии/модели</option>
-                    <option value="build_desc">Сортировка: Сначала новые (по постройке)</option>
-                    <option value="build_asc">Сортировка: Сначала старые (по постройке)</option>
-                    <option value="decomm_desc">Сортировка: Сначала недавно списанные</option>
+                <select id="filterGauge" onchange="renderTable()">
+                    <option value="all">-- Вся колея --</option>
+                    <option value="750">750 мм (Узкая колея)</option>
+                    <option value="1520">1520 мм (Широкая колея)</option>
                 </select>
             </div>
             <div>
-                <button class="btn-secondary" onclick="resetFilters()" style="width:100%;">🧹 Сбросить фильтры</button>
+                <button class="btn-secondary" style="width:100%;" onclick="resetFilters()">❌ Сбросить фильтры</button>
             </div>
         </div>
 
-        <!-- Панель массовых действий -->
         <div class="batch-toolbar no-print" id="batchToolbar" style="display:none;">
             <div>
-                <span>Выбрано элементов: <b id="batchSelectedCount">0</b></span>
+                <b>Выбрано элементов: <span id="selectedCount">0</span></b>
             </div>
-            <div style="display:flex; gap:8px; flex-wrap:wrap;">
-                <button class="btn-secondary btn-sm" onclick="openBatchEditModal('status')">✏️ Изменить статус массово</button>
-                <button class="btn-secondary btn-sm" onclick="openBatchEditModal('park')">🏢 Изменить депо массово</button>
-                <button class="btn-danger btn-sm" onclick="batchDeleteSelected()">🗑 Удалить выбранные</button>
+            <div style="display:flex; gap:8px; align-items:center;">
+                <select id="batchStatusSelect" style="padding:4px; font-size:11px; border-radius:3px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border);">
+                    <option value="">-- Изменить статус для выбранных --</option>
+                    <option value="st-active">В эксплуатации</option>
+                    <option value="st-not-operated">Не эксплуатируется</option>
+                    <option value="st-inactive">В запасе</option>
+                    <option value="st-out">Выведен из эксплуатации</option>
+                    <option value="st-decomm">Списан</option>
+                    <option value="st-scrapped">Порезан / Утилизирован</option>
+                </select>
+                <button class="btn-primary btn-sm" onclick="applyBatchStatus()">Применить</button>
+                <button class="btn-danger btn-sm" onclick="deleteBatchSelected()">🗑 Удалить выбранные</button>
             </div>
         </div>
 
         <div class="table-container">
-            <table class="bp-table" id="dbTable">
+            <table class="bp-table">
                 <thead>
                     <tr>
-                        <th class="no-print" style="width:30px;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAllRows(this)"></th>
-                        <th onclick="changeSort('category')">Тип</th>
-                        <th onclick="changeSort('park')">Депо / Станция</th>
-                        <th onclick="changeSort('model')">Серия / Модель</th>
-                        <th onclick="changeSort('num')">Бортовой №</th>
-                        <th onclick="changeSort('gauge')">Колея</th>
-                        <th onclick="changeSort('statusText')">Статус / Состояние</th>
-                        <th onclick="changeSort('buildDate')">Построен</th>
-                        <th class="col-highlight-out" onclick="changeSort('outDate')">Вывод из экспл.</th>
-                        <th class="col-highlight-decomm" onclick="changeSort('decommDate')">Списание</th>
-                        <th class="col-highlight-scrapped" onclick="changeSort('scrappedDate')">Утилизация</th>
-                        <th>Завод-изготовитель</th>
-                        <th>Действия</th>
+                        <th style="width:30px; text-align:center;"><input type="checkbox" id="selectAllCheckbox" onchange="toggleSelectAll(this)"></th>
+                        <th onclick="sortTable('series')">Серия и Номер ⇳</th>
+                        <th onclick="sortTable('type')">Тип ПС ⇳</th>
+                        <th onclick="sortTable('gauge')">Колея ⇳</th>
+                        <th onclick="sortTable('depot')">Депо / Приписка ⇳</th>
+                        <th onclick="sortTable('factory')">Завод-изготовитель ⇳</th>
+                        <th onclick="sortTable('buildYear')">Год пост. ⇳</th>
+                        <th onclick="sortTable('commissionDate')">Ввод в экспл. ⇳</th>
+                        <th onclick="sortTable('decommissionDate')">Списание ⇳</th>
+                        <th onclick="sortTable('scrapDate')">Утилизация ⇳</th>
+                        <th onclick="sortTable('statusText')">Текущий статус ⇳</th>
+                        <th style="text-align:center;">Действия</th>
                     </tr>
                 </thead>
                 <tbody id="tableBody"></tbody>
@@ -1293,846 +1273,608 @@
         </div>
     </div>
 
-    <!-- СТРАНИЦА 3: КОНСТРУКТОР ПОЕЗДА -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>Параметры и Формирование Поезда (С назначением ЛНП, ТЧМ и ДСП)</span>
+            <span>🚂 Конструктор Сборного Поезда и Расчёт Справки ВУ-45</span>
             <div class="action-buttons no-print">
-                <button class="btn-primary" onclick="sendConsistToTrip()">🚩 Отправить поезд в рейс</button>
-                <button class="btn-secondary" onclick="clearConsist()">🗑 Очистить сцепку</button>
+                <button class="btn-success" onclick="generateVU45Ticket()">📝 Сформировать ВУ-45</button>
+                <button class="btn-primary" onclick="clearConsist()">🧹 Очистить состав</button>
             </div>
         </div>
 
         <div class="trip-form-panel no-print">
             <div>
-                <label for="tripNumInput">№ Поезда:</label>
-                <input type="text" id="tripNumInput" value="601">
+                <label>Номер поезда:</label>
+                <input type="text" id="tripNum" value="№ 602">
             </div>
             <div>
-                <label for="tripRouteInput">Маршрут следования:</label>
-                <input type="text" id="tripRouteInput" value="Крутоборка — Сосновый Бор — Лельма">
+                <label>Станция отправления:</label>
+                <select id="tripFromStation">
+                    <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                    <option value="Лельма">ст. Лельма</option>
+                    <option value="Крутоборка">ст. Крутоборка</option>
+                </select>
             </div>
             <div>
-                <label for="tripDriverInput">Машинист (ТЧМ):</label>
-                <input type="text" id="tripDriverInput" value="Сергеев В.А.">
+                <label>Станция назначения:</label>
+                <select id="tripToStation">
+                    <option value="Крутоборка">ст. Крутоборка</option>
+                    <option value="Лельма">ст. Лельма</option>
+                    <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                </select>
             </div>
             <div>
-                <label for="tripLNPInput">Начальник поезда (ЛНП):</label>
-                <input type="text" id="tripLNPInput" value="Ковалев П.М.">
+                <label>Машинист (ФИО):</label>
+                <input type="text" id="tripDriver" value="Петров В.В.">
             </div>
             <div>
-                <label for="tripDSPInput">ДСП отправления:</label>
-                <input type="text" id="tripDSPInput" value="Иванов И.И.">
-            </div>
-            <div>
-                <label for="tripTimeInput">Время отправления:</label>
-                <input type="time" id="tripTimeInput" value="10:00">
+                <label>Давление в ТМ (кгс/см²):</label>
+                <input type="number" step="0.1" id="tripBrakePressure" value="5.2">
             </div>
         </div>
 
         <div class="builder-layout">
-            <div class="builder-source no-print">
-                <div style="font-weight:bold; margin-bottom:10px; font-size:12px;">Доступный ПС в парке:</div>
+            <div class="builder-source">
+                <h4 style="margin-bottom:10px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Доступный ПС из базы</h4>
                 <div id="builderSourceList"></div>
             </div>
 
             <div>
-                <div class="created-trips-list no-print" style="background:var(--bp-card-bg); border:1px solid var(--bp-border); padding:14px; border-radius:4px; margin-bottom:16px;">
-                    <div style="font-weight:bold; margin-bottom:10px;">📋 Сформированные поезда в графике:</div>
-                    <div id="createdTripsContainer"></div>
+                <div class="consist-area">
+                    <h4 style="margin-bottom:10px; color:var(--bp-link);">Формируемый поезд (нажмите ❌ чтобы убрать вагон):</h4>
+                    <div class="consist-track" id="consistTrack">
+                        <div style="color:var(--bp-text-muted); font-style:italic;">Состав пуст. Нажмите «+ В поезд» в списке слева.</div>
+                    </div>
+                    <div class="consist-metrics-bar">
+                        <span>Всего вагонов/лок: <span id="metricCount">0</span></span>
+                        <span>Масса поезда: <span id="metricWeight">0</span> т</span>
+                        <span>Длина состава: <span id="metricLength">0</span> м</span>
+                        <span>Тормозные нажатия: <span id="metricBrakes">0</span> тс</span>
+                    </div>
                 </div>
 
-                <div class="consist-area">
-                    <div style="font-weight:bold; margin-bottom:12px;">Сцепка поезда (Голова -> Хвост):</div>
-                    <div class="consist-track" id="consistTrack"></div>
-                    <div class="consist-metrics-bar" id="consistMetricsBar">
-                        <span>Всего вагонов/ед: <b id="mCount">0</b></span> | 
-                        <span>Осей: <b id="mAxles">0</b></span> | 
-                        <span>Вес состава: <b id="mWeight">0</b> т</span> | 
-                        <span>Длина: <b id="mLength">0</b> м</span>
+                <div id="vu45Container" style="display:none;">
+                    <div class="vu45-ticket" id="vu45Ticket"></div>
+                    <div class="action-buttons no-print" style="margin-top:12px;">
+                        <button class="btn-primary" onclick="window.print()">🖨 Распечатать справку ВУ-45</button>
                     </div>
                 </div>
             </div>
         </div>
     </div>
 
-    <!-- СТРАНИЦА 4: ТАБЛО СТАНЦИЙ С АВТОМАТИКОЙ И ВУ-45 -->
     <div id="pageSchedule" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>📅 Информационные Табло Станций и Выдача Справки ВУ-45</span>
+            <span>📅 Интерактивное Вокзальное Табло Станций и Онлайн-Расписание</span>
             <div class="action-buttons no-print">
-                <button class="btn-primary" onclick="openAddTrainToBoardModal()">➕ Добавить поезд на табло</button>
-                <button class="btn-danger" onclick="clearCurrentStationBoard()">🧹 Очистить табло станции</button>
-                <button class="btn-gold" onclick="window.print()">🖨️ Печать расписания / ВУ-45</button>
+                <button class="btn-primary" onclick="openAddTrainScheduleModal()">➕ Добавить поезд в расписание</button>
             </div>
         </div>
 
         <div class="station-selector-bar no-print">
             <div class="station-tabs-group">
-                <button class="station-tab-btn active" id="btnStSosnovy" onclick="selectStationBoard('sosnovy')">🚉 ст. Сосновый Бор</button>
-                <button class="station-tab-btn" id="btnStKrutoborka" onclick="selectStationBoard('krutoborka')">🚉 ст. Крутоборка</button>
-                <button class="station-tab-btn" id="btnStLelma" onclick="selectStationBoard('lelma')">🚉 ст. Лельма</button>
+                <button class="station-tab-btn active" id="stTabSosnovy" onclick="selectStationBoard('Сосновый Бор')">🚉 ст. Сосновый Бор</button>
+                <button class="station-tab-btn" id="stTabLelma" onclick="selectStationBoard('Лельма')">🚉 ст. Лельма</button>
+                <button class="station-tab-btn" id="stTabKrutoborka" onclick="selectStationBoard('Крутоборка')">🚉 ст. Крутоборка</button>
             </div>
-            <div style="font-size:11px; color:var(--bp-text-muted);">
-                ⚡ Автоматический расчёт времени отправления и стоянки
-            </div>
+            <div style="font-weight:bold; color:var(--bp-accent-gold);" id="clockDisplay">00:00:00</div>
         </div>
 
-        <div class="board-container no-print">
+        <div class="board-container">
             <div class="board-header">
-                <span id="boardStationTitle">📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР</span>
-                <span style="font-size:12px; color:#2ec4b6;" id="boardLiveClock">10:15:00</span>
+                <span>ТАБЛО ОТПРАВЛЕНИЯ И ПРИБЫТИЯ ПОЕЗДОВ</span>
+                <span id="boardStationTitle">СТАНЦИЯ СОСНОВЫЙ БОР</span>
             </div>
             <table class="board-table">
                 <thead>
                     <tr>
-                        <th>ПОЕЗД</th>
+                        <th>№ ПОЕЗДА</th>
                         <th>МАРШРУТ СЛЕДОВАНИЯ</th>
-                        <th>ПУТЬ ПРИЁМА</th>
                         <th>ПРИБЫТИЕ</th>
                         <th>СТОЯНКА</th>
                         <th>ОТПРАВЛЕНИЕ</th>
-                        <th>СТАТУС</th>
-                        <th style="text-align:right;">ДЕЙСТВИЯ ДСП</th>
+                        <th>ПУТЬ</th>
+                        <th>СТАТУС / ПРИМЕЧАНИЕ</th>
                     </tr>
                 </thead>
                 <tbody id="boardTableBody"></tbody>
             </table>
         </div>
 
-        <div class="trip-form-panel no-print">
-            <div>
-                <label for="schTrainSelect">Выберите поезд из графика:</label>
-                <select id="schTrainSelect"></select>
-            </div>
-            <div style="display:flex; align-items:flex-end;">
-                <button class="btn-primary" onclick="generateScheduleAndVU45()" style="width:100%; padding:8px;">⚡ Сформировать расписание и ВУ-45</button>
-            </div>
-        </div>
-
-        <div id="scheduleOutput" style="display:none;">
-            <div class="schedule-box">
-                <h3 style="margin-top:0; color:var(--bp-link);" id="schTitle">График движения</h3>
-                <div class="table-container" style="margin-top:10px;">
-                    <table class="bp-table">
-                        <thead>
-                            <tr>
-                                <th>Раздельный пункт / ОП</th>
-                                <th>Прибытие</th>
-                                <th>Стоянка / Операция</th>
-                                <th>Отправление</th>
-                                <th>Перегон</th>
-                            </tr>
-                        </thead>
-                        <tbody id="schTableBody"></tbody>
-                    </table>
-                </div>
-
-                <div class="vu45-ticket" id="vu45PrintArea">
-                    <div style="text-align:center; font-weight:bold; text-decoration:underline; font-size:13px;">СПРАВКА О БЕСПЕРЕБОЙНОМ ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ И ИХ ДЕЙСТВИИ (ФОРМА ВУ-45)</div>
-                    <br>
-                    <div><b>Поезд №:</b> <span id="vuTrainNum">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Маршрут:</b> <span id="vuRoute">—</span></div>
-                    <div><b>Машинист (ТЧМ):</b> <span id="vuDriver">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>ЛНП:</b> <span id="vuLNP">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>ДСП:</b> <span id="vuDSP">—</span></div>
-                    <div><b>Локомотив:</b> <span id="vuLoco">—</span> &nbsp;&nbsp;|&nbsp;&nbsp; <b>Состав:</b> <span id="vuCarsCount">0</span> ваг.</div>
-                    <hr style="border-top: 1px dashed #000; margin: 10px 0;">
-                    <div><b>Давление в ТМ:</b> 4.5 – 4.8 кгс/см² | <b>Плотность ТМ:</b> Норма</div>
-                    <div><b>Хвостовой вагон №:</b> <span id="vuTailCar">—</span> (Сигналы установлены)</div>
-                    <hr style="border-top: 1px dashed #000; margin: 10px 0;">
-                    <div>Опробование автотормозов: <b>ПОЛНОЕ ИНСПЕКТОРСКОЕ</b></div>
-                    <div style="margin-top:12px;">Осмотрщик вагонов / ДСП: _________________</div>
-                    <div>Машинист (ТЧМ): _________________</div>
-                </div>
+        <div class="schedule-box">
+            <h3 style="margin-bottom:12px; font-size:14px;">Полная сводная ведомость движения по участку Сосновый Бор — Лельма — Крутоборка</h3>
+            <div class="table-container">
+                <table class="bp-table">
+                    <thead>
+                        <tr>
+                            <th>№ Поезда</th>
+                            <th>Категория / Тип</th>
+                            <th>Маршрут</th>
+                            <th>Время отпр.</th>
+                            <th>Время приб.</th>
+                            <th>Регулярность</th>
+                            <th style="text-align:center;">Управление</th>
+                        </tr>
+                    </thead>
+                    <tbody id="fullScheduleTableBody"></tbody>
+                </table>
             </div>
         </div>
     </div>
 
-    <!-- СТРАНИЦА 5: АТТЕСТАЦИЯ ДСП И ТЧМ -->
     <div id="pageTests" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>🎓 Экзаменационные Тесты & Аттестация (ДСП, ТЧМ, ЛНП, Инструктор)</span>
+            <span>🎓 Аттестационный Центр Проверки Знаний ПТЭ, ИСИ и ИДП</span>
         </div>
 
-        <div class="trip-form-panel no-print">
+        <div style="display:grid; grid-template-columns: 280px 1fr; gap:18px;">
             <div>
-                <label for="testRoleSelect">Выберите экзаменационный профиль:</label>
-                <select id="testRoleSelect" onchange="loadTestRole()">
-                    <option value="dsp">🚦 Дежурный по станции (ДСП)</option>
-                    <option value="driver">🚂 Машинист (ТЧМ)</option>
-                    <option value="instructor">👨‍🏫 Машинист-Инструктор</option>
-                    <option value="lnp">📋 Начальник поезда (ЛНП)</option>
-                </select>
+                <div class="profile-card">
+                    <h4 style="margin-bottom:12px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Модули тестирования</h4>
+                    <button class="btn-secondary" style="width:100%; margin-bottom:8px; text-align:left;" onclick="loadTestModule('pte')">📘 ПТЭ (Правила тех. эксплуатации)</button>
+                    <button class="btn-secondary" style="width:100%; margin-bottom:8px; text-align:left;" onclick="loadTestModule('isi')">🚨 ИСИ (Инструкция по сигнализации)</button>
+                    <button class="btn-secondary" style="width:100%; text-align:left;" onclick="loadTestModule('dsp')">🚉 Работа ДСП и Поездная радиосвязь</button>
+                    
+                    <div style="margin-top:20px; padding:12px; background:var(--bp-input-bg); border-radius:4px; border:1px solid var(--bp-border);">
+                        <div style="font-weight:bold; margin-bottom:6px;">Результат текущей попытки:</div>
+                        <div style="font-size:20px; font-weight:bold; color:var(--bp-link);" id="testScoreText">0 / 0</div>
+                    </div>
+                </div>
+            </div>
+
+            <div>
+                <div id="testQuestionsContainer"></div>
+                <button class="btn-success" id="btnSubmitTest" onclick="submitTestAnswers()" style="display:none; width:100%; padding:10px; font-size:12px;">✅ Завершить тест и проверить результаты</button>
             </div>
         </div>
-
-        <div id="testContainer"></div>
-        <button class="btn-primary" onclick="checkTestResults()" style="padding:10px 22px; font-size:12px;">Сдать экзаменационную работу</button>
-        <div id="testResultBox" style="margin-top:16px; font-weight:bold; font-size:14px;"></div>
     </div>
 
-    <!-- СТРАНИЦА 6: СТАТИСТИКА И АНАЛИТИКА ПАРКА -->
     <div id="pageAnalytics" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>📊 Статистика и Аналитика Парка Подвижного Состава</span>
+            <span>📊 Аналитический Обзор и Диагностика Парка</span>
         </div>
 
         <div class="analytics-grid">
             <div class="analytics-card">
-                <h4 style="margin-bottom:12px; color:var(--bp-link);">Распределение по статусам:</h4>
+                <h4 style="margin-bottom:14px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Распределение ПС по техническому состоянию</h4>
                 <div id="analyticsStatusProgress"></div>
             </div>
+
             <div class="analytics-card">
-                <h4 style="margin-bottom:12px; color:var(--bp-accent-teal);">Распределение по категориям:</h4>
-                <div id="analyticsCatProgress"></div>
+                <h4 style="margin-bottom:14px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Соотношение ширины колеи</h4>
+                <div id="analyticsGaugeProgress"></div>
             </div>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ / СОЗДАНИЕ ЕДИНИЦЫ ПС (МАКСИМАЛЬНЫЙ ФУНКЦИОНАЛ) -->
-    <div class="modal-overlay" id="vehicleModal">
+    <div class="modal-overlay" id="modalVehicle">
         <div class="modal-card">
-            <span class="modal-close" onclick="closeModal('vehicleModal')">&times;</span>
-            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;" id="modalTitle">Параметры единицы подвижного состава</div>
+            <span class="modal-close" onclick="closeVehicleModal()">&times;</span>
+            <h3 id="modalVehicleTitle" style="margin-bottom:16px;">Добавить единицу подвижного состава</h3>
             
-            <form onsubmit="saveVehicleData(event)">
-                <input type="hidden" id="editVehicleId">
+            <form id="vehicleForm" onsubmit="saveVehicleForm(event)">
+                <input type="hidden" id="formVehicleId">
                 <div class="form-grid">
                     <div>
-                        <label for="fieldCategory">Категория ПС:</label>
-                        <select id="fieldCategory">
-                            <option value="loco">🚂 Локомотив</option>
-                            <option value="pass_car">🚃 Пассажирский вагон</option>
-                            <option value="cargo_car">📦 Грузовой вагон</option>
-                            <option value="special">🛠 Спецтехника / Дрезина</option>
+                        <label>Серия и номер (напр. TU2-113, PV40-02):</label>
+                        <input type="text" id="formSeries" required>
+                    </div>
+                    <div>
+                        <label>Категория ПС:</label>
+                        <select id="formCategory">
+                            <option value="loco">Локомотив / Мотовоз</option>
+                            <option value="pass_car">Пассажирский вагон</option>
+                            <option value="cargo_car">Грузовой вагон</option>
+                            <option value="special">Спецтехника</option>
                         </select>
                     </div>
                     <div>
-                        <label for="fieldModel">Серия / Модель:</label>
-                        <input type="text" id="fieldModel" required placeholder="ТУ2 / ПВ40 / ЧС4Т">
-                    </div>
-                    <div>
-                        <label for="fieldNum">Бортовой / Номер:</label>
-                        <input type="text" id="fieldNum" required placeholder="001 / 3100">
-                    </div>
-                    <div>
-                        <label for="fieldFactoryNum">Заводской номер:</label>
-                        <input type="text" id="fieldFactoryNum" placeholder="Заводской №">
-                    </div>
-                    <div>
-                        <label for="fieldPark">Депо / Станция приписки:</label>
-                        <input type="text" id="fieldPark" required placeholder="ст. Сосновый Бор / ТЧ-1">
-                    </div>
-                    <div>
-                        <label for="fieldGauge">Ширина колеи:</label>
-                        <select id="fieldGauge">
-                            <option value="750мм">750 мм (Узкая колея)</option>
-                            <option value="1520мм">1520 мм (Широкая колея)</option>
-                            <option value="1435мм">1435 мм (Европейская колея)</option>
+                        <label>Ширина колеи (мм):</label>
+                        <select id="formGauge">
+                            <option value="750">750 мм (Узкоколейный)</option>
+                            <option value="1520">1520 мм (Ширококолейный)</option>
                         </select>
                     </div>
                     <div>
-                        <label for="fieldStatusCls">Статус / Цветовая категория:</label>
-                        <select id="fieldStatusCls">
-                            <option value="st-active">Работает / Эксплуатируется</option>
+                        <label>Депо приписки / Станция:</label>
+                        <input type="text" id="formDepot" placeholder="ТЧ-1 Сосновый Бор">
+                    </div>
+                    <div>
+                        <label>Завод-изготовитель:</label>
+                        <input type="text" id="formFactory" placeholder="Камбарский машиностроительный">
+                    </div>
+                    <div>
+                        <label>Год постройки:</label>
+                        <input type="number" id="formBuildYear" placeholder="1958">
+                    </div>
+                    <div>
+                        <label>Дата ввода в эксплуатацию:</label>
+                        <input type="date" id="formCommissionDate">
+                    </div>
+                    <div>
+                        <label>Текущий статус:</label>
+                        <select id="formStatus">
+                            <option value="st-active">В эксплуатации (Действует)</option>
                             <option value="st-not-operated">Не эксплуатируется</option>
-                            <option value="st-inactive">Консервация / Запас</option>
-                            <option value="st-mod">КР / КРП / Модернизация</option>
+                            <option value="st-inactive">В запасе / Консервация</option>
                             <option value="st-out">Выведен из эксплуатации</option>
                             <option value="st-decomm">Списан</option>
-                            <option value="st-scrapped">Утилизирован / Порезан</option>
-                            <option value="st-trans">Передан в другое депо/город</option>
-                            <option value="st-museum">Музейный / Памятник</option>
+                            <option value="st-scrapped">Порезан / Утилизирован</option>
+                            <option value="st-mod">Модернизация / КРП</option>
+                            <option value="st-trans">Передан / Передислокация</option>
+                            <option value="st-museum">Музейный экспонат</option>
                         </select>
                     </div>
                     <div>
-                        <label for="fieldStatusText">Текстовое описание состояния:</label>
-                        <input type="text" id="fieldStatusText" placeholder="Например: В работе на ДЖД / ТР-3">
+                        <label>Дата вывода из эксплуатации:</label>
+                        <input type="date" id="formOutDate">
                     </div>
                     <div>
-                        <label for="fieldBuildDate">Дата постройки / Выпуска:</label>
-                        <input type="date" id="fieldBuildDate">
+                        <label>Дата списания:</label>
+                        <input type="date" id="formDecomDate">
                     </div>
                     <div>
-                        <label for="fieldInServiceDate">Дата ввода в эксплуатацию:</label>
-                        <input type="date" id="fieldInServiceDate">
+                        <label>Дата порезки / утилизации:</label>
+                        <input type="date" id="formScrapDate">
                     </div>
                     <div>
-                        <label for="fieldOutDate">Дата вывода из эксплуатации:</label>
-                        <input type="date" id="fieldOutDate">
+                        <label>Масса единицы (тонн):</label>
+                        <input type="number" step="0.1" id="formWeight" value="15">
                     </div>
                     <div>
-                        <label for="fieldDecommDate">Дата списания:</label>
-                        <input type="date" id="fieldDecommDate">
+                        <label>Длина по автосцепкам (метров):</label>
+                        <input type="number" step="0.1" id="formLength" value="10.2">
+                    </div>
+                    <div>
+                        <label>Тормозное нажатие (тс):</label>
+                        <input type="number" step="0.1" id="formBrake" value="8">
                     </div>
                     <div class="form-full">
-                        <label for="fieldScrappedDate">Дата утилизации / Порезки:</label>
-                        <input type="date" id="fieldScrappedDate">
-                    </div>
-                    <div>
-                        <label for="fieldManufacturer">Завод-изготовитель:</label>
-                        <input type="text" id="fieldManufacturer" placeholder="Камбарский МЗ / Демиховский МЗ">
-                    </div>
-                    <div>
-                        <label for="fieldPhotoUrl">Ссылка на фото (URL):</label>
-                        <input type="text" id="fieldPhotoUrl" placeholder="https://...">
-                    </div>
-                    <div class="form-full">
-                        <label for="fieldHistory">Журнал ремонтов, модернизаций и передач:</label>
-                        <textarea id="fieldHistory" rows="2" placeholder="История ремонтов, КР, КРП, передача между депо..."></textarea>
-                    </div>
-                    <div class="form-full">
-                        <label for="fieldNote">Примечание / Дополнительные заметки:</label>
-                        <textarea id="fieldNote" rows="2" placeholder="Заметки о техническом состоянии..."></textarea>
+                        <label>История ремонтов / Примечания:</label>
+                        <textarea id="formNotes" rows="3" placeholder="Прохождение КР, замечен на перегоне..."></textarea>
                     </div>
                 </div>
 
-                <div style="margin-top:18px; display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--bp-border); padding-top: 12px; flex-wrap:wrap; gap:8px;">
-                    <div>
-                        <button type="button" class="btn-danger" id="btnDeleteVehicle" onclick="deleteCurrentVehicle()">🗑 Удалить из базы</button>
-                        <button type="button" class="btn-secondary" id="btnDuplicateVehicle" onclick="duplicateCurrentVehicle()">📋 Клонировать</button>
-                    </div>
-                    <div style="display:flex; gap:8px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal('vehicleModal')">Отмена</button>
-                        <button type="submit" class="btn-primary">💾 Сохранить изменения</button>
-                    </div>
+                <div class="action-buttons" style="margin-top:18px; justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeVehicleModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить единицу ПС</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: МАССОВОЕ РЕДАКТИРОВАНИЕ ПС -->
-    <div class="modal-overlay" id="batchEditModal">
-        <div class="modal-card" style="max-width:450px;">
-            <span class="modal-close" onclick="closeModal('batchEditModal')">&times;</span>
-            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom:1px solid var(--bp-border); padding-bottom:8px;" id="batchModalTitle">Массовое редактирование</div>
-            
-            <form onsubmit="applyBatchEdit(event)">
-                <input type="hidden" id="batchEditType">
-                <div id="batchStatusContainer" style="display:none; margin-bottom:14px;">
-                    <label style="font-weight:bold; font-size:11px;">Выберите новый статус:</label>
-                    <select id="batchNewStatus" style="width:100%; padding:8px; margin-top:4px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border);">
-                        <option value="st-active">Работает / Эксплуатируется</option>
-                        <option value="st-not-operated">Не эксплуатируется</option>
-                        <option value="st-inactive">Консервация / Запас</option>
-                        <option value="st-mod">КР / КРП / Модернизация</option>
-                        <option value="st-out">Выведен из эксплуатации</option>
-                        <option value="st-decomm">Списан</option>
-                        <option value="st-scrapped">Утилизирован / Порезан</option>
-                        <option value="st-trans">Передан в другое депо/город</option>
-                    </select>
-                </div>
-
-                <div id="batchParkContainer" style="display:none; margin-bottom:14px;">
-                    <label style="font-weight:bold; font-size:11px;">Введите новое депо / станцию приписки:</label>
-                    <input type="text" id="batchNewPark" placeholder="ст. Лельма" style="width:100%; padding:8px; margin-top:4px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border);">
-                </div>
-
-                <div style="display:flex; justify-content:flex-end; gap:8px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('batchEditModal')">Отмена</button>
-                    <button type="submit" class="btn-primary">Применить к выделенным</button>
-                </div>
-            </form>
+    <div class="modal-overlay" id="modalCard">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeCardModal()">&times;</span>
+            <div id="cardContent"></div>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ПРОФИЛЯ -->
-    <div class="modal-overlay" id="editProfileModal">
-        <div class="modal-card" style="max-width:550px;">
-            <span class="modal-close" onclick="closeModal('editProfileModal')">&times;</span>
-            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;">✏️ Редактирование Профиля</div>
-            
-            <form onsubmit="saveProfileData(event)">
+    <div class="modal-overlay" id="modalProfile">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeProfileModal()">&times;</span>
+            <h3 style="margin-bottom:16px;">Редактирование профиля сотрудника</h3>
+            <form onsubmit="saveProfileForm(event)">
                 <div class="form-grid">
-                    <div class="form-full">
-                        <label for="editProfName">ФИО Сотрудника:</label>
-                        <input type="text" id="editProfName" required placeholder="Иванов Иван Иванович">
+                    <div>
+                        <label>ФИО:</label>
+                        <input type="text" id="editProfName" required>
                     </div>
                     <div>
-                        <label for="editProfRole">Должность:</label>
-                        <input type="text" id="editProfRole" required placeholder="Дежурный по станции (ДСП)">
+                        <label>Должность:</label>
+                        <input type="text" id="editProfRole" required>
                     </div>
                     <div>
-                        <label for="editProfTabNum">Табельный номер:</label>
-                        <input type="text" id="editProfTabNum" required placeholder="ТБ-88402">
+                        <label>Табельный номер:</label>
+                        <input type="text" id="editProfTabNum">
                     </div>
                     <div>
-                        <label for="editProfStation">Станция приписки:</label>
-                        <input type="text" id="editProfStation" required placeholder="ст. Сосновый Бор">
+                        <label>Станция приписки:</label>
+                        <input type="text" id="editProfStation">
                     </div>
                     <div>
-                        <label for="editProfQual">Квалификация:</label>
-                        <input type="text" id="editProfQual" required placeholder="ДСП 1-го класса">
+                        <label>Квалификация / Классность:</label>
+                        <input type="text" id="editProfQual">
                     </div>
                     <div>
-                        <label for="editProfExp">Стаж работы:</label>
-                        <input type="text" id="editProfExp" required placeholder="5 лет 4 месяца">
-                    </div>
-                    <div>
-                        <label for="editProfShift">Статус смены:</label>
-                        <input type="text" id="editProfShift" required placeholder="На дежурстве">
+                        <label>Стаж работы:</label>
+                        <input type="text" id="editProfExp">
                     </div>
                 </div>
-
-                <div style="margin-top:18px; display:flex; justify-content:flex-end; gap:8px; border-top: 1px solid var(--bp-border); padding-top: 12px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('editProfileModal')">Отмена</button>
-                    <button type="submit" class="btn-primary">💾 Сохранить профиль</button>
+                <div class="action-buttons" style="margin-top:18px; justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeProfileModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Сохранить данные</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: ДОБАВЛЕНИЕ ПАМЯТКИ -->
-    <div class="modal-overlay" id="addPinnedNoteModal">
-        <div class="modal-card" style="max-width:550px;">
-            <span class="modal-close" onclick="closeModal('addPinnedNoteModal')">&times;</span>
-            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;">📌 Закрепить Новую Заметку / Памятку</div>
-            
+    <div class="modal-overlay" id="modalPinnedNote">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closePinnedNoteModal()">&times;</span>
+            <h3 style="margin-bottom:16px;">Закрепить новую памятку ДСП</h3>
             <form onsubmit="savePinnedNote(event)">
                 <div class="form-grid">
                     <div class="form-full">
-                        <label for="fieldPinTitle">Заголовок памятки:</label>
-                        <input type="text" id="fieldPinTitle" required placeholder="Памятка при неисправности СЦБ">
+                        <label>Заголовок памятки:</label>
+                        <input type="text" id="noteTitle" placeholder="Прием поезда при запрещающем показании" required>
                     </div>
                     <div class="form-full">
-                        <label for="fieldPinBody">Содержание памятки:</label>
-                        <textarea id="fieldPinBody" rows="4" required placeholder="Введите алгоритм действий ДСП или контактные телефоны..."></textarea>
+                        <label>Текст инструкции / алгоритма:</label>
+                        <textarea id="noteBody" rows="4" placeholder="1. Оформить бланк ДУ-54... 2. Сверить стрелки..." required></textarea>
                     </div>
                 </div>
-
-                <div style="margin-top:18px; display:flex; justify-content:flex-end; gap:8px; border-top: 1px solid var(--bp-border); padding-top: 12px;">
-                    <button type="button" class="btn-secondary" onclick="closeModal('addPinnedNoteModal')">Отмена</button>
-                    <button type="submit" class="btn-gold">📌 Закрепить в профиле</button>
+                <div class="action-buttons" style="margin-top:18px; justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closePinnedNoteModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Закрепить</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- МОДАЛЬНОЕ ОКНО: РЕДАКТИРОВАНИЕ ПОЕЗДА НА ТАБЛО -->
-    <div class="modal-overlay" id="boardTrainModal">
-        <div class="modal-card" style="max-width:550px;">
-            <span class="modal-close" onclick="closeModal('boardTrainModal')">&times;</span>
-            <div style="font-weight:bold; font-size:16px; margin-bottom:16px; border-bottom: 1px solid var(--bp-border); padding-bottom: 8px;" id="boardModalTitle">Параметры поезда на информационном табло</div>
-            
-            <form onsubmit="saveBoardTrainData(event)">
-                <input type="hidden" id="boardTrainEditIndex">
+    <div class="modal-overlay" id="modalSchedule">
+        <div class="modal-card">
+            <span class="modal-close" onclick="closeScheduleModal()">&times;</span>
+            <h3 style="margin-bottom:16px;">Добавить поезд в расписание</h3>
+            <form onsubmit="saveScheduleForm(event)">
                 <div class="form-grid">
                     <div>
-                        <label for="boardTrainNum">№ Поезда:</label>
-                        <input type="text" id="boardTrainNum" required placeholder="601">
+                        <label>Номер поезда:</label>
+                        <input type="text" id="schNum" placeholder="№ 605" required>
                     </div>
                     <div>
-                        <label for="boardTrainRoute">Маршрут следования:</label>
-                        <input type="text" id="boardTrainRoute" required placeholder="Крутоборка — Лельма">
+                        <label>Категория:</label>
+                        <input type="text" id="schCat" placeholder="Пассажирский / Пригородный">
                     </div>
                     <div>
-                        <label for="boardTrainTrack">Путь приёма / отправления:</label>
-                        <select id="boardTrainTrack">
-                            <option value="1 путь">1 путь</option>
-                            <option value="2 путь">2 путь</option>
-                            <option value="3 путь">3 путь</option>
-                            <option value="4 путь">4 путь</option>
-                            <option value="Главный путь">Главный путь</option>
-                            <option value="Заездной путь">Заездной путь</option>
-                            <option value="Тупиковый путь">Тупиковый путь</option>
+                        <label>Станция отправления:</label>
+                        <select id="schFrom">
+                            <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                            <option value="Лельма">ст. Лельма</option>
+                            <option value="Крутоборка">ст. Крутоборка</option>
                         </select>
                     </div>
                     <div>
-                        <label for="boardTrainArr">Время прибытия:</label>
-                        <input type="time" id="boardTrainArr" onchange="autoCalcBoardDeparture()">
-                    </div>
-                    <div>
-                        <label for="boardTrainStopMin">Время стоянки (в минутах):</label>
-                        <input type="number" id="boardTrainStopMin" value="5" min="0" oninput="autoCalcBoardDeparture()" placeholder="5">
-                    </div>
-                    <div>
-                        <label for="boardTrainDep">Время отправления:</label>
-                        <input type="time" id="boardTrainDep" style="border-color:var(--bp-accent-gold); font-weight:bold;">
-                    </div>
-                    <div class="form-full">
-                        <label for="boardTrainStatus">Статус на табло:</label>
-                        <select id="boardTrainStatus">
-                            <option value="ПОСАДКА">ПОСАДКА (Мигает)</option>
-                            <option value="ОЖИДАЕТСЯ">ОЖИДАЕТСЯ</option>
-                            <option value="ПРИБЫВАЕТ">ПРИБЫВАЕТ (Мигает)</option>
-                            <option value="В ПУТИ">В ПУТИ</option>
-                            <option value="ГОТОВИТСЯ">ГОТОВИТСЯ</option>
-                            <option value="ОТПРАВЛЕН">ОТПРАВЛЕН</option>
-                            <option value="ЗАДЕРЖИВАЕТСЯ">ЗАДЕРЖИВАЕТСЯ (Красный)</option>
+                        <label>Станция назначения:</label>
+                        <select id="schTo">
+                            <option value="Крутоборка">ст. Крутоборка</option>
+                            <option value="Лельма">ст. Лельма</option>
+                            <option value="Сосновый Бор">ст. Сосновый Бор</option>
                         </select>
+                    </div>
+                    <div>
+                        <label>Время отправления:</label>
+                        <input type="time" id="schDepTime" required>
+                    </div>
+                    <div>
+                        <label>Время прибытия:</label>
+                        <input type="time" id="schArrTime" required>
+                    </div>
+                    <div>
+                        <label>Назначенный путь:</label>
+                        <input type="text" id="schTrack" value="1 путь">
+                    </div>
+                    <div>
+                        <label>Регулярность:</label>
+                        <input type="text" id="schDays" value="Ежедневно">
                     </div>
                 </div>
-
-                <div style="margin-top:18px; display:flex; justify-content:space-between; align-items:center; border-top: 1px solid var(--bp-border); padding-top: 12px;">
-                    <span style="font-size:10px; color:var(--bp-text-muted);">* Отправление рассчитывается автоматически.</span>
-                    <div style="display:flex; gap:8px;">
-                        <button type="button" class="btn-secondary" onclick="closeModal('boardTrainModal')">Отмена</button>
-                        <button type="submit" class="btn-primary">💾 Сохранить на табло</button>
-                    </div>
+                <div class="action-buttons" style="margin-top:18px; justify-content:flex-end;">
+                    <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Отмена</button>
+                    <button type="submit" class="btn-primary">Добавить в расписание</button>
                 </div>
             </form>
         </div>
     </div>
 
-    <!-- ЛОГИКА И СКРИПТЫ (JAVASCRIPT LOGIC) -->
+
     <script>
-        /* ==========================================================================
-           ИНИЦИАЛИЗАЦИЯ И РАСШИРЕННЫЕ ИСХОДНЫЕ ДАННЫЕ
-           ========================================================================== */
-        
-        const defaultDB = [
-            { id: "ps_1", category: "loco", gauge: "750мм", park: "ст. Крутоборка", model: "ТУ2", num: "001", factoryNum: "104", manufacturer: "Камбарский МЗ", statusCls: "st-active", statusText: "Работает", buildDate: "1958-05-12", inServiceDate: "1958-06-01", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Прошёл КР в 2018 году.", note: "Узкоколейный тепловоз, исправен." },
-            { id: "ps_2", category: "pass_car", gauge: "750мм", park: "ст. Крутоборка", model: "ПВ40", num: "012", factoryNum: "882", manufacturer: "Демиховский МЗ", statusCls: "st-active", statusText: "Работает", buildDate: "1982-10-20", inServiceDate: "1982-11-05", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Плановый ТО-2 пройден.", note: "Пассажирский вагон узкой колеи." },
-            { id: "ps_3", category: "pass_car", gauge: "750мм", park: "ст. Крутоборка", model: "ПВ40", num: "013", factoryNum: "883", manufacturer: "Демиховский МЗ", statusCls: "st-active", statusText: "Работает", buildDate: "1982-10-22", inServiceDate: "1982-11-05", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "", note: "Пассажирский вагон." },
-            { id: "ps_4", category: "loco", gauge: "750мм", park: "ст. Сосновый Бор", model: "ТУ7A", num: "3100", factoryNum: "2841", manufacturer: "Камбарский МЗ", statusCls: "st-decomm", statusText: "Списан", buildDate: "1988-03-15", inServiceDate: "1988-04-10", outDate: "2015-08-10", decommDate: "2018-11-01", scrappedDate: "2021-04-12", photoUrl: "", history: "Находился на пути отстоя ТЧ-2.", note: "Списан и порезан на металлолом." },
-            { id: "ps_5", category: "loco", gauge: "750мм", park: "ст. Лельма", model: "ТУ2", num: "141", factoryNum: "312", manufacturer: "Камбарский МЗ", statusCls: "st-active", statusText: "Работает", buildDate: "1957-09-04", inServiceDate: "1957-10-01", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Маневровые работы по ст. Лельма.", note: "Исправен." },
-            { id: "ps_6", category: "cargo_car", gauge: "750мм", park: "ст. Лельма", model: "Платформа 750мм", num: "502", factoryNum: "1029", manufacturer: "Алтайвагон", statusCls: "st-out", statusText: "Выведен из экспл.", buildDate: "1975-04-18", inServiceDate: "1975-05-10", outDate: "2022-06-01", decommDate: "", scrappedDate: "", photoUrl: "", history: "Ожидает ремонта тележек.", note: "Грузовая платформа." },
-            { id: "ps_7", category: "loco", gauge: "1520мм", park: "ТЧЭ-1 Москва-Пассажирская", model: "ЧС4Т", num: "329", factoryNum: "7012", manufacturer: "Шкода (Škoda)", statusCls: "st-active", statusText: "Работает", buildDate: "1978-02-14", inServiceDate: "1978-03-20", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "КР-2 прошел в 2019 г.", note: "Пассажирский электровоз переменного тока." },
-            { id: "ps_8", category: "loco", gauge: "1520мм", park: "ТЧЭ-8 Днепропетровск", model: "ЧС7", num: "115", factoryNum: "8102", manufacturer: "Шкода (Škoda)", statusCls: "st-mod", statusText: "КР / Модернизация", buildDate: "1987-11-05", inServiceDate: "1987-12-01", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Находится на Запорожском ЭВРЗ.", note: "Пассажирский двухсекционный электровоз." },
-            { id: "ps_9", category: "loco", gauge: "1520мм", park: "ТЧЭ-14 Минск-Сортировочный", model: "ТЭП70", num: "0214", factoryNum: "1402", manufacturer: "Коломенский завод", statusCls: "st-active", statusText: "Работает", buildDate: "1991-06-30", inServiceDate: "1991-07-15", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Водит скорые и пассажирские поезда.", note: "Пассажирский тепловоз." },
-            { id: "ps_10", category: "pass_car", gauge: "1520мм", park: "ЛВЧD-1 Минск", model: "Аммендорф 47K/k", num: "017-28491", factoryNum: "4820", manufacturer: "VEB Waggonbau Ammendorf", statusCls: "st-active", statusText: "Работает", buildDate: "1989-08-12", inServiceDate: "1989-09-01", outDate: "", decommDate: "", scrappedDate: "", photoUrl: "", history: "Купейный вагон с кондиционером.", note: "Пройден КР-1." },
-            { id: "ps_11", category: "special", gauge: "750мм", park: "ст. Сосновый Бор", model: "Дрезина ДМ-52", num: "04", factoryNum: "42", manufacturer: "Камбарский МЗ", statusCls: "st-inactive", statusText: "Консервация", buildDate: "1968-03-10", inServiceDate: "1968-04-01", outDate: "2019-10-15", decommDate: "", scrappedDate: "", photoUrl: "", history: "Служебная дрезина путейцев.", note: "В резерве управления дороги." }
+        /* === ИНИЦИАЛИЗАЦИЯ И БАЗОВЫЕ ДАННЫЕ === */
+        const DEFAULT_DATABASE = [
+            { id: "ps-1", series: "ТУ2-113", category: "loco", gauge: "750", depot: "ТЧ-1 Сосновый Бор", factory: "Калужский машиностроительный", buildYear: 1957, commissionDate: "1957-06-12", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Прошел КР в 2021 году. Исправен, находится в постоянной эксплуатации." },
+            { id: "ps-2", series: "ТУ2-048", category: "loco", gauge: "750", depot: "ТЧ-1 Сосновый Бор", factory: "Калужский машиностроительный", buildYear: 1956, commissionDate: "1956-08-20", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Окрашен в историческую ливрею." },
+            { id: "ps-3", series: "ПВ40-0012", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Пассажирский салон на 40 мест." },
+            { id: "ps-4", series: "ПВ40-0015", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Плановый ремонт пройден." },
+            { id: "ps-5", series: "ПВ40-0021", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1984, commissionDate: "1984-07-01", decommissionDate: "", scrapDate: "", status: "st-mod", weight: 9.5, length: 11.1, brake: 8, notes: "Находится на КРП в мастерских." },
+            { id: "ps-6", series: "ТУ7А-3110", category: "loco", gauge: "750", depot: "ТЧ-1 Сосновый Бор", factory: "Камбарский машиностроительный", buildYear: 1988, commissionDate: "1988-11-15", decommissionDate: "", scrapDate: "", status: "st-inactive", weight: 24, length: 9.9, brake: 18, notes: "В резерве депо." },
+            { id: "ps-7", series: "Платформа 43-091", category: "cargo_car", gauge: "750", depot: "ПЧ-3 Лельма", factory: "Алтайвагон", buildYear: 1975, commissionDate: "1975-04-12", decommissionDate: "2018-09-10", scrapDate: "2019-05-20", status: "st-scrapped", weight: 4.0, length: 8.5, brake: 4, notes: "Утилизирована после списания." }
         ];
 
-        const defaultProfile = {
-            name: "Петров Сергей Владимирович",
+        const STATUS_MAP = {
+            "st-active": "В эксплуатации",
+            "st-not-operated": "Не эксплуатируется",
+            "st-inactive": "В запасе / Консервация",
+            "st-out": "Выведен из эксплуатации",
+            "st-decomm": "Списан",
+            "st-scrapped": "Порезан / Утилизирован",
+            "st-mod": "Модернизация / КРП",
+            "st-trans": "Передан",
+            "st-museum": "Музейный"
+        };
+
+        let db = JSON.parse(localStorage.getItem('rp_db')) || DEFAULT_DATABASE;
+        let profile = JSON.parse(localStorage.getItem('rp_profile')) || {
+            name: "Иванов Иван Иванович",
             role: "Дежурный по станции (ДСП)",
-            tabNum: "ТБ-77014",
+            tabNum: "ТБ-88402",
             station: "ст. Сосновый Бор",
             qual: "ДСП 1-го класса",
-            exp: "6 лет 8 месяцев",
+            exp: "5 лет 4 месяца",
             shift: "На дежурстве",
             examDate: "Сдано (Действительно)",
-            badges: ["ДСП", "ПТЭ 2026", "СЦБ Разряд 5", "ВУ-45 Инспектор"]
+            badges: ["ПТЭ Сдано", "Главный по путям", "Радиосвязь OK"]
         };
-
-        const defaultPinnedNotes = [
-            { id: "pin_1", title: "📌 ЗАКРЕПЛЁННЫЙ ПРОФИЛЬ СОТРУДНИКА", body: "<b>ФИО:</b> Петров Сергей Владимирович<br><b>Должность:</b> Дежурный по станции (ДСП)<br><b>Станция:</b> Сосновый Бор<br><b>Классность:</b> 1-й класс" },
-            { id: "pin_2", title: "⚠️ Действия ДСП при ложной занятости пути", body: "1. Убедиться визуально в свободности пути.<br>2. Сообщить ДНЦ и ШН.<br>3. Перевести стрелки на курбель.<br>4. Выдать машинисту бланк ДУ-52 / ДУ-54." },
-            { id: "pin_3", title: "☎️ Оперативные телефоны ДНЦ и ШН", body: "<b>ДНЦ:</b> 12-01 | <b>ШН (СЦБ):</b> 12-44<br><b>Дежурный по депо:</b> 14-02 | <b>МЧС:</b> 112" }
+        let pinnedNotes = JSON.parse(localStorage.getItem('rp_pinned')) || [
+            { id: "n1", title: "🚨 Алгоритм ДСП при неисправности стрелки", body: "1. Прекратить приготовление маршрутов.\n2. Вызвать ШЧ и ПЧ.\n3. Перевести стрелку на ручное управление (курбель)." },
+            { id: "n2", title: "📋 Выдача справки ВУ-45", body: "Справка о тормозах составляется в двух экземплярах при смене локомотивной бригады или переформировании состава." }
+        ];
+        let schedules = JSON.parse(localStorage.getItem('rp_schedules')) || [
+            { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Сосновый Бор", to: "Крутоборка", depTime: "08:30", arrTime: "09:45", track: "1 путь", days: "Ежедневно" },
+            { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Крутоборка", to: "Сосновый Бор", depTime: "10:15", arrTime: "11:30", track: "2 путь", days: "Ежедневно" },
+            { id: "sch-3", num: "№ 603", cat: "Грузопассажирский", from: "Сосновый Бор", to: "Лельма", depTime: "14:00", arrTime: "14:50", track: "1 путь", days: "По будням" }
         ];
 
-        const defaultStationBoardsData = {
-            sosnovy: {
-                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. СОСНОВЫЙ БОР",
-                trains: [
-                    { num: "601", route: "Крутоборка — Сосновый Бор — Лельма", track: "1 путь", arr: "10:17", stopMin: "4", dep: "10:21", status: "ПОСАДКА" },
-                    { num: "602", route: "Лельма — Сосновый Бор — Крутоборка", track: "2 путь", arr: "11:05", stopMin: "5", dep: "11:10", status: "ОЖИДАЕТСЯ" },
-                    { num: "7001", route: "Сосновый Бор — Лельма (Пригородный)", track: "3 путь", arr: "12:30", stopMin: "15", dep: "12:45", status: "ГОТОВИТСЯ" }
-                ]
-            },
-            krutoborka: {
-                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. КРУТОБОРКА",
-                trains: [
-                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "09:50", stopMin: "10", dep: "10:00", status: "ОТПРАВЛЕН" },
-                    { num: "602", route: "Лельма — Крутоборка", track: "2 путь", arr: "11:55", stopMin: "0", dep: "11:55", status: "ПРИБЫВАЕТ" }
-                ]
-            },
-            lelma: {
-                title: "📺 ТАБЛО НАЗНАЧЕНИЯ ПОЕЗДОВ — СТ. ЛЕЛЬМА",
-                trains: [
-                    { num: "601", route: "Крутоборка — Лельма", track: "1 путь", arr: "10:38", stopMin: "0", dep: "10:38", status: "В ПУТИ" },
-                    { num: "904", route: "Лельма — Сосновый Бор (Грузовой)", track: "2 путь", arr: "12:30", stopMin: "30", dep: "13:00", status: "ЗАДЕРЖИВАЕТСЯ" }
-                ]
-            }
-        };
-
-        const testQuestionsData = {
-            dsp: [
-                { q: "Каким документом разрешается отправление поезда при неисправности блокировки?", options: ["Путевой запиской (Форма ДУ-50)", "Бланком ДУ-52", "Устным распоряжением", "Бланком ДУ-54"], correct: 0, exp: "При перерыве блокировки движение устанавливается по телефонным средствам связи с выдачей бланка ДУ-50." },
-                { q: "Значение КРАСНОГО огня светофора согласно ИСИ?", options: ["Снизить скорость до 20 км/ч", "Стой! Запрещается проезжать сигнал", "Проследовать с особой бдительностью", "Снизить скорость до 15 км/ч"], correct: 1, exp: "Красный огонь требует немедленной остановки." },
-                { q: "Что обязан сделать ДСП перед открытием сигнала?", options: ["Проверить свободность пути и запертость стрелок", "Подать звуковой сигнал", "Сообщить кондуктору", "Уведомить пассажиров"], correct: 0, exp: "ДСП обязан проверить свободность пути приёма и положение стрелок." }
-            ],
-            driver: [
-                { q: "Зарядное давление в тормозной магистрали пассажирского поезда?", options: ["3.0 – 3.5 кгс/см²", "4.5 – 4.8 кгс/см²", "6.0 – 6.5 кгс/см²"], correct: 1, exp: "Нормальное давление составляет 4.5 – 4.8 кгс/см²." }
-            ],
-            instructor: [
-                { q: "Периодичность проведения контрольных поездок с машинистом?", options: ["Раз в месяц", "Не реже 1 раза в квартал", "Раз в год"], correct: 1, exp: "Проводятся не реже одного раза в квартал." }
-            ],
-            lnp: [
-                { q: "Что проверяет ЛНП перед отправлением поезда?", options: ["Только внешний вид", "Готовность бригады, экипировку и посадку", "Состояние дизеля"], correct: 1, exp: "Отвечает за готовность бригады, безопасность и порядок в вагонах." }
-            ]
-        };
-
-        let vehicleDB = [];
-        let profileData = {};
-        let pinnedNotesData = [];
-        let stationBoards = {};
-        let consistList = [];
-        let createdTrips = [];
-        let selectedVehicleIds = new Set();
+        let selectedIds = new Set();
         let currentCategoryFilter = 'all';
-        let currentStation = 'sosnovy';
+        let sortField = 'series';
+        let sortAsc = true;
+        let selectedConsist = [];
+        let currentBoardStation = 'Сосновый Бор';
 
-        window.onload = function() {
-            loadProfileData();
-            loadDatabase();
-            loadStationBoardsData();
-            renderProfile();
-            renderPinnedNotes();
-            renderTable();
-            updateLiveClock();
-            setInterval(updateLiveClock, 1000);
-        };
+        /* === СОХРАНЕНИЕ В LOCALSTORAGE === */
+        function saveData() {
+            localStorage.setItem('rp_db', JSON.stringify(db));
+            localStorage.setItem('rp_profile', JSON.stringify(profile));
+            localStorage.setItem('rp_pinned', JSON.stringify(pinnedNotes));
+            localStorage.setItem('rp_schedules', JSON.stringify(schedules));
+        }
 
+        /* === ПЕРЕКЛЮЧЕНИЕ СТРАНИЦ === */
+        function switchPage(pageId) {
+            const pages = ['profile', 'database', 'builder', 'schedule', 'tests', 'analytics'];
+            pages.forEach(p => {
+                const el = document.getElementById('page' + p.charAt(0).toUpperCase() + p.slice(1));
+                const btn = document.getElementById('btnView' + p.charAt(0).toUpperCase() + p.slice(1));
+                if (el) el.style.display = (p === pageId) ? 'block' : 'none';
+                if (btn) btn.classList.toggle('active', p === pageId);
+            });
+
+            if (pageId === 'database') renderTable();
+            if (pageId === 'builder') renderBuilder();
+            if (pageId === 'schedule') renderScheduleBoard();
+            if (pageId === 'analytics') renderAnalytics();
+            if (pageId === 'profile') renderProfile();
+        }
+
+        /* === ТЕМА (ТЕМНАЯ / СВЕТЛАЯ) === */
         function toggleTheme() {
             document.body.classList.toggle('light-theme');
         }
 
-        function switchPage(page) {
-            const pages = ['Profile', 'Database', 'Builder', 'Schedule', 'Tests', 'Analytics'];
-            pages.forEach(p => {
-                const pageEl = document.getElementById('page' + p);
-                const btnEl = document.getElementById('btnView' + p);
-                if (page.toLowerCase() === p.toLowerCase()) {
-                    pageEl.style.display = 'block';
-                    if (btnEl) btnEl.classList.add('active');
-                } else {
-                    pageEl.style.display = 'none';
-                    if (btnEl) btnEl.classList.remove('active');
-                }
-            });
-
-            if (page === 'profile') { renderProfile(); renderPinnedNotes(); }
-            if (page === 'database') { renderTable(); }
-            if (page === 'builder') { renderBuilderSource(); renderConsistTrack(); renderCreatedTripsList(); }
-            if (page === 'schedule') { loadScheduleTrainSelect(); renderBoard(); }
-            if (page === 'tests') { loadTestRole(); }
-            if (page === 'analytics') { renderAnalytics(); }
-        }
-
-        function updateLiveClock() {
-            const now = new Date();
-            const timeStr = now.toTimeString().split(' ')[0];
-            const clockEl = document.getElementById('boardLiveClock');
-            if (clockEl) clockEl.innerText = timeStr;
-        }
-
-        /* ПРОФИЛЬ СОТРУДНИКА */
-        function loadProfileData() {
-            let savedProf = localStorage.getItem('railphoto_user_profile');
-            profileData = savedProf ? JSON.parse(savedProf) : { ...defaultProfile };
-            let savedPins = localStorage.getItem('railphoto_pinned_notes');
-            pinnedNotesData = savedPins ? JSON.parse(savedPins) : [ ...defaultPinnedNotes ];
-        }
-
-        function saveProfileState() {
-            localStorage.setItem('railphoto_user_profile', JSON.stringify(profileData));
-            renderProfile();
-        }
-
-        function savePinnedNotesState() {
-            localStorage.setItem('railphoto_pinned_notes', JSON.stringify(pinnedNotesData));
-            renderPinnedNotes();
-        }
-
+        /* === РЕНДЕР ПРОФИЛЯ === */
         function renderProfile() {
-            document.getElementById('profDisplayName').innerText = profileData.name || "—";
-            document.getElementById('profDisplayRole').innerText = profileData.role || "—";
-            document.getElementById('profDisplayTabNum').innerText = profileData.tabNum || "—";
-            document.getElementById('profDisplayStation').innerText = profileData.station || "—";
-            document.getElementById('profDisplayQual').innerText = profileData.qual || "—";
-            document.getElementById('profDisplayExp').innerText = profileData.exp || "—";
-            document.getElementById('profDisplayShift').innerText = profileData.shift || "—";
-            document.getElementById('profDisplayExamDate').innerText = profileData.examDate || "—";
-
-            let nameParts = profileData.name ? profileData.name.split(' ') : ["Д", "С"];
-            let initials = nameParts.length >= 2 ? (nameParts[0][0] + nameParts[1][0]).toUpperCase() : "ДСП";
+            document.getElementById('profDisplayName').innerText = profile.name;
+            document.getElementById('profDisplayRole').innerText = profile.role;
+            document.getElementById('profDisplayTabNum').innerText = profile.tabNum;
+            document.getElementById('profDisplayStation').innerText = profile.station;
+            document.getElementById('profDisplayQual').innerText = profile.qual;
+            document.getElementById('profDisplayExp').innerText = profile.exp;
+            
+            const initials = profile.name.split(' ').map(n => n[0]).join('').slice(0, 3) || "ДСП";
             document.getElementById('profAvatarInitials').innerText = initials;
 
-            let badgesContainer = document.getElementById('profBadgesContainer');
-            badgesContainer.innerHTML = '';
-            (profileData.badges || []).forEach(b => {
-                let span = document.createElement('span');
-                span.className = 'type-badge';
-                span.style.background = 'rgba(37, 99, 235, 0.2)';
-                span.style.color = 'var(--bp-link)';
-                span.style.borderColor = 'var(--bp-link)';
-                span.innerText = b;
-                badgesContainer.appendChild(span);
-            });
-        }
+            const bContainer = document.getElementById('profBadgesContainer');
+            bContainer.innerHTML = profile.badges.map(b => `<span class="type-badge">${b}</span>`).join('');
 
-        function renderPinnedNotes() {
-            let grid = document.getElementById('pinnedCardsGrid');
-            grid.innerHTML = '';
-            pinnedNotesData.forEach((pin, idx) => {
-                let card = document.createElement('div');
-                card.className = 'pinned-card';
-                card.innerHTML = `
+            // Памятки
+            const pGrid = document.getElementById('pinnedCardsGrid');
+            pGrid.innerHTML = pinnedNotes.map(n => `
+                <div class="pinned-card">
                     <div class="pinned-card-title">
-                        <span>${pin.title}</span>
-                        <button class="pin-icon-btn" onclick="unpinNote(${idx})" title="Открепить">📌</button>
+                        <span>${n.title}</span>
+                        <button class="pin-icon-btn" onclick="deletePinnedNote('${n.id}')">❌</button>
                     </div>
-                    <div class="pinned-card-body">${pin.body}</div>
-                `;
-                grid.appendChild(card);
-            });
+                    <div class="pinned-card-body">${n.body.replace(/\n/g, '<br>')}</div>
+                </div>
+            `).join('');
         }
 
-        function unpinNote(index) {
-            if (confirm("Открепить эту памятку?")) {
-                pinnedNotesData.splice(index, 1);
-                savePinnedNotesState();
-            }
-        }
-
-        function openEditProfileModal() {
-            document.getElementById('editProfName').value = profileData.name || "";
-            document.getElementById('editProfRole').value = profileData.role || "";
-            document.getElementById('editProfTabNum').value = profileData.tabNum || "";
-            document.getElementById('editProfStation').value = profileData.station || "";
-            document.getElementById('editProfQual').value = profileData.qual || "";
-            document.getElementById('editProfExp').value = profileData.exp || "";
-            document.getElementById('editProfShift').value = profileData.shift || "";
-            document.getElementById('editProfileModal').style.display = 'flex';
-        }
-
-        function saveProfileData(e) {
-            e.preventDefault();
-            profileData.name = document.getElementById('editProfName').value;
-            profileData.role = document.getElementById('editProfRole').value;
-            profileData.tabNum = document.getElementById('editProfTabNum').value;
-            profileData.station = document.getElementById('editProfStation').value;
-            profileData.qual = document.getElementById('editProfQual').value;
-            profileData.exp = document.getElementById('editProfExp').value;
-            profileData.shift = document.getElementById('editProfShift').value;
-            saveProfileState();
-            closeModal('editProfileModal');
-        }
-
-        function openAddPinnedNoteModal() {
-            document.getElementById('fieldPinTitle').value = '';
-            document.getElementById('fieldPinBody').value = '';
-            document.getElementById('addPinnedNoteModal').style.display = 'flex';
-        }
-
-        function savePinnedNote(e) {
-            e.preventDefault();
-            let title = document.getElementById('fieldPinTitle').value;
-            let body = document.getElementById('fieldPinBody').value.replace(/\n/g, '<br>');
-            pinnedNotesData.push({ id: "pin_" + Date.now(), title: "📌 " + title, body: body });
-            savePinnedNotesState();
-            closeModal('addPinnedNoteModal');
-        }
-
-        /* БАЗА ДАННЫХ ПОДВИЖНОГО СОСТАВА */
-        function loadDatabase() {
-            let saved = localStorage.getItem('railphoto_full_db');
-            vehicleDB = saved ? JSON.parse(saved) : [...defaultDB];
-        }
-
-        function saveDatabase() {
-            localStorage.setItem('railphoto_full_db', JSON.stringify(vehicleDB));
-            renderTable();
-        }
-
-        function resetDatabaseToDefault() {
-            if (confirm("Сбросить всю базу данных к исходным настройкам? Все внесённые данные будут заменены!")) {
-                vehicleDB = [...defaultDB];
-                saveDatabase();
-            }
-        }
-
+        /* === БАЗА ДАННЫХ И ТАБЛИЦА === */
         function setCategoryFilter(cat) {
             currentCategoryFilter = cat;
             document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
-            if (cat === 'all') document.getElementById('tabCatAll').classList.add('active');
-            if (cat === 'loco') document.getElementById('tabCatLoco').classList.add('active');
-            if (cat === 'pass_car') document.getElementById('tabCatPass').classList.add('active');
-            if (cat === 'cargo_car') document.getElementById('tabCatCargo').classList.add('active');
-            if (cat === 'special') document.getElementById('tabCatSpecial').classList.add('active');
-            if (cat === 'gauge_750') document.getElementById('tabCat750').classList.add('active');
-            if (cat === 'gauge_1520') document.getElementById('tabCat1520').classList.add('active');
+            const activeTab = {
+                'all': 'tabCatAll', 'loco': 'tabCatLoco', 'pass_car': 'tabCatPass', 
+                'cargo_car': 'tabCatCargo', 'special': 'tabCatSpecial', 
+                'gauge_750': 'tabCat750', 'gauge_1520': 'tabCat1520'
+            }[cat];
+            if (activeTab) document.getElementById(activeTab).classList.add('active');
             renderTable();
         }
 
-        function resetFilters() {
-            document.getElementById('searchInput').value = '';
-            document.getElementById('statusFilter').value = 'all';
-            document.getElementById('sortSelect').value = 'num_asc';
-            setCategoryFilter('all');
+        function sortTable(field) {
+            if (sortField === field) {
+                sortAsc = !sortAsc;
+            } else {
+                sortField = field;
+                sortAsc = true;
+            }
+            renderTable();
         }
 
         function renderTable() {
-            let tbody = document.getElementById('tableBody');
-            tbody.innerHTML = '';
-            
-            let q = document.getElementById("searchInput").value.toUpperCase();
-            let stFilter = document.getElementById("statusFilter").value;
-            let sortType = document.getElementById("sortSelect").value;
+            const tbody = document.getElementById('tableBody');
+            const search = document.getElementById('filterSearch').value.toLowerCase();
+            const statusFilter = document.getElementById('filterStatus').value;
+            const gaugeFilter = document.getElementById('filterGauge').value;
 
-            let filtered = vehicleDB.filter(v => {
-                if (currentCategoryFilter === 'loco' && v.category !== 'loco') return false;
-                if (currentCategoryFilter === 'pass_car' && v.category !== 'pass_car') return false;
-                if (currentCategoryFilter === 'cargo_car' && v.category !== 'cargo_car') return false;
-                if (currentCategoryFilter === 'special' && v.category !== 'special') return false;
-                if (currentCategoryFilter === 'gauge_750' && v.gauge !== '750мм') return false;
-                if (currentCategoryFilter === 'gauge_1520' && v.gauge !== '1520мм') return false;
+            let filtered = db.filter(item => {
+                // Категории
+                if (currentCategoryFilter === 'loco' && item.category !== 'loco') return false;
+                if (currentCategoryFilter === 'pass_car' && item.category !== 'pass_car') return false;
+                if (currentCategoryFilter === 'cargo_car' && item.category !== 'cargo_car') return false;
+                if (currentCategoryFilter === 'special' && item.category !== 'special') return false;
+                if (currentCategoryFilter === 'gauge_750' && item.gauge !== '750') return false;
+                if (currentCategoryFilter === 'gauge_1520' && item.gauge !== '1520') return false;
 
-                if (stFilter !== 'all' && v.statusCls !== stFilter) return false;
+                // Селект статуса и колеи
+                if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                if (gaugeFilter !== 'all' && item.gauge !== gaugeFilter) return false;
 
-                let fullText = `${v.model} ${v.num} ${v.park} ${v.factoryNum || ''} ${v.manufacturer || ''} ${v.note || ''} ${v.statusText || ''}`.toUpperCase();
-                if (q && !fullText.includes(q)) return false;
-
-                return true;
+                // Поиск
+                const matchSearch = (item.series + " " + item.depot + " " + item.factory + " " + (item.notes||'')).toLowerCase();
+                return matchSearch.includes(search);
             });
 
             // Сортировка
             filtered.sort((a, b) => {
-                if (sortType === 'num_asc') return a.num.localeCompare(b.num, undefined, {numeric: true});
-                if (sortType === 'num_desc') return b.num.localeCompare(a.num, undefined, {numeric: true});
-                if (sortType === 'model_asc') return a.model.localeCompare(b.model);
-                if (sortType === 'build_desc') return (b.buildDate || '').localeCompare(a.buildDate || '');
-                if (sortType === 'build_asc') return (a.buildDate || '').localeCompare(b.buildDate || '');
-                if (sortType === 'decomm_desc') return (b.decommDate || '').localeCompare(a.decommDate || '');
+                let valA = a[sortField] || '';
+                let valB = b[sortField] || '';
+                if (typeof valA === 'string') valA = valA.toLowerCase();
+                if (typeof valB === 'string') valB = valB.toLowerCase();
+
+                if (valA < valB) return sortAsc ? -1 : 1;
+                if (valA > valB) return sortAsc ? 1 : -1;
                 return 0;
             });
 
-            // Счётчики статистики
-            updateStatsCounters();
+            // Статистика
+            document.getElementById('statTotal').innerText = db.length;
+            document.getElementById('statActive').innerText = db.filter(x => x.status === 'st-active').length;
+            document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;
+            document.getElementById('statOut').innerText = db.filter(x => x.status === 'st-out').length;
+            document.getElementById('statDecomm').innerText = db.filter(x => x.status === 'st-decomm').length;
+            document.getElementById('statScrapped').innerText = db.filter(x => x.status === 'st-scrapped').length;
 
-            filtered.forEach((v) => {
-                let tr = document.createElement('tr');
-                tr.className = v.statusCls + ' vehicle-row-clickable';
-                tr.title = `Открыть карточку ПС: ${v.model || ''} №${v.num || ''}`;
-                tr.setAttribute('role', 'button');
-                tr.setAttribute('tabindex', '0');
-                tr.onclick = function(event) {
-                    if (event.target.closest('input, button, a, select, textarea, label')) return;
-                    openEditModal(v.id);
-                };
-                tr.ondblclick = function(event) {
-                    if (event.target.closest('input, button, a, select, textarea, label')) return;
-                    openEditModal(v.id);
-                };
-                tr.onkeydown = function(event) {
-                    if ((event.key === 'Enter' || event.key === ' ') && event.target === tr) {
-                        event.preventDefault();
-                        openEditModal(v.id);
+            tbody.innerHTML = '';
+            filtered.forEach(item => {
+                const tr = document.createElement('tr');
+                tr.className = item.status;
+                
+                // Делаем всю строку кликабельной для открытия модалки просмотра
+                tr.onclick = (e) => {
+                    if (e.target.tagName !== 'INPUT' && e.target.tagName !== 'BUTTON') {
+                        openCardModal(item.id);
                     }
                 };
 
-                let catLabel = '🚂 Локомотив';
-                if (v.category === 'pass_car') catLabel = '🚃 Вагон Пасс.';
-                if (v.category === 'cargo_car') catLabel = '📦 Вагон Гр.';
-                if (v.category === 'special') catLabel = '🛠 Спецтехника';
-
-                let isChecked = selectedVehicleIds.has(v.id) ? 'checked' : '';
+                const isChecked = selectedIds.has(item.id) ? 'checked' : '';
 
                 tr.innerHTML = `
-                    <td class="no-print" onclick="event.stopPropagation()"><input type="checkbox" ${isChecked} onchange="toggleSelectRow('${v.id}', this.checked)"></td>
-                    <td><span class="type-badge">${catLabel}</span></td>
-                    <td><b>${v.park}</b></td>
-                    <td><b>${v.model}</b><span class="vehicle-click-hint">✎</span></td>
-                    <td><b>${v.num}</b><span class="vehicle-click-hint">открыть</span></td>
-                    <td><span style="font-size:10px; opacity:0.8;">${v.gauge || '750мм'}</span></td>
-                    <td>${v.statusText || getStatusLabel(v.statusCls)}</td>
-                    <td>${v.buildDate || '—'}</td>
-                    <td class="col-highlight-out">${v.outDate ? v.outDate : '—'}</td>
-                    <td class="col-highlight-decomm">${v.decommDate ? v.decommDate : '—'}</td>
-                    <td class="col-highlight-scrapped">${v.scrappedDate ? v.scrappedDate : '—'}</td>
-                    <td>${v.manufacturer || '—'}</td>
-                    <td class="no-print">
-                        <button class="btn-primary btn-sm" onclick="event.stopPropagation(); openEditModal('${v.id}')">✏️ Правка / карточка</button>
+                    <td style="text-align:center;"><input type="checkbox" ${isChecked} onchange="toggleSelectOne('${item.id}', this)"></td>
+                    <td><b>${item.series}</b></td>
+                    <td><span class="type-badge">${getCategoryName(item.category)}</span></td>
+                    <td>${item.gauge} мм</td>
+                    <td>${item.depot || '-'}</td>
+                    <td>${item.factory || '-'}</td>
+                    <td>${item.buildYear || '-'}</td>
+                    <td>${item.commissionDate || '-'}</td>
+                    <td class="${item.decommissionDate ? 'col-highlight-decomm' : ''}">${item.decommissionDate || '-'}</td>
+                    <td class="${item.scrapDate ? 'col-highlight-scrapped' : ''}">${item.scrapDate || '-'}</td>
+                    <td><b>${STATUS_MAP[item.status] || item.status}</b></td>
+                    <td style="text-align:center;" onclick="event.stopPropagation()">
+                        <button class="btn-secondary btn-sm" onclick="openEditModal('${item.id}')">✏️</button>
+                        <button class="btn-danger btn-sm" onclick="deleteVehicle('${item.id}')">🗑</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
@@ -2141,1394 +1883,582 @@
             updateBatchToolbar();
         }
 
-        function updateStatsCounters() {
-            document.getElementById('statTotal').innerText = vehicleDB.length;
-            document.getElementById('statActive').innerText = vehicleDB.filter(v => v.statusCls === 'st-active').length;
-            document.getElementById('statMod').innerText = vehicleDB.filter(v => v.statusCls === 'st-mod').length;
-            document.getElementById('statOut').innerText = vehicleDB.filter(v => v.statusCls === 'st-out').length;
-            document.getElementById('statDecomm').innerText = vehicleDB.filter(v => v.statusCls === 'st-decomm').length;
-            document.getElementById('statScrapped').innerText = vehicleDB.filter(v => v.statusCls === 'st-scrapped').length;
+        function getCategoryName(cat) {
+            return {
+                'loco': 'Локомотив', 'pass_car': 'Пассажирский', 
+                'cargo_car': 'Грузовой', 'special': 'Спецтехника'
+            }[cat] || cat;
         }
 
-        function getStatusLabel(cls) {
-            const map = {
-                'st-active': 'Работает / Эксплуатируется',
-                'st-not-operated': 'Не эксплуатируется',
-                'st-inactive': 'Консервация / Запас',
-                'st-mod': 'КР / КРП / Модернизация',
-                'st-out': 'Выведен из эксплуатации',
-                'st-decomm': 'Списан',
-                'st-scrapped': 'Утилизирован / Порезан',
-                'st-trans': 'Передан',
-                'st-museum': 'Музейный'
-            };
-            return map[cls] || 'Неизвестно';
+        function resetFilters() {
+            document.getElementById('filterSearch').value = '';
+            document.getElementById('filterStatus').value = 'all';
+            document.getElementById('filterGauge').value = 'all';
+            currentCategoryFilter = 'all';
+            setCategoryFilter('all');
         }
 
-        /* Выделение и Массовые операции */
-        function toggleSelectRow(id, isChecked) {
-            if (isChecked) selectedVehicleIds.add(id); else selectedVehicleIds.delete(id);
+        /* === ЧЕКБОКСЫ И МАССОВЫЕ ДЕЙСТВИЯ === */
+        function toggleSelectOne(id, el) {
+            if (el.checked) selectedIds.add(id);
+            else selectedIds.delete(id);
             updateBatchToolbar();
         }
 
-        function toggleSelectAllRows(masterCheckbox) {
-            if (masterCheckbox.checked) {
-                vehicleDB.forEach(v => selectedVehicleIds.add(v.id));
+        function toggleSelectAll(el) {
+            if (el.checked) {
+                db.forEach(x => selectedIds.add(x.id));
             } else {
-                selectedVehicleIds.clear();
+                selectedIds.clear();
             }
             renderTable();
         }
 
         function updateBatchToolbar() {
-            let toolbar = document.getElementById('batchToolbar');
-            let countEl = document.getElementById('batchSelectedCount');
-            countEl.innerText = selectedVehicleIds.size;
-            toolbar.style.display = selectedVehicleIds.size > 0 ? 'flex' : 'none';
-        }
-
-        function openBatchEditModal(type) {
-            document.getElementById('batchEditType').value = type;
-            if (type === 'status') {
-                document.getElementById('batchModalTitle').innerText = 'Массовая смена статуса ПС';
-                document.getElementById('batchStatusContainer').style.display = 'block';
-                document.getElementById('batchParkContainer').style.display = 'none';
-            } else if (type === 'park') {
-                document.getElementById('batchModalTitle').innerText = 'Массовая смена депо / станции';
-                document.getElementById('batchStatusContainer').style.display = 'none';
-                document.getElementById('batchParkContainer').style.display = 'block';
-            }
-            document.getElementById('batchEditModal').style.display = 'flex';
-        }
-
-        function applyBatchEdit(e) {
-            e.preventDefault();
-            let type = document.getElementById('batchEditType').value;
-            if (type === 'status') {
-                let newSt = document.getElementById('batchNewStatus').value;
-                vehicleDB.forEach(v => {
-                    if (selectedVehicleIds.has(v.id)) {
-                        v.statusCls = newSt;
-                        v.statusText = getStatusLabel(newSt);
-                    }
-                });
-            } else if (type === 'park') {
-                let newPark = document.getElementById('batchNewPark').value;
-                vehicleDB.forEach(v => {
-                    if (selectedVehicleIds.has(v.id)) v.park = newPark;
-                });
-            }
-            saveDatabase();
-            selectedVehicleIds.clear();
-            closeModal('batchEditModal');
-        }
-
-        function batchDeleteSelected() {
-            if (confirm(`Удалить выбранные ${selectedVehicleIds.size} единиц из базы данных?`)) {
-                vehicleDB = vehicleDB.filter(v => !selectedVehicleIds.has(v.id));
-                selectedVehicleIds.clear();
-                saveDatabase();
+            const bar = document.getElementById('batchToolbar');
+            const cnt = document.getElementById('selectedCount');
+            if (selectedIds.size > 0) {
+                bar.style.display = 'flex';
+                cnt.innerText = selectedIds.size;
+            } else {
+                bar.style.display = 'none';
             }
         }
 
-        /* Создание, редактирование, клонирование единиц ПС */
+        function applyBatchStatus() {
+            const st = document.getElementById('batchStatusSelect').value;
+            if (!st) return;
+            db.forEach(x => {
+                if (selectedIds.has(x.id)) x.status = st;
+            });
+            saveData();
+            renderTable();
+        }
+
+        function deleteBatchSelected() {
+            if (!confirm(`Удалить выбранные единицы ПС (${selectedIds.size} шт.)?`)) return;
+            db = db.filter(x => !selectedIds.has(x.id));
+            selectedIds.clear();
+            saveData();
+            renderTable();
+        }
+
+        /* === МОДАЛКИ ДЛЯ БАЗЫ ДАННЫХ === */
         function openAddModal() {
-            document.getElementById('modalTitle').innerText = '➕ Добавить единицу подвижного состава';
-            document.getElementById('editVehicleId').value = '';
-            document.getElementById('fieldCategory').value = 'loco';
-            document.getElementById('fieldModel').value = '';
-            document.getElementById('fieldNum').value = '';
-            document.getElementById('fieldFactoryNum').value = '';
-            document.getElementById('fieldPark').value = 'ст. Сосновый Бор';
-            document.getElementById('fieldGauge').value = '750мм';
-            document.getElementById('fieldStatusCls').value = 'st-active';
-            document.getElementById('fieldStatusText').value = 'Работает';
-            document.getElementById('fieldBuildDate').value = '';
-            document.getElementById('fieldInServiceDate').value = '';
-            document.getElementById('fieldOutDate').value = '';
-            document.getElementById('fieldDecommDate').value = '';
-            document.getElementById('fieldScrappedDate').value = '';
-            document.getElementById('fieldManufacturer').value = '';
-            document.getElementById('fieldPhotoUrl').value = '';
-            document.getElementById('fieldHistory').value = '';
-            document.getElementById('fieldNote').value = '';
-            
-            document.getElementById('btnDeleteVehicle').style.display = 'none';
-            document.getElementById('btnDuplicateVehicle').style.display = 'none';
-            document.getElementById('vehicleModal').style.display = 'flex';
+            document.getElementById('modalVehicleTitle').innerText = 'Добавить единицу подвижного состава';
+            document.getElementById('formVehicleId').value = '';
+            document.getElementById('vehicleForm').reset();
+            document.getElementById('modalVehicle').style.display = 'flex';
         }
 
         function openEditModal(id) {
-            let v = vehicleDB.find(item => item.id === id);
-            if (!v) return;
+            const item = db.find(x => x.id === id);
+            if (!item) return;
+            document.getElementById('modalVehicleTitle').innerText = 'Редактировать ' + item.series;
+            document.getElementById('formVehicleId').value = item.id;
+            document.getElementById('formSeries').value = item.series;
+            document.getElementById('formCategory').value = item.category;
+            document.getElementById('formGauge').value = item.gauge;
+            document.getElementById('formDepot').value = item.depot || '';
+            document.getElementById('formFactory').value = item.factory || '';
+            document.getElementById('formBuildYear').value = item.buildYear || '';
+            document.getElementById('formCommissionDate').value = item.commissionDate || '';
+            document.getElementById('formStatus').value = item.status;
+            document.getElementById('formOutDate').value = item.outDate || '';
+            document.getElementById('formDecomDate').value = item.decommissionDate || '';
+            document.getElementById('formScrapDate').value = item.scrapDate || '';
+            document.getElementById('formWeight').value = item.weight || 15;
+            document.getElementById('formLength').value = item.length || 10;
+            document.getElementById('formBrake').value = item.brake || 8;
+            document.getElementById('formNotes').value = item.notes || '';
 
-            document.getElementById('modalTitle').innerText = `✏️ Редактирование ПС: ${v.model}-${v.num}`;
-            document.getElementById('editVehicleId').value = v.id;
-            document.getElementById('fieldCategory').value = v.category;
-            document.getElementById('fieldModel').value = v.model;
-            document.getElementById('fieldNum').value = v.num;
-            document.getElementById('fieldFactoryNum').value = v.factoryNum || '';
-            document.getElementById('fieldPark').value = v.park;
-            document.getElementById('fieldGauge').value = v.gauge || '750мм';
-            document.getElementById('fieldStatusCls').value = v.statusCls;
-            document.getElementById('fieldStatusText').value = v.statusText || getStatusLabel(v.statusCls);
-            document.getElementById('fieldBuildDate').value = v.buildDate || '';
-            document.getElementById('fieldInServiceDate').value = v.inServiceDate || '';
-            document.getElementById('fieldOutDate').value = v.outDate || '';
-            document.getElementById('fieldDecommDate').value = v.decommDate || '';
-            document.getElementById('fieldScrappedDate').value = v.scrappedDate || '';
-            document.getElementById('fieldManufacturer').value = v.manufacturer || '';
-            document.getElementById('fieldPhotoUrl').value = v.photoUrl || '';
-            document.getElementById('fieldHistory').value = v.history || '';
-            document.getElementById('fieldNote').value = v.note || '';
-
-            document.getElementById('btnDeleteVehicle').style.display = 'inline-block';
-            document.getElementById('btnDuplicateVehicle').style.display = 'inline-block';
-            document.getElementById('vehicleModal').style.display = 'flex';
+            document.getElementById('modalVehicle').style.display = 'flex';
         }
 
-        function closeModal(modalId) {
-            document.getElementById(modalId).style.display = 'none';
+        function closeVehicleModal() {
+            document.getElementById('modalVehicle').style.display = 'none';
         }
 
-        function saveVehicleData(e) {
+        function saveVehicleForm(e) {
             e.preventDefault();
-            let id = document.getElementById('editVehicleId').value;
-            let data = {
-                category: document.getElementById('fieldCategory').value,
-                model: document.getElementById('fieldModel').value,
-                num: document.getElementById('fieldNum').value,
-                factoryNum: document.getElementById('fieldFactoryNum').value,
-                park: document.getElementById('fieldPark').value,
-                gauge: document.getElementById('fieldGauge').value,
-                statusCls: document.getElementById('fieldStatusCls').value,
-                statusText: document.getElementById('fieldStatusText').value,
-                buildDate: document.getElementById('fieldBuildDate').value,
-                inServiceDate: document.getElementById('fieldInServiceDate').value,
-                outDate: document.getElementById('fieldOutDate').value,
-                decommDate: document.getElementById('fieldDecommDate').value,
-                scrappedDate: document.getElementById('fieldScrappedDate').value,
-                manufacturer: document.getElementById('fieldManufacturer').value,
-                photoUrl: document.getElementById('fieldPhotoUrl').value,
-                history: document.getElementById('fieldHistory').value,
-                note: document.getElementById('fieldNote').value
+            const id = document.getElementById('formVehicleId').value;
+            const data = {
+                id: id || ('ps-' + Date.now()),
+                series: document.getElementById('formSeries').value,
+                category: document.getElementById('formCategory').value,
+                gauge: document.getElementById('formGauge').value,
+                depot: document.getElementById('formDepot').value,
+                factory: document.getElementById('formFactory').value,
+                buildYear: parseInt(document.getElementById('formBuildYear').value) || '',
+                commissionDate: document.getElementById('formCommissionDate').value,
+                status: document.getElementById('formStatus').value,
+                outDate: document.getElementById('formOutDate').value,
+                decommissionDate: document.getElementById('formDecomDate').value,
+                scrapDate: document.getElementById('formScrapDate').value,
+                weight: parseFloat(document.getElementById('formWeight').value) || 0,
+                length: parseFloat(document.getElementById('formLength').value) || 0,
+                brake: parseFloat(document.getElementById('formBrake').value) || 0,
+                notes: document.getElementById('formNotes').value
             };
 
             if (id) {
-                let idx = vehicleDB.findIndex(v => v.id === id);
-                if (idx !== -1) vehicleDB[idx] = { id, ...data };
+                const idx = db.findIndex(x => x.id === id);
+                if (idx !== -1) db[idx] = data;
             } else {
-                vehicleDB.unshift({ id: 'ps_' + Date.now(), ...data });
+                db.push(data);
             }
 
-            saveDatabase();
-            closeModal('vehicleModal');
+            saveData();
+            closeVehicleModal();
+            renderTable();
         }
 
-        function duplicateCurrentVehicle() {
-            let id = document.getElementById('editVehicleId').value;
-            let v = vehicleDB.find(item => item.id === id);
-            if (!v) return;
-            let copy = { ...v, id: 'ps_' + Date.now(), num: v.num + " (Копия)" };
-            vehicleDB.unshift(copy);
-            saveDatabase();
-            closeModal('vehicleModal');
-            alert("Запись успешно клонирована!");
+        function deleteVehicle(id) {
+            if (!confirm('Удалить эту единицу из базы данных?')) return;
+            db = db.filter(x => x.id !== id);
+            saveData();
+            renderTable();
         }
 
-        function deleteCurrentVehicle() {
-            let id = document.getElementById('editVehicleId').value;
-            if (!id) return;
-            if (confirm("Удалить эту единицу из базы данных?")) {
-                vehicleDB = vehicleDB.filter(v => v.id !== id);
-                saveDatabase();
-                closeModal('vehicleModal');
-            }
+        /* === КАРТОЧКА ПРОСМОТРА ЕДИНИЦЫ ПС === */
+        function openCardModal(id) {
+            const item = db.find(x => x.id === id);
+            if (!item) return;
+
+            document.getElementById('cardContent').innerHTML = `
+                <h2 style="color:var(--bp-link); margin-bottom:12px;">Паспорт единицы: ${item.series}</h2>
+                <div style="display:grid; grid-template-columns:1fr 1fr; gap:10px; font-size:12px;">
+                    <div><b>Категория:</b> ${getCategoryName(item.category)}</div>
+                    <div><b>Колея:</b> ${item.gauge} мм</div>
+                    <div><b>Депо / Приписка:</b> ${item.depot || '—'}</div>
+                    <div><b>Завод-изготовитель:</b> ${item.factory || '—'}</div>
+                    <div><b>Год постройки:</b> ${item.buildYear || '—'}</div>
+                    <div><b>Ввод в эксплуатацию:</b> ${item.commissionDate || '—'}</div>
+                    <div><b>Статус:</b> ${STATUS_MAP[item.status]}</div>
+                    <div><b>Вывод из экспл.:</b> ${item.outDate || '—'}</div>
+                    <div><b>Дата списания:</b> ${item.decommissionDate || '—'}</div>
+                    <div><b>Дата утилизации:</b> ${item.scrapDate || '—'}</div>
+                    <div><b>Масса:</b> ${item.weight} т</div>
+                    <div><b>Длина:</b> ${item.length} м</div>
+                </div>
+                <div style="margin-top:14px; padding:10px; background:var(--bp-input-bg); border:1px solid var(--bp-border); border-radius:4px;">
+                    <b>История и примечания:</b><br>${item.notes || 'Записи отсутствуют.'}
+                </div>
+                <div class="action-buttons" style="margin-top:16px; justify-content:flex-end;">
+                    <button class="btn-primary" onclick="closeCardModal(); openEditModal('${item.id}');">✏️ Редактировать</button>
+                    <button class="btn-secondary" onclick="closeCardModal()">Закрыть</button>
+                </div>
+            `;
+            document.getElementById('modalCard').style.display = 'flex';
         }
 
-        /* Экспорт в CSV и JSON */
-        function exportToCSV() {
-            let csvRows = ["ID;Тип;Депо;Серия;Номер;Колея;Статус;Дата Постройки;Ввод в экспл;Вывод из экспл;Списание;Утилизация;Завод;Примечание"];
-            vehicleDB.forEach(v => {
-                let row = [
-                    v.id, v.category, v.park, v.model, v.num, v.gauge || '', v.statusText || '',
-                    v.buildDate || '', v.inServiceDate || '', v.outDate || '', v.decommDate || '', v.scrappedDate || '',
-                    v.manufacturer || '', (v.note || '').replace(/;/g, ' ')
-                ].join(';');
-                csvRows.push(row);
-            });
-
-            let blob = new Blob(["\ufeff" + csvRows.join("\n")], { type: 'text/csv;charset=utf-8;' });
-            let link = document.createElement("a");
-            link.href = URL.createObjectURL(blob);
-            link.download = `railphoto_export_${new Date().toISOString().slice(0,10)}.csv`;
-            link.click();
+        function closeCardModal() {
+            document.getElementById('modalCard').style.display = 'none';
         }
 
+        /* === ИМПОРТ / ЭКСПОРТ === */
         function exportDatabase() {
-            let dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(vehicleDB, null, 2));
-            let dl = document.createElement('a');
-            dl.setAttribute("href", dataStr);
-            dl.setAttribute("download", `railphoto_db_${new Date().toISOString().slice(0,10)}.json`);
-            dl.click();
+            const dataStr = "data:text/json;charset=utf-8," + encodeURIComponent(JSON.stringify(db, null, 2));
+            const dlAnchor = document.createElement('a');
+            dlAnchor.setAttribute("href", dataStr);
+            dlAnchor.setAttribute("download", `railphoto_database_${Date.now()}.json`);
+            document.body.appendChild(dlAnchor);
+            dlAnchor.click();
+            dlAnchor.remove();
         }
 
         function importDatabase(e) {
-            let file = e.target.files[0];
+            const file = e.target.files[0];
             if (!file) return;
-            let reader = new FileReader();
+            const reader = new FileReader();
             reader.onload = function(evt) {
                 try {
-                    vehicleDB = JSON.parse(evt.target.result);
-                    saveDatabase();
-                    alert("База данных успешно импортирована!");
+                    const imported = JSON.parse(evt.target.result);
+                    if (Array.isArray(imported)) {
+                        db = imported;
+                        saveData();
+                        renderTable();
+                        alert('База данных успешно импортирована!');
+                    }
                 } catch(err) {
-                    alert("Ошибка при чтении JSON файла!");
+                    alert('Ошибка при чтении JSON файла.');
                 }
             };
             reader.readAsText(file);
         }
 
-        /* КОНСТРУКТОР СБОРНОГО ПОЕЗДА */
-        function renderBuilderSource() {
-            let list = document.getElementById('builderSourceList');
-            list.innerHTML = '';
-            vehicleDB.filter(v => v.statusCls === 'st-active').forEach((v) => {
-                let div = document.createElement('div');
+        function exportToCSV() {
+            let csv = 'Серия;Категория;Колея;Депо;Завод;Год;Ввод;Списание;Статус\n';
+            db.forEach(x => {
+                csv += `"${x.series}";"${getCategoryName(x.category)}";"${x.gauge}";"${x.depot}";"${x.factory}";"${x.buildYear}";"${x.commissionDate}";"${x.decommissionDate}";"${STATUS_MAP[x.status]}"\n`;
+            });
+            const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
+            const url = URL.createObjectURL(blob);
+            const a = document.createElement('a');
+            a.href = url;
+            a.download = 'railphoto_export.csv';
+            a.click();
+        }
+
+        function resetDatabaseToDefault() {
+            if (!confirm('Сбросить базу данных к стандартному набору?')) return;
+            db = [...DEFAULT_DATABASE];
+            saveData();
+            renderTable();
+        }
+
+        /* === КОНСТРУКТОР СБОРНОГО ПОЕЗДА И ВУ-45 === */
+        function renderBuilder() {
+            const srcList = document.getElementById('builderSourceList');
+            srcList.innerHTML = '';
+
+            db.filter(x => x.status === 'st-active' || x.status === 'st-inactive').forEach(item => {
+                const div = document.createElement('div');
                 div.className = 'builder-source-item';
                 div.innerHTML = `
-                    <div><b>${v.model}</b> №${v.num} <span style="font-size:10px; color:var(--bp-text-muted);">(${v.park})</span></div>
-                    <button class="btn-primary btn-sm" onclick="addToConsist('${v.id}')">+ В сцепку</button>
+                    <div>
+                        <b>${item.series}</b> (${getCategoryName(item.category)})
+                        <br><small style="color:var(--bp-text-muted);">${item.weight}т | ${item.length}м</small>
+                    </div>
+                    <button class="btn-primary btn-sm" onclick="addToConsist('${item.id}')">+ В поезд</button>
                 `;
-                list.appendChild(div);
+                srcList.appendChild(div);
             });
+
+            renderConsistTrack();
         }
 
         function addToConsist(id) {
-            let item = vehicleDB.find(v => v.id === id);
+            const item = db.find(x => x.id === id);
             if (item) {
-                consistList.push(item);
+                selectedConsist.push(item);
                 renderConsistTrack();
             }
         }
 
         function removeFromConsist(index) {
-            consistList.splice(index, 1);
-            renderConsistTrack();
-        }
-
-        function moveConsistItem(index, dir) {
-            if (index + dir < 0 || index + dir >= consistList.length) return;
-            let temp = consistList[index];
-            consistList[index] = consistList[index + dir];
-            consistList[index + dir] = temp;
+            selectedConsist.splice(index, 1);
             renderConsistTrack();
         }
 
         function clearConsist() {
-            consistList = [];
+            selectedConsist = [];
             renderConsistTrack();
+            document.getElementById('vu45Container').style.display = 'none';
         }
 
         function renderConsistTrack() {
-            let track = document.getElementById('consistTrack');
-            track.innerHTML = consistList.length === 0 ? '<div style="color:#888;">Состав пуст. Добавьте подвижной состав из левой панели.</div>' : '';
-            
-            let totalAxles = 0;
-            let totalWeight = 0;
-            let totalLength = 0;
-
-            consistList.forEach((v, idx) => {
-                totalAxles += (v.category === 'loco' ? 4 : 4);
-                totalWeight += (v.category === 'loco' ? 16 : 9);
-                totalLength += (v.category === 'loco' ? 10 : 11);
-
-                let div = document.createElement('div');
-                div.className = 'consist-card';
-                div.innerHTML = `
-                    <span><b>${idx === 0 ? '🚂' : '🚃'} ${v.model}-${v.num}</b></span>
-                    <div style="display:flex; gap:3px;">
-                        <button class="btn-secondary btn-sm" onclick="moveConsistItem(${idx}, -1)">◄</button>
-                        <button class="btn-secondary btn-sm" onclick="moveConsistItem(${idx}, 1)">►</button>
-                        <button class="btn-danger btn-sm" onclick="removeFromConsist(${idx})">✕</button>
-                    </div>
-                `;
-                track.appendChild(div);
-            });
-
-            document.getElementById('mCount').innerText = consistList.length;
-            document.getElementById('mAxles').innerText = totalAxles;
-            document.getElementById('mWeight').innerText = totalWeight;
-            document.getElementById('mLength').innerText = totalLength;
-        }
-
-        function sendConsistToTrip() {
-            if (consistList.length === 0) {
-                alert("Сцепка пуста! Сначала сформируйте состав.");
-                return;
-            }
-
-            let num = document.getElementById('tripNumInput').value;
-            let route = document.getElementById('tripRouteInput').value;
-            let driver = document.getElementById('tripDriverInput').value;
-            let lnp = document.getElementById('tripLNPInput').value;
-            let dsp = document.getElementById('tripDSPInput').value;
-            let time = document.getElementById('tripTimeInput').value;
-
-            let trip = {
-                id: "trip_" + Date.now(),
-                num: num,
-                route: route,
-                driver: driver,
-                lnp: lnp,
-                dsp: dsp,
-                time: time,
-                consist: [...consistList]
-            };
-
-            createdTrips.push(trip);
-            renderCreatedTripsList();
-            loadScheduleTrainSelect();
-            alert(`Поезд №${num} успешно сформирован и внесен в график!`);
-        }
-
-        function renderCreatedTripsList() {
-            let container = document.getElementById('createdTripsContainer');
-            container.innerHTML = createdTrips.length === 0 ? '<div style="color:#888; font-size:11px;">Нет сформированных поездов</div>' : '';
-            
-            createdTrips.forEach(t => {
-                let loco = t.consist.find(v => v.category === 'loco') || t.consist[0];
-                let div = document.createElement('div');
-                div.style.padding = '8px';
-                div.style.borderBottom = '1px solid var(--bp-border)';
-                div.style.fontSize = '11px';
-                div.innerHTML = `
-                    <b>Поезд №${t.num}</b> (${t.route}) — 🕒 ${t.time}<br>
-                    <span style="color:var(--bp-text-muted);">Локомотив: ${loco ? loco.model + '-' + loco.num : '—'} | Вагонов: ${t.consist.length} | ТЧМ: ${t.driver} | ЛНП: ${t.lnp}</span>
-                `;
-                container.appendChild(div);
-            });
-        }
-
-        /* ТАБЛО СТАНЦИЙ */
-        function loadStationBoardsData() {
-            let saved = localStorage.getItem('railphoto_boards_data');
-            stationBoards = saved ? JSON.parse(saved) : { ...defaultStationBoardsData };
-        }
-
-        function saveStationBoardsData() {
-            localStorage.setItem('railphoto_boards_data', JSON.stringify(stationBoards));
-            renderBoard();
-        }
-
-        function selectStationBoard(st) {
-            currentStation = st;
-            document.querySelectorAll('.station-tab-btn').forEach(b => b.classList.remove('active'));
-            if (st === 'sosnovy') document.getElementById('btnStSosnovy').classList.add('active');
-            if (st === 'krutoborka') document.getElementById('btnStKrutoborka').classList.add('active');
-            if (st === 'lelma') document.getElementById('btnStLelma').classList.add('active');
-            renderBoard();
-        }
-
-        function renderBoard() {
-            let data = stationBoards[currentStation];
-            if (!data) return;
-
-            document.getElementById('boardStationTitle').innerText = data.title;
-            let tbody = document.getElementById('boardTableBody');
-            tbody.innerHTML = '';
-
-            data.trains.forEach((t, idx) => {
-                let tr = document.createElement('tr');
-                let stCls = '';
-                if (t.status === 'ПОСАДКА' || t.status === 'ПРИБЫВАЕТ') stCls = 'status-blink';
-                if (t.status === 'ЗАДЕРЖИВАЕТСЯ') stCls = 'status-delayed';
-
-                tr.innerHTML = `
-                    <td><b>${t.num}</b></td>
-                    <td>${t.route}</td>
-                    <td><b>${t.track}</b></td>
-                    <td>${t.arr || '—'}</td>
-                    <td>${t.stopMin ? t.stopMin + ' мин' : '—'}</td>
-                    <td><b>${t.dep || '—'}</b></td>
-                    <td class="${stCls}">${t.status}</td>
-                    <td style="text-align:right;">
-                        <button class="btn-primary btn-sm" onclick="openEditBoardTrainModal(${idx})">✏️ Изменить</button>
-                        <button class="btn-danger btn-sm" onclick="deleteBoardTrain(${idx})">✕</button>
-                    </td>
-                `;
-                tbody.appendChild(tr);
-            });
-        }
-
-        function openAddTrainToBoardModal() {
-            document.getElementById('boardModalTitle').innerText = '➕ Добавить поезд на табло';
-            document.getElementById('boardTrainEditIndex').value = '';
-            document.getElementById('boardTrainNum').value = '603';
-            document.getElementById('boardTrainRoute').value = 'Сосновый Бор — Крутоборка';
-            document.getElementById('boardTrainTrack').value = '1 путь';
-            document.getElementById('boardTrainArr').value = '14:00';
-            document.getElementById('boardTrainStopMin').value = '5';
-            autoCalcBoardDeparture();
-            document.getElementById('boardTrainStatus').value = 'ОЖИДАЕТСЯ';
-            document.getElementById('boardTrainModal').style.display = 'flex';
-        }
-
-        function openEditBoardTrainModal(idx) {
-            let t = stationBoards[currentStation].trains[idx];
-            if (!t) return;
-
-            document.getElementById('boardModalTitle').innerText = `✏️ Редактирование поезда №${t.num} на табло`;
-            document.getElementById('boardTrainEditIndex').value = idx;
-            document.getElementById('boardTrainNum').value = t.num;
-            document.getElementById('boardTrainRoute').value = t.route;
-            document.getElementById('boardTrainTrack').value = t.track;
-            document.getElementById('boardTrainArr').value = t.arr;
-            document.getElementById('boardTrainStopMin').value = t.stopMin;
-            document.getElementById('boardTrainDep').value = t.dep;
-            document.getElementById('boardTrainStatus').value = t.status;
-            document.getElementById('boardTrainModal').style.display = 'flex';
-        }
-
-        function autoCalcBoardDeparture() {
-            let arr = document.getElementById('boardTrainArr').value;
-            let stopMin = parseInt(document.getElementById('boardTrainStopMin').value) || 0;
-            if (arr) {
-                let parts = arr.split(':');
-                let d = new Date();
-                d.setHours(parseInt(parts[0]), parseInt(parts[1]) + stopMin, 0);
-                let h = String(d.getHours()).padStart(2, '0');
-                let m = String(d.getMinutes()).padStart(2, '0');
-                document.getElementById('boardTrainDep').value = `${h}:${m}`;
-            }
-        }
-
-        function saveBoardTrainData(e) {
-            e.preventDefault();
-            let idx = document.getElementById('boardTrainEditIndex').value;
-            let data = {
-                num: document.getElementById('boardTrainNum').value,
-                route: document.getElementById('boardTrainRoute').value,
-                track: document.getElementById('boardTrainTrack').value,
-                arr: document.getElementById('boardTrainArr').value,
-                stopMin: document.getElementById('boardTrainStopMin').value,
-                dep: document.getElementById('boardTrainDep').value,
-                status: document.getElementById('boardTrainStatus').value
-            };
-
-            if (idx !== '') {
-                stationBoards[currentStation].trains[idx] = data;
+            const track = document.getElementById('consistTrack');
+            if (selectedConsist.length === 0) {
+                track.innerHTML = '<div style="color:var(--bp-text-muted); font-style:italic;">Состав пуст. Нажмите «+ В поезд» в списке слева.</div>';
             } else {
-                stationBoards[currentStation].trains.push(data);
+                track.innerHTML = selectedConsist.map((item, idx) => `
+                    <div class="consist-card">
+                        <span>${idx === 0 ? '🚂' : '🚃'} <b>${item.series}</b></span>
+                        <button style="background:none; border:none; color:var(--bp-btn-danger); cursor:pointer; font-weight:bold;" onclick="removeFromConsist(${idx})">❌</button>
+                    </div>
+                `).join('');
             }
 
-            saveStationBoardsData();
-            closeModal('boardTrainModal');
-        }
-
-        function deleteBoardTrain(idx) {
-            if (confirm("Удалить поезд с табло?")) {
-                stationBoards[currentStation].trains.splice(idx, 1);
-                saveStationBoardsData();
-            }
-        }
-
-        function clearCurrentStationBoard() {
-            if (confirm("Очистить все записи на табло текущей станции?")) {
-                stationBoards[currentStation].trains = [];
-                saveStationBoardsData();
-            }
-        }
-
-        /* ГЕНЕРАЦИЯ ВУ-45 И РАСПИСАНИЯ */
-        function loadScheduleTrainSelect() {
-            let sel = document.getElementById('schTrainSelect');
-            sel.innerHTML = '';
-            if (createdTrips.length === 0) {
-                sel.innerHTML = '<option value="">Сначала сформируйте поезд в Конструкторе!</option>';
-                return;
-            }
-            createdTrips.forEach((t, i) => {
-                sel.innerHTML += `<option value="${i}">Поезд №${t.num} (${t.route})</option>`;
+            // Подсчет метрик
+            let weight = 0, length = 0, brakes = 0;
+            selectedConsist.forEach(x => {
+                weight += x.weight || 0;
+                length += x.length || 0;
+                brakes += x.brake || 0;
             });
+
+            document.getElementById('metricCount').innerText = selectedConsist.length;
+            document.getElementById('metricWeight').innerText = weight.toFixed(1);
+            document.getElementById('metricLength').innerText = length.toFixed(1);
+            document.getElementById('metricBrakes').innerText = brakes.toFixed(1);
         }
 
-        function generateScheduleAndVU45() {
-            let idx = document.getElementById('schTrainSelect').value;
-            if (idx === "" || !createdTrips[idx]) {
-                alert("Выберите поезд!");
+        function generateVU45Ticket() {
+            if (selectedConsist.length === 0) {
+                alert('Сначала сформируйте поезд из доступных вагонов!');
                 return;
             }
 
-            let t = createdTrips[idx];
-            let loco = t.consist.find(v => v.category === 'loco') || { model: 'ТУ2', num: '001' };
-            let tail = t.consist[t.consist.length - 1] || { num: '001' };
+            const trainNum = document.getElementById('tripNum').value;
+            const fromSt = document.getElementById('tripFromStation').value;
+            const toSt = document.getElementById('tripToStation').value;
+            const driver = document.getElementById('tripDriver').value;
+            const pressure = document.getElementById('tripBrakePressure').value;
 
-            document.getElementById('schTitle').innerText = `График движения поезда №${t.num} (${t.route})`;
-            let tbody = document.getElementById('schTableBody');
-            tbody.innerHTML = `
-                <tr><td><b>ст. Крутоборка</b></td><td>—</td><td>Отправление</td><td>10:00</td><td>Перегон Крутоборка — Сосновый Бор</td></tr>
-                <tr><td><b>ст. Сосновый Бор</b></td><td>10:17</td><td>4 мин / Стоянка</td><td>10:21</td><td>Перегон Сосновый Бор — Лельма</td></tr>
-                <tr><td><b>ст. Лельма</b></td><td>10:38</td><td>Прибытие</td><td>—</td><td>Конечная</td></tr>
+            let weight = 0, length = 0, brakes = 0;
+            selectedConsist.forEach(x => {
+                weight += x.weight || 0;
+                length += x.length || 0;
+                brakes += x.brake || 0;
+            });
+
+            const reqBrakes = (weight * 0.33).toFixed(1);
+            const loco = selectedConsist[0] ? selectedConsist[0].series : "ТУ2-113";
+
+            const html = `
+                <div style="text-align:center; font-weight:bold; font-size:14px; margin-bottom:8px;">СПРАВКА ОБ ОБЕСПЕЧЕНИИ ПОЕЗДА ТОРМОЗАМИ И ИХ ИСПРАВНОМ ДЕЙСТВИИ (ФОРМА ВУ-45)</div>
+                <hr style="border:1px solid #000; margin-bottom:10px;">
+                <div><b>Дата / Время:</b> ${new Date().toLocaleString()}</div>
+                <div><b>Поезд:</b> ${trainNum} | <b>Сообщение:</b> ст. ${fromSt} — ст. ${toSt}</div>
+                <div><b>Локомотив:</b> ${loco} | <b>Машинист:</b> ${driver}</div>
+                <hr style="border:1px dashed #000; margin:8px 0;">
+                <div><b>Состав поезда:</b> ${selectedConsist.length} ваг. | <b>Длина:</b> ${length.toFixed(1)} м | <b>Вес поезда:</b> ${weight.toFixed(1)} тонн</div>
+                <div><b>Требуемое тормозное нажатие:</b> ${reqBrakes} тс</div>
+                <div><b>Фактическое тормозное нажатие:</b> ${brakes.toFixed(1)} тс</div>
+                <div><b>Давление в тормозной магистрали:</b> ${pressure} кгс/см²</div>
+                <div style="margin-top:10px;"><b>Плотность ТМ:</b> Опрессовка выдержана (30 сек / 0.2 кгс)</div>
+                <br>
+                <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
+                    <span>Осмотрщик вагонов: ____________</span>
+                    <span>Машинист: ${driver}</span>
+                </div>
             `;
 
-            document.getElementById('vuTrainNum').innerText = t.num;
-            document.getElementById('vuRoute').innerText = t.route;
-            document.getElementById('vuDriver').innerText = t.driver;
-            document.getElementById('vuLNP').innerText = t.lnp;
-            document.getElementById('vuDSP').innerText = t.dsp;
-            document.getElementById('vuLoco').innerText = `${loco.model}-${loco.num}`;
-            document.getElementById('vuCarsCount').innerText = t.consist.length;
-            document.getElementById('vuTailCar').innerText = tail.num;
-
-            document.getElementById('scheduleOutput').style.display = 'block';
+            document.getElementById('vu45Ticket').innerHTML = html;
+            document.getElementById('vu45Container').style.display = 'block';
         }
 
-        /* АТТЕСТАЦИЯ И ТЕСТЫ */
-        function loadTestRole() {
-            let role = document.getElementById('testRoleSelect').value;
-            let questions = testQuestionsData[role] || testQuestionsData.dsp;
-            let container = document.getElementById('testContainer');
+        /* === ТАБЛО СТАНЦИЙ И РАСПИСАНИЕ === */
+        function selectStationBoard(stName) {
+            currentBoardStation = stName;
+            document.getElementById('stTabSosnovy').classList.toggle('active', stName === 'Сосновый Бор');
+            document.getElementById('stTabLelma').classList.toggle('active', stName === 'Лельма');
+            document.getElementById('stTabKrutoborka').classList.toggle('active', stName === 'Крутоборка');
+            document.getElementById('boardStationTitle').innerText = 'СТАНЦИЯ ' + stName.toUpperCase();
+            renderScheduleBoard();
+        }
+
+        function renderScheduleBoard() {
+            const bBody = document.getElementById('boardTableBody');
+            bBody.innerHTML = '';
+
+            const filtered = schedules.filter(s => s.from === currentBoardStation || s.to === currentBoardStation);
+
+            if (filtered.length === 0) {
+                bBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Рейсов не найдено</td></tr>';
+            } else {
+                filtered.forEach(s => {
+                    const isDeparture = s.from === currentBoardStation;
+                    const tr = document.createElement('tr');
+                    tr.innerHTML = `
+                        <td><b>${s.num}</b></td>
+                        <td>ст. ${s.from} ➔ ст. ${s.to}</td>
+                        <td>${isDeparture ? '—' : s.arrTime}</td>
+                        <td>10 мин</td>
+                        <td>${isDeparture ? s.depTime : '—'}</td>
+                        <td><b>${s.track}</b></td>
+                        <td><span class="status-blink">ПОСАДКА / ГОТОВ</span></td>
+                    `;
+                    bBody.appendChild(tr);
+                });
+            }
+
+            // Сводная таблица
+            const fBody = document.getElementById('fullScheduleTableBody');
+            fBody.innerHTML = schedules.map(s => `
+                <tr>
+                    <td><b>${s.num}</b></td>
+                    <td>${s.cat}</td>
+                    <td>ст. ${s.from} — ст. ${s.to}</td>
+                    <td>${s.depTime}</td>
+                    <td>${s.arrTime}</td>
+                    <td>${s.days}</td>
+                    <td style="text-align:center;">
+                        <button class="btn-danger btn-sm" onclick="deleteSchedule('${s.id}')">🗑</button>
+                    </td>
+                </tr>
+            `).join('');
+        }
+
+        function openAddTrainScheduleModal() {
+            document.getElementById('modalSchedule').style.display = 'flex';
+        }
+
+        function closeScheduleModal() {
+            document.getElementById('modalSchedule').style.display = 'none';
+        }
+
+        function saveScheduleForm(e) {
+            e.preventDefault();
+            const newItem = {
+                id: 'sch-' + Date.now(),
+                num: document.getElementById('schNum').value,
+                cat: document.getElementById('schCat').value || 'Пригородный',
+                from: document.getElementById('schFrom').value,
+                to: document.getElementById('schTo').value,
+                depTime: document.getElementById('schDepTime').value,
+                arrTime: document.getElementById('schArrTime').value,
+                track: document.getElementById('schTrack').value,
+                days: document.getElementById('schDays').value
+            };
+            schedules.push(newItem);
+            saveData();
+            closeScheduleModal();
+            renderScheduleBoard();
+        }
+
+        function deleteSchedule(id) {
+            schedules = schedules.filter(x => x.id !== id);
+            saveData();
+            renderScheduleBoard();
+        }
+
+        /* Часы */
+        setInterval(() => {
+            const now = new Date();
+            const clock = document.getElementById('clockDisplay');
+            if (clock) clock.innerText = now.toTimeString().split(' ')[0];
+        }, 1000);
+
+        /* === АТТЕСТАЦИЯ И ТЕСТЫ === */
+        const TEST_MODULES = {
+            pte: [
+                { id: "q1", q: "Какое основное средство сигнализации применяется при движении поездов?", opts: ["Автоблокировка (АБ)", "Полуавтоблокировка", "Путевая записка"], ans: 0 },
+                { id: "q2", q: "Какое нормативное давление должно быть в тормозной магистрали пассажирского поезда?", opts: ["4.0 - 4.2 кгс/см²", "5.0 - 5.2 кгс/см²", "6.0 - 6.5 кгс/см²"], ans: 1 }
+            ],
+            isi: [
+                { id: "q1", q: "Что означает один зелёный огонь на входном светофоре?", opts: ["Разрешается движение с установленной скоростью", "Стой! Запрещается проезжать", "Разрешается движение с уменьшенной скоростью"], ans: 0 },
+                { id: "q2", q: "Что означает один жёлтый мигающий огонь?", opts: ["Разрешается проследование с готовностью остановиться", "Разрешается движение с установленной скоростью, следующий светофор открыт"], ans: 1 }
+            ],
+            dsp: [
+                { id: "q1", q: "Каким документом оформляется отправление поезда при неисправности выходного светофора?", opts: ["Путевая записка (ДУ-50) / Разрешение на бланке ДУ-54", "Справка ВУ-45", "Бланк ДУ-61"], ans: 0 }
+            ]
+        };
+
+        let currentQuestions = [];
+
+        function loadTestModule(modKey) {
+            currentQuestions = TEST_MODULES[modKey] || [];
+            const container = document.getElementById('testQuestionsContainer');
             container.innerHTML = '';
 
-            questions.forEach((q, idx) => {
-                let card = document.createElement('div');
-                card.className = 'test-card';
-                let optsHtml = q.options.map((opt, oIdx) => `
-                    <label class="test-option">
-                        <input type="radio" name="q_${idx}" value="${oIdx}"> ${opt}
-                    </label>
-                `).join('');
-
-                card.innerHTML = `
-                    <div class="test-question">Вопрос ${idx + 1}: ${q.q}</div>
-                    ${optsHtml}
-                    <div class="test-explanation" id="exp_${idx}">💡 <b>Пояснение:</b> ${q.exp}</div>
+            currentQuestions.forEach((q, idx) => {
+                const qDiv = document.createElement('div');
+                qDiv.className = 'test-card';
+                qDiv.innerHTML = `
+                    <div class="test-question">Вопрос №${idx+1}: ${q.q}</div>
+                    ${q.opts.map((o, oIdx) => `
+                        <label class="test-option">
+                            <input type="radio" name="q_${idx}" value="${oIdx}"> ${o}
+                        </label>
+                    `).join('')}
                 `;
-                container.appendChild(card);
+                container.appendChild(qDiv);
             });
-            document.getElementById('testResultBox').innerText = '';
+
+            document.getElementById('btnSubmitTest').style.display = 'block';
+            document.getElementById('testScoreText').innerText = `0 / ${currentQuestions.length}`;
         }
 
-        function checkTestResults() {
-            let role = document.getElementById('testRoleSelect').value;
-            let questions = testQuestionsData[role] || testQuestionsData.dsp;
-            let correctCount = 0;
-
-            questions.forEach((q, idx) => {
-                let selected = document.querySelector(`input[name="q_${idx}"]:checked`);
-                let expEl = document.getElementById(`exp_${idx}`);
-                if (expEl) expEl.style.display = 'block';
-
-                if (selected && parseInt(selected.value) === q.correct) {
-                    correctCount++;
+        function submitTestAnswers() {
+            let correct = 0;
+            currentQuestions.forEach((q, idx) => {
+                const selected = document.querySelector(`input[name="q_${idx}"]:checked`);
+                if (selected && parseInt(selected.value) === q.ans) {
+                    correct++;
                 }
             });
-
-            let resBox = document.getElementById('testResultBox');
-            let scorePct = Math.round((correctCount / questions.length) * 100);
-            if (scorePct >= 80) {
-                resBox.style.color = 'var(--bp-btn-success)';
-                resBox.innerText = `✅ ЭКЗАМЕН СДАН! Результат: ${correctCount} из ${questions.length} (${scorePct}%). Аттестация подтверждена!`;
-            } else {
-                resBox.style.color = 'var(--bp-btn-danger)';
-                resBox.innerText = `❌ ЭКЗАМЕН НЕ СДАН! Результат: ${correctCount} из ${questions.length} (${scorePct}%). Изучите правила и повторите попытку.`;
-            }
+            document.getElementById('testScoreText').innerText = `${correct} / ${currentQuestions.length}`;
+            alert(`Тест завершен! Правильных ответов: ${correct} из ${currentQuestions.length}`);
         }
 
-        /* АНАЛИТИКА И СТАТИСТИКА ПАРКА */
+        /* === АНАЛИТИКА === */
         function renderAnalytics() {
-            let total = vehicleDB.length;
-            if (total === 0) return;
+            const total = db.length || 1;
+            const stContainer = document.getElementById('analyticsStatusProgress');
+            stContainer.innerHTML = '';
 
-            let statuses = ['st-active', 'st-mod', 'st-not-operated', 'st-out', 'st-decomm', 'st-scrapped'];
-            let statusContainer = document.getElementById('analyticsStatusProgress');
-            statusContainer.innerHTML = '';
-
-            statuses.forEach(st => {
-                let count = vehicleDB.filter(v => v.statusCls === st).length;
-                let pct = Math.round((count / total) * 100);
-                let label = getStatusLabel(st);
-
-                statusContainer.innerHTML += `
-                    <div class="progress-item">
-                        <div class="progress-label"><span>${label}</span><span>${count} ед. (${pct}%)</span></div>
-                        <div class="progress-bg"><div class="progress-fill" style="width:${pct}%;"></div></div>
-                    </div>
-                `;
-            });
-
-            let cats = [
-                { key: 'loco', name: 'Локомотивы' },
-                { key: 'pass_car', name: 'Пассажирские вагоны' },
-                { key: 'cargo_car', name: 'Грузовые вагоны' },
-                { key: 'special', name: 'Спецтехника' }
-            ];
-            let catContainer = document.getElementById('analyticsCatProgress');
-            catContainer.innerHTML = '';
-
-            cats.forEach(c => {
-                let count = vehicleDB.filter(v => v.category === c.key).length;
-                let pct = Math.round((count / total) * 100);
-
-                catContainer.innerHTML += `
-                    <div class="progress-item">
-                        <div class="progress-label"><span>${c.name}</span><span>${count} ед. (${pct}%)</span></div>
-                        <div class="progress-bg"><div class="progress-fill" style="width:${pct}%; background:var(--bp-accent-teal);"></div></div>
-                    </div>
-                `;
-            });
-        }
-    </script>
-
-
-<!-- ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ: UI, автосохранение черновиков и drag&drop ПС -->
-<style id="railphoto-extra-enhancements">
-    /* Не удаляем существующие элементы/данные — только скрываем ненужные подписи в интерфейсе. */
-    #tabCat750, #tabCat1520 { display:none !important; }
-    #pageDatabase .cat-tab[onclick*="gauge_750"],
-    #pageDatabase .cat-tab[onclick*="gauge_1520"] { display:none !important; }
-
-    /* В конструкторе сохраняем исходные поля в коде, но убираем их из интерфейса. */
-    #tripDriverInput, #tripLNPInput, #tripDSPInput { display:none !important; }
-    #tripDriverInput, #tripLNPInput, #tripDSPInput { visibility:hidden !important; }
-    #tripDriverInput, #tripLNPInput, #tripDSPInput { pointer-events:none; }
-
-    /* Перетаскивание состава */
-    #builderSourceList .builder-source-item { cursor:grab; user-select:none; }
-    #builderSourceList .builder-source-item:active { cursor:grabbing; }
-    #consistTrack { min-height:70px; }
-    #consistTrack.drag-over { outline:2px dashed var(--bp-link); outline-offset:4px; }
-    #consistTrack .consist-card { cursor:grab; transition:transform .12s ease, opacity .12s ease; }
-    #consistTrack .consist-card:active { cursor:grabbing; }
-    #consistTrack .consist-card.dragging { opacity:.45; transform:scale(.99); }
-    #consistTrack .consist-card.drag-over-item { border-top:2px solid var(--bp-link); }
-
-    /* Ненавязчивая индикация автосохранения */
-    #vehicleDraftStatus { font-size:10px; color:var(--bp-text-muted); margin-right:auto; padding:6px 0; }
-
-    /* Перетаскивание ПС в базе данных */
-    #tableBody tr.vehicle-row-clickable { cursor: grab; }
-    #tableBody tr.vehicle-row-clickable:active { cursor: grabbing; }
-    #tableBody tr.db-dragging { opacity: .45; }
-    #tableBody tr.db-drag-over { outline: 2px dashed var(--bp-link); outline-offset: -2px; }
-    .db-drag-handle { display:inline-block; margin-right:6px; cursor:grab; font-weight:bold; opacity:.65; user-select:none; }
-    .db-drag-handle:hover { opacity:1; }
-    .db-order-buttons { display:inline-flex; gap:3px; margin-left:6px; vertical-align:middle; }
-    .db-order-buttons button { border:1px solid var(--bp-border); background:var(--bp-card-bg); color:var(--bp-text); border-radius:3px; cursor:pointer; padding:1px 5px; font-weight:bold; }
-    .db-order-buttons button:hover { background:var(--bp-link); color:#fff; }
-</style>
-
-<script id="railphoto-extra-enhancements-js">
-(function () {
-    'use strict';
-
-    const VEHICLE_DRAFT_PREFIX = 'railphoto_vehicle_draft_';
-    const CONSIST_DRAFT_KEY = 'railphoto_builder_consist_draft';
-    let draggedVehicleId = null;
-    let draggedConsistIndex = null;
-
-    function vehicleDraftKey(id) {
-        return VEHICLE_DRAFT_PREFIX + (id || '__new__');
-    }
-
-    function getVehicleFormData() {
-        const ids = [
-            'fieldCategory','fieldModel','fieldNum','fieldFactoryNum','fieldPark','fieldGauge',
-            'fieldStatusCls','fieldStatusText','fieldBuildDate','fieldInServiceDate','fieldOutDate',
-            'fieldDecommDate','fieldScrappedDate','fieldManufacturer','fieldPhotoUrl','fieldHistory','fieldNote'
-        ];
-        const data = {};
-        ids.forEach(id => {
-            const el = document.getElementById(id);
-            if (el) data[id] = el.value;
-        });
-        return data;
-    }
-
-    function restoreVehicleDraft(id) {
-        const raw = localStorage.getItem(vehicleDraftKey(id));
-        if (!raw) return false;
-        try {
-            const data = JSON.parse(raw);
-            Object.keys(data).forEach(fieldId => {
-                const el = document.getElementById(fieldId);
-                if (el) el.value = data[fieldId];
-            });
-            showDraftStatus('Черновик восстановлен');
-            return true;
-        } catch (e) {
-            console.warn('Не удалось восстановить черновик ПС:', e);
-            return false;
-        }
-    }
-
-    function saveVehicleDraft() {
-        const modal = document.getElementById('vehicleModal');
-        if (!modal) return;
-        const id = document.getElementById('editVehicleId')?.value || '__new__';
-        localStorage.setItem(vehicleDraftKey(id), JSON.stringify({
-            ...getVehicleFormData(),
-            _savedAt: new Date().toISOString()
-        }));
-        showDraftStatus('Черновик сохранён');
-    }
-
-    function clearVehicleDraft(id) {
-        localStorage.removeItem(vehicleDraftKey(id));
-        showDraftStatus('Изменения сохранены');
-    }
-
-    function showDraftStatus(text) {
-        const el = document.getElementById('vehicleDraftStatus');
-        if (el) el.textContent = text;
-    }
-
-    /* Добавляем строку состояния, не меняя существующие кнопки. */
-    function ensureDraftStatus() {
-        const form = document.querySelector('#vehicleModal form');
-        if (!form || document.getElementById('vehicleDraftStatus')) return;
-        const footer = form.querySelector('div[style*="justify-content:space-between"]') || form.lastElementChild;
-        if (footer) {
-            const status = document.createElement('span');
-            status.id = 'vehicleDraftStatus';
-            status.textContent = 'Автосохранение включено';
-            footer.prepend(status);
-        }
-    }
-
-    /* Сохраняем введённое сразу при каждом изменении, поэтому случайный выход из модального окна/страницы ничего не теряет. */
-    function bindVehicleAutosave() {
-        const modal = document.getElementById('vehicleModal');
-        if (!modal || modal.dataset.autosaveBound === '1') return;
-        modal.dataset.autosaveBound = '1';
-        ensureDraftStatus();
-        modal.querySelectorAll('input, select, textarea').forEach(el => {
-            el.addEventListener('input', saveVehicleDraft);
-            el.addEventListener('change', saveVehicleDraft);
-        });
-    }
-
-    /* Оборачиваем существующие функции, не удаляя и не переписывая их. */
-    const originalOpenAddModal = window.openAddModal;
-    if (typeof originalOpenAddModal === 'function') {
-        window.openAddModal = function () {
-            originalOpenAddModal.apply(this, arguments);
-            bindVehicleAutosave();
-            restoreVehicleDraft('__new__');
-        };
-    }
-
-    const originalOpenEditModal = window.openEditModal;
-    if (typeof originalOpenEditModal === 'function') {
-        window.openEditModal = function (id) {
-            originalOpenEditModal.apply(this, arguments);
-            bindVehicleAutosave();
-            restoreVehicleDraft(id);
-        };
-    }
-
-    const originalSaveVehicleData = window.saveVehicleData;
-    if (typeof originalSaveVehicleData === 'function') {
-        window.saveVehicleData = function (e) {
-            const id = document.getElementById('editVehicleId')?.value || '__new__';
-            originalSaveVehicleData.apply(this, arguments);
-            clearVehicleDraft(id);
-        };
-    }
-
-    /* Сохраняем черновик и при закрытии вкладки/обновлении страницы. */
-    window.addEventListener('beforeunload', function () {
-        const modal = document.getElementById('vehicleModal');
-        if (modal && modal.style.display !== 'none') saveVehicleDraft();
-        saveConsistDraft();
-    });
-
-    /* ---------- DRAG & DROP ПОДВИЖНОГО СОСТАВА ---------- */
-    function saveConsistDraft() {
-        try {
-            localStorage.setItem(CONSIST_DRAFT_KEY, JSON.stringify(consistList.map(v => v.id)));
-        } catch (e) {}
-    }
-
-    function restoreConsistDraft() {
-        try {
-            const raw = localStorage.getItem(CONSIST_DRAFT_KEY);
-            if (!raw || !Array.isArray(vehicleDB)) return;
-            const ids = JSON.parse(raw);
-            if (!Array.isArray(ids)) return;
-            const restored = ids.map(id => vehicleDB.find(v => v.id === id)).filter(Boolean);
-            if (restored.length) {
-                consistList = restored;
-                if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
-            }
-        } catch (e) {}
-    }
-
-    function setupBuilderDragAndDrop() {
-        const source = document.getElementById('builderSourceList');
-        const track = document.getElementById('consistTrack');
-        if (!source || !track) return;
-
-        source.querySelectorAll('.builder-source-item').forEach(item => {
-            const button = item.querySelector('button');
-            const match = button && button.getAttribute('onclick')?.match(/addToConsist\(['"]([^'"]+)['"]\)/);
-            const id = match ? match[1] : null;
-            if (!id) return;
-            item.draggable = true;
-            item.dataset.vehicleId = id;
-            item.addEventListener('dragstart', function (e) {
-                draggedVehicleId = id;
-                draggedConsistIndex = null;
-                item.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'copy';
-                e.dataTransfer.setData('text/plain', id);
-            });
-            item.addEventListener('dragend', function () {
-                draggedVehicleId = null;
-                item.classList.remove('dragging');
-            });
-        });
-
-        track.querySelectorAll('.consist-card').forEach((card, index) => {
-            card.draggable = true;
-            card.dataset.consistIndex = index;
-            card.addEventListener('dragstart', function (e) {
-                draggedConsistIndex = index;
-                draggedVehicleId = null;
-                card.classList.add('dragging');
-                e.dataTransfer.effectAllowed = 'move';
-                e.dataTransfer.setData('text/plain', 'consist:' + index);
-            });
-            card.addEventListener('dragend', function () {
-                draggedConsistIndex = null;
-                card.classList.remove('dragging');
-                track.querySelectorAll('.drag-over-item').forEach(x => x.classList.remove('drag-over-item'));
-            });
-            card.addEventListener('dragover', function (e) {
-                e.preventDefault();
-                e.dataTransfer.dropEffect = draggedVehicleId ? 'copy' : 'move';
-                card.classList.add('drag-over-item');
-            });
-            card.addEventListener('dragleave', function () {
-                card.classList.remove('drag-over-item');
-            });
-            card.addEventListener('drop', function (e) {
-                e.preventDefault();
-                e.stopPropagation();
-                card.classList.remove('drag-over-item');
-                const targetIndex = Number(card.dataset.consistIndex);
-
-                if (draggedVehicleId) {
-                    const item = vehicleDB.find(v => v.id === draggedVehicleId);
-                    if (item) consistList.splice(targetIndex, 0, item);
-                } else if (draggedConsistIndex !== null && draggedConsistIndex !== targetIndex) {
-                    const moved = consistList.splice(draggedConsistIndex, 1)[0];
-                    let insertAt = targetIndex;
-                    if (draggedConsistIndex < targetIndex) insertAt--;
-                    consistList.splice(Math.max(0, insertAt), 0, moved);
+            Object.keys(STATUS_MAP).forEach(st => {
+                const count = db.filter(x => x.status === st).length;
+                if (count > 0) {
+                    const pct = Math.round((count / total) * 100);
+                    stContainer.innerHTML += `
+                        <div class="progress-item">
+                            <div class="progress-label">
+                                <span>${STATUS_MAP[st]}</span>
+                                <span>${count} шт. (${pct}%)</span>
+                            </div>
+                            <div class="progress-bg">
+                                <div class="progress-fill" style="width:${pct}%;"></div>
+                            </div>
+                        </div>
+                    `;
                 }
-                draggedVehicleId = null;
-                draggedConsistIndex = null;
-                saveConsistDraft();
-                if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
             });
-        });
 
-        track.ondragover = function (e) {
-            e.preventDefault();
-            track.classList.add('drag-over');
-            e.dataTransfer.dropEffect = draggedVehicleId ? 'copy' : 'move';
-        };
-        track.ondragleave = function (e) {
-            if (e.target === track) track.classList.remove('drag-over');
-        };
-        track.ondrop = function (e) {
-            e.preventDefault();
-            track.classList.remove('drag-over');
-            if (draggedVehicleId) {
-                const item = vehicleDB.find(v => v.id === draggedVehicleId);
-                if (item) consistList.push(item);
-            } else if (draggedConsistIndex !== null) {
-                const moved = consistList.splice(draggedConsistIndex, 1)[0];
-                consistList.push(moved);
-            }
-            draggedVehicleId = null;
-            draggedConsistIndex = null;
-            saveConsistDraft();
-            if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
-        };
-    }
+            const gContainer = document.getElementById('analyticsGaugeProgress');
+            gContainer.innerHTML = '';
+            const g750 = db.filter(x => x.gauge === '750').length;
+            const g1520 = db.filter(x => x.gauge === '1520').length;
 
-    const originalRenderBuilderSource = window.renderBuilderSource;
-    if (typeof originalRenderBuilderSource === 'function') {
-        window.renderBuilderSource = function () {
-            originalRenderBuilderSource.apply(this, arguments);
-            setupBuilderDragAndDrop();
-        };
-    }
-
-    const originalRenderConsistTrack = window.renderConsistTrack;
-    if (typeof originalRenderConsistTrack === 'function') {
-        window.renderConsistTrack = function () {
-            originalRenderConsistTrack.apply(this, arguments);
-            setupBuilderDragAndDrop();
-            saveConsistDraft();
-        };
-    }
-
-    /* Сохраняем состав также после обычных кнопок +/вверх/вниз/удалить. */
-    ['addToConsist','removeFromConsist','moveConsistItem','clearConsist'].forEach(name => {
-        const original = window[name];
-        if (typeof original === 'function') {
-            window[name] = function () {
-                const result = original.apply(this, arguments);
-                saveConsistDraft();
-                setupBuilderDragAndDrop();
-                return result;
-            };
+            gContainer.innerHTML = `
+                <div class="progress-item">
+                    <div class="progress-label"><span>Узкая колея (750 мм)</span><span>${g750} шт.</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width:${Math.round((g750/total)*100)}%;"></div></div>
+                </div>
+                <div class="progress-item">
+                    <div class="progress-label"><span>Широкая колея (1520 мм)</span><span>${g1520} шт.</span></div>
+                    <div class="progress-bg"><div class="progress-fill" style="width:${Math.round((g1520/total)*100)}%; background:var(--bp-accent-gold);"></div></div>
+                </div>
+            `;
         }
-    });
 
-    /* Возвращаем поля ТЧМ/ЛНП/ДСП в конструктор. Ничего из исходного кода и данных не удаляем. */
-    function restoreBuilderStaffFields() {
-        ['tripDriverInput','tripLNPInput','tripDSPInput'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el && el.parentElement) el.parentElement.style.display = '';
-        });
-        const header = document.querySelector('#pageBuilder .page-header span');
-        if (header) header.textContent = 'Параметры и Формирование Поезда (С назначением ЛНП, ТЧМ и ДСП)';
-    }
-
-    /* Убираем только демонстрационный текст маршрута из поля конструктора. Реальные данные поездов не трогаем. */
-    function clearBuilderDemoText() {
-        const route = document.getElementById('tripRouteInput');
-        if (route && route.value === 'Крутоборка — Сосновый Бор — Лельма') route.value = '';
-        if (route) route.placeholder = 'Введите маршрут следования';
-    }
-
-    /* Скрываем только подписи фильтров колеи. Значения 750/1520 и существующие записи БД не удаляем. */
-    function hideGaugeUiLabels() {
-        ['tabCat750','tabCat1520'].forEach(id => {
-            const el = document.getElementById(id);
-            if (el) el.style.display = 'none';
-        });
-        const gaugeSelect = document.getElementById('fieldGauge');
-        if (gaugeSelect) {
-            Array.from(gaugeSelect.options).forEach(opt => {
-                opt.textContent = opt.value || opt.textContent;
+        /* === УПРАВЛЕНИЕ ПАМЯТКАМИ В ПРОФИЛЕ === */
+        function openAddPinnedNoteModal() {
+            document.getElementById('modalPinnedNote').style.display = 'flex';
+        }
+        function closePinnedNoteModal() {
+            document.getElementById('modalPinnedNote').style.display = 'none';
+        }
+        function savePinnedNote(e) {
+            e.preventDefault();
+            pinnedNotes.push({
+                id: 'n-' + Date.now(),
+                title: document.getElementById('noteTitle').value,
+                body: document.getElementById('noteBody').value
             });
+            saveData();
+            closePinnedNoteModal();
+            renderProfile();
         }
-    }
+        function deletePinnedNote(id) {
+            pinnedNotes = pinnedNotes.filter(x => x.id !== id);
+            saveData();
+            renderProfile();
+        }
 
-    /* Оборачиваем уже существующий switchPage, чтобы скрытие сохранялось после переходов. */
-    const originalSwitchPage = window.switchPage;
-    if (typeof originalSwitchPage === 'function') {
-        window.switchPage = function () {
-            const result = originalSwitchPage.apply(this, arguments);
-            restoreBuilderStaffFields();
-            clearBuilderDemoText();
-            hideGaugeUiLabels();
-            if (arguments[0] === 'builder') {
-                setupBuilderDragAndDrop();
-                restoreConsistDraft();
-            }
-            return result;
-        };
-    }
-
-    /* ===== НОВОЕ: ПЕРЕТАСКИВАНИЕ ПС В САМОЙ БАЗЕ ===== */
-    function ensureManualSortOption() {
-        const sel = document.getElementById('sortSelect');
-        if (!sel || sel.querySelector('option[value="manual_order"]')) return;
-        const opt = document.createElement('option');
-        opt.value = 'manual_order';
-        opt.textContent = 'Свой порядок (перетаскивание)';
-        sel.appendChild(opt);
-    }
-
-    function saveVehicleOrder() {
-        localStorage.setItem('railphoto_full_db', JSON.stringify(vehicleDB));
-    }
-
-    function moveVehicleInDatabase(id, direction) {
-        const index = vehicleDB.findIndex(v => v.id === id);
-        if (index < 0) return;
-        const target = index + direction;
-        if (target < 0 || target >= vehicleDB.length) return;
-        const tmp = vehicleDB[index];
-        vehicleDB[index] = vehicleDB[target];
-        vehicleDB[target] = tmp;
-        const sort = document.getElementById('sortSelect');
-        if (sort) sort.value = 'manual_order';
-        saveVehicleOrder();
-        renderTable();
-    }
-
-    function setupDatabaseDragAndDrop() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-        ensureManualSortOption();
-        if (tbody.dataset.dbDragReady === '1') return;
-        tbody.dataset.dbDragReady = '1';
-
-        tbody.addEventListener('dragover', function(e) {
-            const row = e.target.closest('tr.vehicle-row-clickable');
-            if (!row) return;
+        /* === УПРАВЛЕНИЕ ПРОФИЛЕМ === */
+        function openEditProfileModal() {
+            document.getElementById('editProfName').value = profile.name;
+            document.getElementById('editProfRole').value = profile.role;
+            document.getElementById('editProfTabNum').value = profile.tabNum;
+            document.getElementById('editProfStation').value = profile.station;
+            document.getElementById('editProfQual').value = profile.qual;
+            document.getElementById('editProfExp').value = profile.exp;
+            document.getElementById('modalProfile').style.display = 'flex';
+        }
+        function closeProfileModal() {
+            document.getElementById('modalProfile').style.display = 'none';
+        }
+        function saveProfileForm(e) {
             e.preventDefault();
-            row.classList.add('db-drag-over');
-        });
+            profile.name = document.getElementById('editProfName').value;
+            profile.role = document.getElementById('editProfRole').value;
+            profile.tabNum = document.getElementById('editProfTabNum').value;
+            profile.station = document.getElementById('editProfStation').value;
+            profile.qual = document.getElementById('editProfQual').value;
+            profile.exp = document.getElementById('editProfExp').value;
+            saveData();
+            closeProfileModal();
+            renderProfile();
+        }
 
-        tbody.addEventListener('dragleave', function(e) {
-            const row = e.target.closest('tr.vehicle-row-clickable');
-            if (row && !row.contains(e.relatedTarget)) row.classList.remove('db-drag-over');
-        });
-
-        tbody.addEventListener('drop', function(e) {
-            const targetRow = e.target.closest('tr.vehicle-row-clickable');
-            if (!targetRow) return;
-            e.preventDefault();
-            targetRow.classList.remove('db-drag-over');
-            const draggedId = e.dataTransfer.getData('text/plain');
-            const targetId = targetRow.dataset.vehicleId;
-            if (!draggedId || !targetId || draggedId === targetId) return;
-
-            const from = vehicleDB.findIndex(v => v.id === draggedId);
-            const to = vehicleDB.findIndex(v => v.id === targetId);
-            if (from < 0 || to < 0) return;
-
-            const moved = vehicleDB.splice(from, 1)[0];
-            vehicleDB.splice(to, 0, moved);
-            const sort = document.getElementById('sortSelect');
-            if (sort) sort.value = 'manual_order';
-            saveVehicleOrder();
+        /* СТАРТОВАЯ ИНИЦИАЛИЗАЦИЯ */
+        window.addEventListener('load', () => {
+            renderProfile();
             renderTable();
-            setupDatabaseDragAndDrop();
         });
-    }
-
-    function decorateDatabaseRows() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-        tbody.querySelectorAll('tr.vehicle-row-clickable').forEach(row => {
-            const idCell = row.querySelector('td');
-            const id = row.dataset.vehicleId || '';
-            if (!id) return;
-            row.draggable = true;
-            row.dataset.vehicleId = id;
-            if (!row.querySelector('.db-drag-handle')) {
-                const handle = document.createElement('span');
-                handle.className = 'db-drag-handle';
-                handle.textContent = '☷';
-                handle.title = 'Перетащить ПС вверх или вниз';
-                handle.draggable = true;
-                handle.addEventListener('dragstart', function(e) {
-                    e.stopPropagation();
-                    e.dataTransfer.effectAllowed = 'move';
-                    e.dataTransfer.setData('text/plain', id);
-                    row.classList.add('db-dragging');
-                });
-                handle.addEventListener('dragend', function() {
-                    row.classList.remove('db-dragging');
-                    tbody.querySelectorAll('.db-drag-over').forEach(r => r.classList.remove('db-drag-over'));
-                });
-                if (idCell) idCell.prepend(handle);
-            }
-            if (!row.dataset.dbRowDragBound) {
-                row.dataset.dbRowDragBound = '1';
-                row.addEventListener('dragstart', function(e) {
-                    if (!e.dataTransfer.getData('text/plain')) {
-                        e.dataTransfer.effectAllowed = 'move';
-                        e.dataTransfer.setData('text/plain', id);
-                    }
-                    row.classList.add('db-dragging');
-                });
-                row.addEventListener('dragend', function() {
-                    row.classList.remove('db-dragging');
-                });
-            }
-            if (!row.querySelector('.db-order-buttons')) {
-                const actionCell = row.querySelector('td:last-child');
-                if (actionCell) {
-                    const box = document.createElement('span');
-                    box.className = 'db-order-buttons';
-                    box.innerHTML = '<button type="button" title="Переместить вверх">↑</button><button type="button" title="Переместить вниз">↓</button>';
-                    box.children[0].addEventListener('click', e => { e.stopPropagation(); moveVehicleInDatabase(id, -1); });
-                    box.children[1].addEventListener('click', e => { e.stopPropagation(); moveVehicleInDatabase(id, 1); });
-                    actionCell.appendChild(box);
-                }
-            }
-        });
-        setupDatabaseDragAndDrop();
-    }
-
-    const originalRenderTableForOrder = window.renderTable;
-    if (typeof originalRenderTableForOrder === 'function') {
-        window.renderTable = function() {
-            const result = originalRenderTableForOrder.apply(this, arguments);
-            ensureManualSortOption();
-            const sort = document.getElementById('sortSelect');
-            if (sort && sort.value === 'manual_order') {
-                const tbody = document.getElementById('tableBody');
-                if (tbody) {
-                    // При ручном порядке восстанавливаем порядок vehicleDB, не меняя фильтры.
-                    const q = (document.getElementById('searchInput')?.value || '').toUpperCase();
-                    const st = document.getElementById('statusFilter')?.value || 'all';
-                    const rows = vehicleDB.filter(v => {
-                        if (currentCategoryFilter !== 'all') {
-                            if (['loco','pass_car','cargo_car','special'].includes(currentCategoryFilter) && v.category !== currentCategoryFilter) return false;
-                        }
-                        if (st !== 'all' && v.statusCls !== st) return false;
-                        const full = `${v.model} ${v.num} ${v.park} ${v.factoryNum || ''} ${v.manufacturer || ''} ${v.note || ''} ${v.statusText || ''}`.toUpperCase();
-                        return !q || full.includes(q);
-                    });
-                    tbody.innerHTML = '';
-                    // Запрашиваем штатный рендер для создания строк, затем переставляем их по vehicleDB.
-                    sort.value = 'num_asc';
-                    originalRenderTableForOrder.apply(this, arguments);
-                    sort.value = 'manual_order';
-                    const map = new Map(Array.from(tbody.children).map(r => [r.dataset.vehicleId, r]));
-                    rows.forEach(v => { const r = map.get(v.id); if (r) tbody.appendChild(r); });
-                }
-            }
-            markDatabaseRows();
-            return result;
-        };
-    }
-
-    /* Добавляем идентификатор каждой строки после штатного рендера, не переписывая существующую таблицу. */
-    function markDatabaseRows() {
-        const tbody = document.getElementById('tableBody');
-        if (!tbody) return;
-        const visible = vehicleDB.filter(v => {
-            const q = (document.getElementById('searchInput')?.value || '').toUpperCase();
-            const st = document.getElementById('statusFilter')?.value || 'all';
-            if (st !== 'all' && v.statusCls !== st) return false;
-            if (currentCategoryFilter !== 'all' && ['loco','pass_car','cargo_car','special'].includes(currentCategoryFilter) && v.category !== currentCategoryFilter) return false;
-            if (currentCategoryFilter === 'gauge_750' && v.gauge !== '750мм') return false;
-            if (currentCategoryFilter === 'gauge_1520' && v.gauge !== '1520мм') return false;
-            const full = `${v.model} ${v.num} ${v.park} ${v.factoryNum || ''} ${v.manufacturer || ''} ${v.note || ''} ${v.statusText || ''}`.toUpperCase();
-            return !q || full.includes(q);
-        });
-        // Сопоставляем строки с текущим DOM-порядком и сохраняем id на строке.
-        const rows = Array.from(tbody.querySelectorAll('tr.vehicle-row-clickable'));
-        const byText = new Map(visible.map(v => [`${v.model}|${v.num}|${v.park}`, v]));
-        rows.forEach(row => {
-            if (row.dataset.vehicleId) return;
-            const cells = row.querySelectorAll('td');
-            const model = cells[3]?.innerText.replace('✎','').trim() || '';
-            const num = cells[4]?.innerText.replace('открыть','').trim() || '';
-            const park = cells[2]?.innerText.trim() || '';
-            const v = byText.get(`${model}|${num}|${park}`);
-            if (v) row.dataset.vehicleId = v.id;
-        });
-        decorateDatabaseRows();
-    }
-
-    /* Слушаем изменения фильтра/сортировки и снова добавляем drag&drop. */
-    document.addEventListener('change', function(e) {
-        if (e.target && (e.target.id === 'sortSelect' || e.target.id === 'statusFilter')) {
-            setTimeout(markDatabaseRows, 0);
-        }
-    });
-
-    /* После исходной инициализации сайта применяем наши дополнения. */
-    const originalOnload = window.onload;
-    window.onload = function (e) {
-        if (typeof originalOnload === 'function') originalOnload.call(this, e);
-        restoreBuilderStaffFields();
-        clearBuilderDemoText();
-        hideGaugeUiLabels();
-        bindVehicleAutosave();
-        restoreConsistDraft();
-        setupBuilderDragAndDrop();
-    };
-})();
-</script>
-
-
-<!-- ПОСЛЕДНЕЕ ДОПОЛНЕНИЕ: надёжное перетаскивание ПС мышью + полноценные поля ТЧМ/ЛНП/ДСП -->
-<style id="railphoto-final-fix">
-    /* Поля ТЧМ/ЛНП/ДСП снова полностью видимы и доступны для ввода. */
-    #tripDriverInput, #tripLNPInput, #tripDSPInput {
-        display:block !important;
-        visibility:visible !important;
-        pointer-events:auto !important;
-    }
-    /* Если исходная разметка скрывала контейнер поля — возвращаем и его. */
-    #tripDriverInput, #tripLNPInput, #tripDSPInput { opacity:1 !important; }
-
-    /* Явная ручка перетаскивания в БАЗЕ. */
-    .db-drag-handle {
-        touch-action:none !important;
-        -webkit-user-select:none !important;
-        user-select:none !important;
-        cursor:grab !important;
-        font-size:16px;
-        display:inline-block;
-        min-width:22px;
-        text-align:center;
-    }
-    .db-drag-handle:active { cursor:grabbing !important; }
-    #tableBody tr.db-pointer-dragging {
-        opacity:.45;
-        outline:2px dashed var(--bp-link);
-    }
-    #tableBody tr.db-pointer-target-before { box-shadow:inset 0 3px 0 var(--bp-link); }
-    #tableBody tr.db-pointer-target-after { box-shadow:inset 0 -3px 0 var(--bp-link); }
-    #tableBody.db-pointer-drag-active { cursor:grabbing; }
-</style>
-
-<script id="railphoto-final-fix-js">
-(function(){
-    'use strict';
-
-    /* ===== ТЧМ / ЛНП / ДСП: возвращаем именно поля ввода ===== */
-    function showStaffFields(){
-        ['tripDriverInput','tripLNPInput','tripDSPInput'].forEach(function(id){
-            var el=document.getElementById(id);
-            if(!el) return;
-            el.style.setProperty('display','block','important');
-            el.style.setProperty('visibility','visible','important');
-            el.style.setProperty('pointer-events','auto','important');
-            var wrap=el.parentElement;
-            if(wrap){
-                wrap.style.removeProperty('display');
-                wrap.style.removeProperty('visibility');
-            }
-        });
-    }
-
-    /* ===== НАДЁЖНОЕ ПЕРЕТАСКИВАНИЕ ПС В САМОЙ БАЗЕ =====
-       Не зависит от HTML5 drag&drop: работает обычной мышью/тачпадом. */
-    var activeDrag=null;
-
-    function visibleRows(){
-        var tb=document.getElementById('tableBody');
-        return tb ? Array.from(tb.querySelectorAll('tr.vehicle-row-clickable')) : [];
-    }
-
-    function clearDragMarks(){
-        visibleRows().forEach(function(r){
-            r.classList.remove('db-pointer-target-before','db-pointer-target-after');
-        });
-    }
-
-    function persistDomOrder(){
-        var rows=visibleRows();
-        var ids=rows.map(function(r){return r.dataset.vehicleId;}).filter(Boolean);
-        if(!ids.length) return;
-
-        /* При фильтре меняем только видимые записи, остальные сохраняем на своих местах. */
-        var positions=[];
-        vehicleDB.forEach(function(v,i){ if(ids.indexOf(v.id)!==-1) positions.push(i); });
-        var ordered=ids.map(function(id){ return vehicleDB.find(function(v){return v.id===id;}); }).filter(Boolean);
-        positions.forEach(function(pos,i){ if(ordered[i]) vehicleDB[pos]=ordered[i]; });
-
-        localStorage.setItem('railphoto_full_db', JSON.stringify(vehicleDB));
-        var sort=document.getElementById('sortSelect');
-        if(sort) sort.value='manual_order';
-    }
-
-    function bindPointerDatabaseDrag(){
-        var tbody=document.getElementById('tableBody');
-        if(!tbody) return;
-        tbody.querySelectorAll('.db-drag-handle').forEach(function(handle){
-            if(handle.dataset.pointerBound==='1') return;
-            handle.dataset.pointerBound='1';
-
-            handle.addEventListener('pointerdown',function(e){
-                if(e.button!==undefined && e.button!==0) return;
-                var row=handle.closest('tr.vehicle-row-clickable');
-                if(!row || !row.dataset.vehicleId) return;
-                e.preventDefault();
-                e.stopPropagation();
-                try{ handle.setPointerCapture(e.pointerId); }catch(_){ }
-                activeDrag={handle:handle,row:row,pointerId:e.pointerId,moved:false};
-                row.classList.add('db-pointer-dragging');
-                tbody.classList.add('db-pointer-drag-active');
-            });
-
-            handle.addEventListener('pointermove',function(e){
-                if(!activeDrag || activeDrag.handle!==handle) return;
-                e.preventDefault();
-                var row=activeDrag.row;
-                var rows=visibleRows().filter(function(r){return r!==row;});
-                var target=null;
-                for(var i=0;i<rows.length;i++){
-                    var rect=rows[i].getBoundingClientRect();
-                    if(e.clientY>=rect.top && e.clientY<=rect.bottom){ target=rows[i]; break; }
-                }
-                if(!target) return;
-                activeDrag.moved=true;
-                clearDragMarks();
-                var rect=target.getBoundingClientRect();
-                if(e.clientY < rect.top + rect.height/2){
-                    target.parentNode.insertBefore(row,target);
-                    target.classList.add('db-pointer-target-before');
-                }else{
-                    target.parentNode.insertBefore(row,target.nextSibling);
-                    target.classList.add('db-pointer-target-after');
-                }
-            });
-
-            handle.addEventListener('pointerup',function(e){
-                if(!activeDrag || activeDrag.handle!==handle) return;
-                e.preventDefault();
-                var didMove=activeDrag.moved;
-                var row=activeDrag.row;
-                clearDragMarks();
-                row.classList.remove('db-pointer-dragging');
-                tbody.classList.remove('db-pointer-drag-active');
-                activeDrag=null;
-                if(didMove){
-                    persistDomOrder();
-                    /* Оставляем именно ручной порядок и повторно навешиваем ручки. */
-                    if(typeof window.renderTable==='function') window.renderTable();
-                }
-            });
-
-            handle.addEventListener('pointercancel',function(){
-                if(!activeDrag || activeDrag.handle!==handle) return;
-                clearDragMarks();
-                activeDrag.row.classList.remove('db-pointer-dragging');
-                tbody.classList.remove('db-pointer-drag-active');
-                activeDrag=null;
-                if(typeof window.renderTable==='function') window.renderTable();
-            });
-        });
-    }
-
-    /* Повторяем привязку после каждого штатного рендера базы. */
-    var oldRender=window.renderTable;
-    if(typeof oldRender==='function'){
-        window.renderTable=function(){
-            var result=oldRender.apply(this,arguments);
-            setTimeout(function(){
-                showStaffFields();
-                if(typeof window.markDatabaseRows==='function') window.markDatabaseRows();
-                bindPointerDatabaseDrag();
-            },0);
-            return result;
-        };
-    }
-
-    /* Если markDatabaseRows не глобальная — всё равно ищем ручки после изменений DOM. */
-    var observer=new MutationObserver(function(){
-        bindPointerDatabaseDrag();
-        showStaffFields();
-    });
-    var tb=document.getElementById('tableBody');
-    if(tb) observer.observe(tb,{childList:true,subtree:true});
-
-    window.addEventListener('load',function(){
-        showStaffFields();
-        setTimeout(bindPointerDatabaseDrag,50);
-    });
-    showStaffFields();
-    setTimeout(bindPointerDatabaseDrag,100);
-})();
-</script>
-
+    </script>
 </body>
 </html>
