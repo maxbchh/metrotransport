@@ -2780,5 +2780,755 @@
             });
         }
     </script>
+
+
+<!-- ДОПОЛНИТЕЛЬНЫЕ УЛУЧШЕНИЯ: UI, автосохранение черновиков и drag&drop ПС -->
+<style id="railphoto-extra-enhancements">
+    /* Не удаляем существующие элементы/данные — только скрываем ненужные подписи в интерфейсе. */
+    #tabCat750, #tabCat1520 { display:none !important; }
+    #pageDatabase .cat-tab[onclick*="gauge_750"],
+    #pageDatabase .cat-tab[onclick*="gauge_1520"] { display:none !important; }
+
+    /* В конструкторе сохраняем исходные поля в коде, но убираем их из интерфейса. */
+    #tripDriverInput, #tripLNPInput, #tripDSPInput { display:none !important; }
+    #tripDriverInput, #tripLNPInput, #tripDSPInput { visibility:hidden !important; }
+    #tripDriverInput, #tripLNPInput, #tripDSPInput { pointer-events:none; }
+
+    /* Перетаскивание состава */
+    #builderSourceList .builder-source-item { cursor:grab; user-select:none; }
+    #builderSourceList .builder-source-item:active { cursor:grabbing; }
+    #consistTrack { min-height:70px; }
+    #consistTrack.drag-over { outline:2px dashed var(--bp-link); outline-offset:4px; }
+    #consistTrack .consist-card { cursor:grab; transition:transform .12s ease, opacity .12s ease; }
+    #consistTrack .consist-card:active { cursor:grabbing; }
+    #consistTrack .consist-card.dragging { opacity:.45; transform:scale(.99); }
+    #consistTrack .consist-card.drag-over-item { border-top:2px solid var(--bp-link); }
+
+    /* Ненавязчивая индикация автосохранения */
+    #vehicleDraftStatus { font-size:10px; color:var(--bp-text-muted); margin-right:auto; padding:6px 0; }
+
+    /* Перетаскивание ПС в базе данных */
+    #tableBody tr.vehicle-row-clickable { cursor: grab; }
+    #tableBody tr.vehicle-row-clickable:active { cursor: grabbing; }
+    #tableBody tr.db-dragging { opacity: .45; }
+    #tableBody tr.db-drag-over { outline: 2px dashed var(--bp-link); outline-offset: -2px; }
+    .db-drag-handle { display:inline-block; margin-right:6px; cursor:grab; font-weight:bold; opacity:.65; user-select:none; }
+    .db-drag-handle:hover { opacity:1; }
+    .db-order-buttons { display:inline-flex; gap:3px; margin-left:6px; vertical-align:middle; }
+    .db-order-buttons button { border:1px solid var(--bp-border); background:var(--bp-card-bg); color:var(--bp-text); border-radius:3px; cursor:pointer; padding:1px 5px; font-weight:bold; }
+    .db-order-buttons button:hover { background:var(--bp-link); color:#fff; }
+</style>
+
+<script id="railphoto-extra-enhancements-js">
+(function () {
+    'use strict';
+
+    const VEHICLE_DRAFT_PREFIX = 'railphoto_vehicle_draft_';
+    const CONSIST_DRAFT_KEY = 'railphoto_builder_consist_draft';
+    let draggedVehicleId = null;
+    let draggedConsistIndex = null;
+
+    function vehicleDraftKey(id) {
+        return VEHICLE_DRAFT_PREFIX + (id || '__new__');
+    }
+
+    function getVehicleFormData() {
+        const ids = [
+            'fieldCategory','fieldModel','fieldNum','fieldFactoryNum','fieldPark','fieldGauge',
+            'fieldStatusCls','fieldStatusText','fieldBuildDate','fieldInServiceDate','fieldOutDate',
+            'fieldDecommDate','fieldScrappedDate','fieldManufacturer','fieldPhotoUrl','fieldHistory','fieldNote'
+        ];
+        const data = {};
+        ids.forEach(id => {
+            const el = document.getElementById(id);
+            if (el) data[id] = el.value;
+        });
+        return data;
+    }
+
+    function restoreVehicleDraft(id) {
+        const raw = localStorage.getItem(vehicleDraftKey(id));
+        if (!raw) return false;
+        try {
+            const data = JSON.parse(raw);
+            Object.keys(data).forEach(fieldId => {
+                const el = document.getElementById(fieldId);
+                if (el) el.value = data[fieldId];
+            });
+            showDraftStatus('Черновик восстановлен');
+            return true;
+        } catch (e) {
+            console.warn('Не удалось восстановить черновик ПС:', e);
+            return false;
+        }
+    }
+
+    function saveVehicleDraft() {
+        const modal = document.getElementById('vehicleModal');
+        if (!modal) return;
+        const id = document.getElementById('editVehicleId')?.value || '__new__';
+        localStorage.setItem(vehicleDraftKey(id), JSON.stringify({
+            ...getVehicleFormData(),
+            _savedAt: new Date().toISOString()
+        }));
+        showDraftStatus('Черновик сохранён');
+    }
+
+    function clearVehicleDraft(id) {
+        localStorage.removeItem(vehicleDraftKey(id));
+        showDraftStatus('Изменения сохранены');
+    }
+
+    function showDraftStatus(text) {
+        const el = document.getElementById('vehicleDraftStatus');
+        if (el) el.textContent = text;
+    }
+
+    /* Добавляем строку состояния, не меняя существующие кнопки. */
+    function ensureDraftStatus() {
+        const form = document.querySelector('#vehicleModal form');
+        if (!form || document.getElementById('vehicleDraftStatus')) return;
+        const footer = form.querySelector('div[style*="justify-content:space-between"]') || form.lastElementChild;
+        if (footer) {
+            const status = document.createElement('span');
+            status.id = 'vehicleDraftStatus';
+            status.textContent = 'Автосохранение включено';
+            footer.prepend(status);
+        }
+    }
+
+    /* Сохраняем введённое сразу при каждом изменении, поэтому случайный выход из модального окна/страницы ничего не теряет. */
+    function bindVehicleAutosave() {
+        const modal = document.getElementById('vehicleModal');
+        if (!modal || modal.dataset.autosaveBound === '1') return;
+        modal.dataset.autosaveBound = '1';
+        ensureDraftStatus();
+        modal.querySelectorAll('input, select, textarea').forEach(el => {
+            el.addEventListener('input', saveVehicleDraft);
+            el.addEventListener('change', saveVehicleDraft);
+        });
+    }
+
+    /* Оборачиваем существующие функции, не удаляя и не переписывая их. */
+    const originalOpenAddModal = window.openAddModal;
+    if (typeof originalOpenAddModal === 'function') {
+        window.openAddModal = function () {
+            originalOpenAddModal.apply(this, arguments);
+            bindVehicleAutosave();
+            restoreVehicleDraft('__new__');
+        };
+    }
+
+    const originalOpenEditModal = window.openEditModal;
+    if (typeof originalOpenEditModal === 'function') {
+        window.openEditModal = function (id) {
+            originalOpenEditModal.apply(this, arguments);
+            bindVehicleAutosave();
+            restoreVehicleDraft(id);
+        };
+    }
+
+    const originalSaveVehicleData = window.saveVehicleData;
+    if (typeof originalSaveVehicleData === 'function') {
+        window.saveVehicleData = function (e) {
+            const id = document.getElementById('editVehicleId')?.value || '__new__';
+            originalSaveVehicleData.apply(this, arguments);
+            clearVehicleDraft(id);
+        };
+    }
+
+    /* Сохраняем черновик и при закрытии вкладки/обновлении страницы. */
+    window.addEventListener('beforeunload', function () {
+        const modal = document.getElementById('vehicleModal');
+        if (modal && modal.style.display !== 'none') saveVehicleDraft();
+        saveConsistDraft();
+    });
+
+    /* ---------- DRAG & DROP ПОДВИЖНОГО СОСТАВА ---------- */
+    function saveConsistDraft() {
+        try {
+            localStorage.setItem(CONSIST_DRAFT_KEY, JSON.stringify(consistList.map(v => v.id)));
+        } catch (e) {}
+    }
+
+    function restoreConsistDraft() {
+        try {
+            const raw = localStorage.getItem(CONSIST_DRAFT_KEY);
+            if (!raw || !Array.isArray(vehicleDB)) return;
+            const ids = JSON.parse(raw);
+            if (!Array.isArray(ids)) return;
+            const restored = ids.map(id => vehicleDB.find(v => v.id === id)).filter(Boolean);
+            if (restored.length) {
+                consistList = restored;
+                if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
+            }
+        } catch (e) {}
+    }
+
+    function setupBuilderDragAndDrop() {
+        const source = document.getElementById('builderSourceList');
+        const track = document.getElementById('consistTrack');
+        if (!source || !track) return;
+
+        source.querySelectorAll('.builder-source-item').forEach(item => {
+            const button = item.querySelector('button');
+            const match = button && button.getAttribute('onclick')?.match(/addToConsist\(['"]([^'"]+)['"]\)/);
+            const id = match ? match[1] : null;
+            if (!id) return;
+            item.draggable = true;
+            item.dataset.vehicleId = id;
+            item.addEventListener('dragstart', function (e) {
+                draggedVehicleId = id;
+                draggedConsistIndex = null;
+                item.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'copy';
+                e.dataTransfer.setData('text/plain', id);
+            });
+            item.addEventListener('dragend', function () {
+                draggedVehicleId = null;
+                item.classList.remove('dragging');
+            });
+        });
+
+        track.querySelectorAll('.consist-card').forEach((card, index) => {
+            card.draggable = true;
+            card.dataset.consistIndex = index;
+            card.addEventListener('dragstart', function (e) {
+                draggedConsistIndex = index;
+                draggedVehicleId = null;
+                card.classList.add('dragging');
+                e.dataTransfer.effectAllowed = 'move';
+                e.dataTransfer.setData('text/plain', 'consist:' + index);
+            });
+            card.addEventListener('dragend', function () {
+                draggedConsistIndex = null;
+                card.classList.remove('dragging');
+                track.querySelectorAll('.drag-over-item').forEach(x => x.classList.remove('drag-over-item'));
+            });
+            card.addEventListener('dragover', function (e) {
+                e.preventDefault();
+                e.dataTransfer.dropEffect = draggedVehicleId ? 'copy' : 'move';
+                card.classList.add('drag-over-item');
+            });
+            card.addEventListener('dragleave', function () {
+                card.classList.remove('drag-over-item');
+            });
+            card.addEventListener('drop', function (e) {
+                e.preventDefault();
+                e.stopPropagation();
+                card.classList.remove('drag-over-item');
+                const targetIndex = Number(card.dataset.consistIndex);
+
+                if (draggedVehicleId) {
+                    const item = vehicleDB.find(v => v.id === draggedVehicleId);
+                    if (item) consistList.splice(targetIndex, 0, item);
+                } else if (draggedConsistIndex !== null && draggedConsistIndex !== targetIndex) {
+                    const moved = consistList.splice(draggedConsistIndex, 1)[0];
+                    let insertAt = targetIndex;
+                    if (draggedConsistIndex < targetIndex) insertAt--;
+                    consistList.splice(Math.max(0, insertAt), 0, moved);
+                }
+                draggedVehicleId = null;
+                draggedConsistIndex = null;
+                saveConsistDraft();
+                if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
+            });
+        });
+
+        track.ondragover = function (e) {
+            e.preventDefault();
+            track.classList.add('drag-over');
+            e.dataTransfer.dropEffect = draggedVehicleId ? 'copy' : 'move';
+        };
+        track.ondragleave = function (e) {
+            if (e.target === track) track.classList.remove('drag-over');
+        };
+        track.ondrop = function (e) {
+            e.preventDefault();
+            track.classList.remove('drag-over');
+            if (draggedVehicleId) {
+                const item = vehicleDB.find(v => v.id === draggedVehicleId);
+                if (item) consistList.push(item);
+            } else if (draggedConsistIndex !== null) {
+                const moved = consistList.splice(draggedConsistIndex, 1)[0];
+                consistList.push(moved);
+            }
+            draggedVehicleId = null;
+            draggedConsistIndex = null;
+            saveConsistDraft();
+            if (typeof window.renderConsistTrack === 'function') window.renderConsistTrack();
+        };
+    }
+
+    const originalRenderBuilderSource = window.renderBuilderSource;
+    if (typeof originalRenderBuilderSource === 'function') {
+        window.renderBuilderSource = function () {
+            originalRenderBuilderSource.apply(this, arguments);
+            setupBuilderDragAndDrop();
+        };
+    }
+
+    const originalRenderConsistTrack = window.renderConsistTrack;
+    if (typeof originalRenderConsistTrack === 'function') {
+        window.renderConsistTrack = function () {
+            originalRenderConsistTrack.apply(this, arguments);
+            setupBuilderDragAndDrop();
+            saveConsistDraft();
+        };
+    }
+
+    /* Сохраняем состав также после обычных кнопок +/вверх/вниз/удалить. */
+    ['addToConsist','removeFromConsist','moveConsistItem','clearConsist'].forEach(name => {
+        const original = window[name];
+        if (typeof original === 'function') {
+            window[name] = function () {
+                const result = original.apply(this, arguments);
+                saveConsistDraft();
+                setupBuilderDragAndDrop();
+                return result;
+            };
+        }
+    });
+
+    /* Возвращаем поля ТЧМ/ЛНП/ДСП в конструктор. Ничего из исходного кода и данных не удаляем. */
+    function restoreBuilderStaffFields() {
+        ['tripDriverInput','tripLNPInput','tripDSPInput'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el && el.parentElement) el.parentElement.style.display = '';
+        });
+        const header = document.querySelector('#pageBuilder .page-header span');
+        if (header) header.textContent = 'Параметры и Формирование Поезда (С назначением ЛНП, ТЧМ и ДСП)';
+    }
+
+    /* Убираем только демонстрационный текст маршрута из поля конструктора. Реальные данные поездов не трогаем. */
+    function clearBuilderDemoText() {
+        const route = document.getElementById('tripRouteInput');
+        if (route && route.value === 'Крутоборка — Сосновый Бор — Лельма') route.value = '';
+        if (route) route.placeholder = 'Введите маршрут следования';
+    }
+
+    /* Скрываем только подписи фильтров колеи. Значения 750/1520 и существующие записи БД не удаляем. */
+    function hideGaugeUiLabels() {
+        ['tabCat750','tabCat1520'].forEach(id => {
+            const el = document.getElementById(id);
+            if (el) el.style.display = 'none';
+        });
+        const gaugeSelect = document.getElementById('fieldGauge');
+        if (gaugeSelect) {
+            Array.from(gaugeSelect.options).forEach(opt => {
+                opt.textContent = opt.value || opt.textContent;
+            });
+        }
+    }
+
+    /* Оборачиваем уже существующий switchPage, чтобы скрытие сохранялось после переходов. */
+    const originalSwitchPage = window.switchPage;
+    if (typeof originalSwitchPage === 'function') {
+        window.switchPage = function () {
+            const result = originalSwitchPage.apply(this, arguments);
+            restoreBuilderStaffFields();
+            clearBuilderDemoText();
+            hideGaugeUiLabels();
+            if (arguments[0] === 'builder') {
+                setupBuilderDragAndDrop();
+                restoreConsistDraft();
+            }
+            return result;
+        };
+    }
+
+    /* ===== НОВОЕ: ПЕРЕТАСКИВАНИЕ ПС В САМОЙ БАЗЕ ===== */
+    function ensureManualSortOption() {
+        const sel = document.getElementById('sortSelect');
+        if (!sel || sel.querySelector('option[value="manual_order"]')) return;
+        const opt = document.createElement('option');
+        opt.value = 'manual_order';
+        opt.textContent = 'Свой порядок (перетаскивание)';
+        sel.appendChild(opt);
+    }
+
+    function saveVehicleOrder() {
+        localStorage.setItem('railphoto_full_db', JSON.stringify(vehicleDB));
+    }
+
+    function moveVehicleInDatabase(id, direction) {
+        const index = vehicleDB.findIndex(v => v.id === id);
+        if (index < 0) return;
+        const target = index + direction;
+        if (target < 0 || target >= vehicleDB.length) return;
+        const tmp = vehicleDB[index];
+        vehicleDB[index] = vehicleDB[target];
+        vehicleDB[target] = tmp;
+        const sort = document.getElementById('sortSelect');
+        if (sort) sort.value = 'manual_order';
+        saveVehicleOrder();
+        renderTable();
+    }
+
+    function setupDatabaseDragAndDrop() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        ensureManualSortOption();
+        if (tbody.dataset.dbDragReady === '1') return;
+        tbody.dataset.dbDragReady = '1';
+
+        tbody.addEventListener('dragover', function(e) {
+            const row = e.target.closest('tr.vehicle-row-clickable');
+            if (!row) return;
+            e.preventDefault();
+            row.classList.add('db-drag-over');
+        });
+
+        tbody.addEventListener('dragleave', function(e) {
+            const row = e.target.closest('tr.vehicle-row-clickable');
+            if (row && !row.contains(e.relatedTarget)) row.classList.remove('db-drag-over');
+        });
+
+        tbody.addEventListener('drop', function(e) {
+            const targetRow = e.target.closest('tr.vehicle-row-clickable');
+            if (!targetRow) return;
+            e.preventDefault();
+            targetRow.classList.remove('db-drag-over');
+            const draggedId = e.dataTransfer.getData('text/plain');
+            const targetId = targetRow.dataset.vehicleId;
+            if (!draggedId || !targetId || draggedId === targetId) return;
+
+            const from = vehicleDB.findIndex(v => v.id === draggedId);
+            const to = vehicleDB.findIndex(v => v.id === targetId);
+            if (from < 0 || to < 0) return;
+
+            const moved = vehicleDB.splice(from, 1)[0];
+            vehicleDB.splice(to, 0, moved);
+            const sort = document.getElementById('sortSelect');
+            if (sort) sort.value = 'manual_order';
+            saveVehicleOrder();
+            renderTable();
+            setupDatabaseDragAndDrop();
+        });
+    }
+
+    function decorateDatabaseRows() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        tbody.querySelectorAll('tr.vehicle-row-clickable').forEach(row => {
+            const idCell = row.querySelector('td');
+            const id = row.dataset.vehicleId || '';
+            if (!id) return;
+            row.draggable = true;
+            row.dataset.vehicleId = id;
+            if (!row.querySelector('.db-drag-handle')) {
+                const handle = document.createElement('span');
+                handle.className = 'db-drag-handle';
+                handle.textContent = '☷';
+                handle.title = 'Перетащить ПС вверх или вниз';
+                handle.draggable = true;
+                handle.addEventListener('dragstart', function(e) {
+                    e.stopPropagation();
+                    e.dataTransfer.effectAllowed = 'move';
+                    e.dataTransfer.setData('text/plain', id);
+                    row.classList.add('db-dragging');
+                });
+                handle.addEventListener('dragend', function() {
+                    row.classList.remove('db-dragging');
+                    tbody.querySelectorAll('.db-drag-over').forEach(r => r.classList.remove('db-drag-over'));
+                });
+                if (idCell) idCell.prepend(handle);
+            }
+            if (!row.dataset.dbRowDragBound) {
+                row.dataset.dbRowDragBound = '1';
+                row.addEventListener('dragstart', function(e) {
+                    if (!e.dataTransfer.getData('text/plain')) {
+                        e.dataTransfer.effectAllowed = 'move';
+                        e.dataTransfer.setData('text/plain', id);
+                    }
+                    row.classList.add('db-dragging');
+                });
+                row.addEventListener('dragend', function() {
+                    row.classList.remove('db-dragging');
+                });
+            }
+            if (!row.querySelector('.db-order-buttons')) {
+                const actionCell = row.querySelector('td:last-child');
+                if (actionCell) {
+                    const box = document.createElement('span');
+                    box.className = 'db-order-buttons';
+                    box.innerHTML = '<button type="button" title="Переместить вверх">↑</button><button type="button" title="Переместить вниз">↓</button>';
+                    box.children[0].addEventListener('click', e => { e.stopPropagation(); moveVehicleInDatabase(id, -1); });
+                    box.children[1].addEventListener('click', e => { e.stopPropagation(); moveVehicleInDatabase(id, 1); });
+                    actionCell.appendChild(box);
+                }
+            }
+        });
+        setupDatabaseDragAndDrop();
+    }
+
+    const originalRenderTableForOrder = window.renderTable;
+    if (typeof originalRenderTableForOrder === 'function') {
+        window.renderTable = function() {
+            const result = originalRenderTableForOrder.apply(this, arguments);
+            ensureManualSortOption();
+            const sort = document.getElementById('sortSelect');
+            if (sort && sort.value === 'manual_order') {
+                const tbody = document.getElementById('tableBody');
+                if (tbody) {
+                    // При ручном порядке восстанавливаем порядок vehicleDB, не меняя фильтры.
+                    const q = (document.getElementById('searchInput')?.value || '').toUpperCase();
+                    const st = document.getElementById('statusFilter')?.value || 'all';
+                    const rows = vehicleDB.filter(v => {
+                        if (currentCategoryFilter !== 'all') {
+                            if (['loco','pass_car','cargo_car','special'].includes(currentCategoryFilter) && v.category !== currentCategoryFilter) return false;
+                        }
+                        if (st !== 'all' && v.statusCls !== st) return false;
+                        const full = `${v.model} ${v.num} ${v.park} ${v.factoryNum || ''} ${v.manufacturer || ''} ${v.note || ''} ${v.statusText || ''}`.toUpperCase();
+                        return !q || full.includes(q);
+                    });
+                    tbody.innerHTML = '';
+                    // Запрашиваем штатный рендер для создания строк, затем переставляем их по vehicleDB.
+                    sort.value = 'num_asc';
+                    originalRenderTableForOrder.apply(this, arguments);
+                    sort.value = 'manual_order';
+                    const map = new Map(Array.from(tbody.children).map(r => [r.dataset.vehicleId, r]));
+                    rows.forEach(v => { const r = map.get(v.id); if (r) tbody.appendChild(r); });
+                }
+            }
+            markDatabaseRows();
+            return result;
+        };
+    }
+
+    /* Добавляем идентификатор каждой строки после штатного рендера, не переписывая существующую таблицу. */
+    function markDatabaseRows() {
+        const tbody = document.getElementById('tableBody');
+        if (!tbody) return;
+        const visible = vehicleDB.filter(v => {
+            const q = (document.getElementById('searchInput')?.value || '').toUpperCase();
+            const st = document.getElementById('statusFilter')?.value || 'all';
+            if (st !== 'all' && v.statusCls !== st) return false;
+            if (currentCategoryFilter !== 'all' && ['loco','pass_car','cargo_car','special'].includes(currentCategoryFilter) && v.category !== currentCategoryFilter) return false;
+            if (currentCategoryFilter === 'gauge_750' && v.gauge !== '750мм') return false;
+            if (currentCategoryFilter === 'gauge_1520' && v.gauge !== '1520мм') return false;
+            const full = `${v.model} ${v.num} ${v.park} ${v.factoryNum || ''} ${v.manufacturer || ''} ${v.note || ''} ${v.statusText || ''}`.toUpperCase();
+            return !q || full.includes(q);
+        });
+        // Сопоставляем строки с текущим DOM-порядком и сохраняем id на строке.
+        const rows = Array.from(tbody.querySelectorAll('tr.vehicle-row-clickable'));
+        const byText = new Map(visible.map(v => [`${v.model}|${v.num}|${v.park}`, v]));
+        rows.forEach(row => {
+            if (row.dataset.vehicleId) return;
+            const cells = row.querySelectorAll('td');
+            const model = cells[3]?.innerText.replace('✎','').trim() || '';
+            const num = cells[4]?.innerText.replace('открыть','').trim() || '';
+            const park = cells[2]?.innerText.trim() || '';
+            const v = byText.get(`${model}|${num}|${park}`);
+            if (v) row.dataset.vehicleId = v.id;
+        });
+        decorateDatabaseRows();
+    }
+
+    /* Слушаем изменения фильтра/сортировки и снова добавляем drag&drop. */
+    document.addEventListener('change', function(e) {
+        if (e.target && (e.target.id === 'sortSelect' || e.target.id === 'statusFilter')) {
+            setTimeout(markDatabaseRows, 0);
+        }
+    });
+
+    /* После исходной инициализации сайта применяем наши дополнения. */
+    const originalOnload = window.onload;
+    window.onload = function (e) {
+        if (typeof originalOnload === 'function') originalOnload.call(this, e);
+        restoreBuilderStaffFields();
+        clearBuilderDemoText();
+        hideGaugeUiLabels();
+        bindVehicleAutosave();
+        restoreConsistDraft();
+        setupBuilderDragAndDrop();
+    };
+})();
+</script>
+
+
+<!-- ПОСЛЕДНЕЕ ДОПОЛНЕНИЕ: надёжное перетаскивание ПС мышью + полноценные поля ТЧМ/ЛНП/ДСП -->
+<style id="railphoto-final-fix">
+    /* Поля ТЧМ/ЛНП/ДСП снова полностью видимы и доступны для ввода. */
+    #tripDriverInput, #tripLNPInput, #tripDSPInput {
+        display:block !important;
+        visibility:visible !important;
+        pointer-events:auto !important;
+    }
+    /* Если исходная разметка скрывала контейнер поля — возвращаем и его. */
+    #tripDriverInput, #tripLNPInput, #tripDSPInput { opacity:1 !important; }
+
+    /* Явная ручка перетаскивания в БАЗЕ. */
+    .db-drag-handle {
+        touch-action:none !important;
+        -webkit-user-select:none !important;
+        user-select:none !important;
+        cursor:grab !important;
+        font-size:16px;
+        display:inline-block;
+        min-width:22px;
+        text-align:center;
+    }
+    .db-drag-handle:active { cursor:grabbing !important; }
+    #tableBody tr.db-pointer-dragging {
+        opacity:.45;
+        outline:2px dashed var(--bp-link);
+    }
+    #tableBody tr.db-pointer-target-before { box-shadow:inset 0 3px 0 var(--bp-link); }
+    #tableBody tr.db-pointer-target-after { box-shadow:inset 0 -3px 0 var(--bp-link); }
+    #tableBody.db-pointer-drag-active { cursor:grabbing; }
+</style>
+
+<script id="railphoto-final-fix-js">
+(function(){
+    'use strict';
+
+    /* ===== ТЧМ / ЛНП / ДСП: возвращаем именно поля ввода ===== */
+    function showStaffFields(){
+        ['tripDriverInput','tripLNPInput','tripDSPInput'].forEach(function(id){
+            var el=document.getElementById(id);
+            if(!el) return;
+            el.style.setProperty('display','block','important');
+            el.style.setProperty('visibility','visible','important');
+            el.style.setProperty('pointer-events','auto','important');
+            var wrap=el.parentElement;
+            if(wrap){
+                wrap.style.removeProperty('display');
+                wrap.style.removeProperty('visibility');
+            }
+        });
+    }
+
+    /* ===== НАДЁЖНОЕ ПЕРЕТАСКИВАНИЕ ПС В САМОЙ БАЗЕ =====
+       Не зависит от HTML5 drag&drop: работает обычной мышью/тачпадом. */
+    var activeDrag=null;
+
+    function visibleRows(){
+        var tb=document.getElementById('tableBody');
+        return tb ? Array.from(tb.querySelectorAll('tr.vehicle-row-clickable')) : [];
+    }
+
+    function clearDragMarks(){
+        visibleRows().forEach(function(r){
+            r.classList.remove('db-pointer-target-before','db-pointer-target-after');
+        });
+    }
+
+    function persistDomOrder(){
+        var rows=visibleRows();
+        var ids=rows.map(function(r){return r.dataset.vehicleId;}).filter(Boolean);
+        if(!ids.length) return;
+
+        /* При фильтре меняем только видимые записи, остальные сохраняем на своих местах. */
+        var positions=[];
+        vehicleDB.forEach(function(v,i){ if(ids.indexOf(v.id)!==-1) positions.push(i); });
+        var ordered=ids.map(function(id){ return vehicleDB.find(function(v){return v.id===id;}); }).filter(Boolean);
+        positions.forEach(function(pos,i){ if(ordered[i]) vehicleDB[pos]=ordered[i]; });
+
+        localStorage.setItem('railphoto_full_db', JSON.stringify(vehicleDB));
+        var sort=document.getElementById('sortSelect');
+        if(sort) sort.value='manual_order';
+    }
+
+    function bindPointerDatabaseDrag(){
+        var tbody=document.getElementById('tableBody');
+        if(!tbody) return;
+        tbody.querySelectorAll('.db-drag-handle').forEach(function(handle){
+            if(handle.dataset.pointerBound==='1') return;
+            handle.dataset.pointerBound='1';
+
+            handle.addEventListener('pointerdown',function(e){
+                if(e.button!==undefined && e.button!==0) return;
+                var row=handle.closest('tr.vehicle-row-clickable');
+                if(!row || !row.dataset.vehicleId) return;
+                e.preventDefault();
+                e.stopPropagation();
+                try{ handle.setPointerCapture(e.pointerId); }catch(_){ }
+                activeDrag={handle:handle,row:row,pointerId:e.pointerId,moved:false};
+                row.classList.add('db-pointer-dragging');
+                tbody.classList.add('db-pointer-drag-active');
+            });
+
+            handle.addEventListener('pointermove',function(e){
+                if(!activeDrag || activeDrag.handle!==handle) return;
+                e.preventDefault();
+                var row=activeDrag.row;
+                var rows=visibleRows().filter(function(r){return r!==row;});
+                var target=null;
+                for(var i=0;i<rows.length;i++){
+                    var rect=rows[i].getBoundingClientRect();
+                    if(e.clientY>=rect.top && e.clientY<=rect.bottom){ target=rows[i]; break; }
+                }
+                if(!target) return;
+                activeDrag.moved=true;
+                clearDragMarks();
+                var rect=target.getBoundingClientRect();
+                if(e.clientY < rect.top + rect.height/2){
+                    target.parentNode.insertBefore(row,target);
+                    target.classList.add('db-pointer-target-before');
+                }else{
+                    target.parentNode.insertBefore(row,target.nextSibling);
+                    target.classList.add('db-pointer-target-after');
+                }
+            });
+
+            handle.addEventListener('pointerup',function(e){
+                if(!activeDrag || activeDrag.handle!==handle) return;
+                e.preventDefault();
+                var didMove=activeDrag.moved;
+                var row=activeDrag.row;
+                clearDragMarks();
+                row.classList.remove('db-pointer-dragging');
+                tbody.classList.remove('db-pointer-drag-active');
+                activeDrag=null;
+                if(didMove){
+                    persistDomOrder();
+                    /* Оставляем именно ручной порядок и повторно навешиваем ручки. */
+                    if(typeof window.renderTable==='function') window.renderTable();
+                }
+            });
+
+            handle.addEventListener('pointercancel',function(){
+                if(!activeDrag || activeDrag.handle!==handle) return;
+                clearDragMarks();
+                activeDrag.row.classList.remove('db-pointer-dragging');
+                tbody.classList.remove('db-pointer-drag-active');
+                activeDrag=null;
+                if(typeof window.renderTable==='function') window.renderTable();
+            });
+        });
+    }
+
+    /* Повторяем привязку после каждого штатного рендера базы. */
+    var oldRender=window.renderTable;
+    if(typeof oldRender==='function'){
+        window.renderTable=function(){
+            var result=oldRender.apply(this,arguments);
+            setTimeout(function(){
+                showStaffFields();
+                if(typeof window.markDatabaseRows==='function') window.markDatabaseRows();
+                bindPointerDatabaseDrag();
+            },0);
+            return result;
+        };
+    }
+
+    /* Если markDatabaseRows не глобальная — всё равно ищем ручки после изменений DOM. */
+    var observer=new MutationObserver(function(){
+        bindPointerDatabaseDrag();
+        showStaffFields();
+    });
+    var tb=document.getElementById('tableBody');
+    if(tb) observer.observe(tb,{childList:true,subtree:true});
+
+    window.addEventListener('load',function(){
+        showStaffFields();
+        setTimeout(bindPointerDatabaseDrag,50);
+    });
+    showStaffFields();
+    setTimeout(bindPointerDatabaseDrag,100);
+})();
+</script>
+
 </body>
 </html>
