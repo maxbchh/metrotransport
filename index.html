@@ -9,6 +9,87 @@
         /* ==========================================================================
            1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ТЕМАТИЗАЦИЯ (CSS VARIABLES)
            ========================================================================== */
+       /* Стили для формы редактирования */
+.modal-overlay {
+  position: fixed;
+  top: 0;
+  left: 0;
+  width: 100%;
+  height: 100%;
+  background: rgba(0, 0, 0, 0.7);
+  display: flex;
+  justify-content: center;
+  align-items: center;
+  z-index: 9999;
+}
+
+.modal-content {
+  background: #2a2a2a;
+  color: #fff;
+  padding: 20px;
+  border-radius: 8px;
+  width: 90%;
+  max-width: 500px;
+  box-shadow: 0 4px 15px rgba(0, 0, 0, 0.5);
+  position: relative;
+}
+
+.close-btn {
+  position: absolute;
+  top: 10px;
+  right: 15px;
+  font-size: 24px;
+  cursor: pointer;
+}
+
+.modal-content form {
+  display: flex;
+  flex-direction: column;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.modal-content input, .modal-content select {
+  padding: 8px;
+  border-radius: 4px;
+  border: 1px solid #444;
+  background: #1a1a1a;
+  color: #fff;
+}
+
+.modal-actions {
+  display: flex;
+  gap: 10px;
+  margin-top: 15px;
+}
+
+.btn-save {
+  background: #28a745;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+.btn-cancel {
+  background: #dc3545;
+  color: white;
+  border: none;
+  padding: 10px 15px;
+  border-radius: 4px;
+  cursor: pointer;
+}
+
+/* Курсор-указатель для кликабельных строк/карточек */
+.ps-item-editable {
+  cursor: pointer;
+  transition: background 0.2s;
+}
+
+.ps-item-editable:hover {
+  background: rgba(255, 255, 255, 0.05);
+}
         :root {
             --bp-header-bg: #102a43;
             --bp-header-border: #081726;
@@ -357,6 +438,12 @@
         /* ==========================================================================
            4. ТАБЫ, ФИЛЬТРЫ И МАССОВЫЕ ДЕЙСТВИЯ (FILTERS & BATCH ACTIONS)
            ========================================================================== */
+       <tr data-ps-id="TU2-001" data-model="ТУ2-001" data-depo="Минск" data-type="Тепловоз" data-status="В эксплуатации">
+  <td>ТУ2-001</td>
+  <td>Минск</td>
+  <td>Тепловоз</td>
+  <td>В эксплуатации</td>
+</tr>
         .category-tabs {
             display: flex;
             gap: 8px;
@@ -2739,7 +2826,142 @@
                     </div>
                 `;
             });
-        }
+        }<!-- Модальное окно редактирования ПС -->
+<div id="editModal" class="modal-overlay" style="display: none;">
+  <div class="modal-content">
+    <span class="close-btn" onclick="closeEditModal()">&times;</span>
+    <h3>Редактирование ПС: <span id="edit-ps-title"></span></h3>
+    
+    <form id="editForm" onsubmit="savePSData(event)">
+      <input type="hidden" id="edit-id">
+
+      <label>Модель:</label>
+      <input type="text" id="edit-model" required>
+
+      <label>Депо:</label>
+      <input type="text" id="edit-depo">
+
+      <label>Тип ПС:</label>
+      <select id="edit-type">
+        <option value="Тепловоз">Тепловоз</option>
+        <option value="Паровоз">Паровоз</option>
+        <option value="Электровоз">Электровоз</option>
+        <option value="Вагон">Вагон</option>
+        <option value="Дрезина">Дрезина</option>
+      </select>
+
+      <label>Состояние ПС:</label>
+      <select id="edit-status">
+        <option value="В эксплуатации">В эксплуатации</option>
+        <option value="В ремонте">В ремонте</option>
+        <option value="Законсервирован">Законсервирован</option>
+        <option value="Ожидает списания">Ожидает списания</option>
+      </select>
+
+      <label>Дата / Год вывода из эксплуатации:</label>
+      <input type="text" id="edit-decommissioned" placeholder="Например: 2018 или Нет">
+
+      <label>Списан:</label>
+      <select id="edit-written-off">
+        <option value="Нет">Нет</option>
+        <option value="Да">Да</option>
+      </select>
+
+      <label>Утилизирован:</label>
+      <select id="edit-scrapped">
+        <option value="Нет">Нет</option>
+        <option value="Да">Да</option>
+      </select>
+
+      <div class="modal-actions">
+        <button type="submit" class="btn-save">Сохранить</button>
+        <button type="button" class="btn-cancel" onclick="closeEditModal()">Отмена</button>
+      </div>
+    </form>
+  </div>
+</div>
+        // Функция открытия окна редактирования (вызывается при клике на элемент ПС)
+function openEditModal(psData) {
+  document.getElementById('edit-id').value = psData.id;
+  document.getElementById('edit-ps-title').innerText = psData.model + ' (№' + psData.id + ')';
+  document.getElementById('edit-model').value = psData.model || '';
+  document.getElementById('edit-depo').value = psData.depo || '';
+  document.getElementById('edit-type').value = psData.type || 'Тепловоз';
+  document.getElementById('edit-status').value = psData.status || 'В эксплуатации';
+  document.getElementById('edit-decommissioned').value = psData.decommissioned || 'Нет';
+  document.getElementById('edit-written-off').value = psData.writtenOff || 'Нет';
+  document.getElementById('edit-scrapped').value = psData.scrapped || 'Нет';
+
+  document.getElementById('editModal').style.display = 'flex';
+}
+
+// Закрытие модального окна
+function closeEditModal() {
+  document.getElementById('editModal').style.display = 'none';
+}
+
+// Сохранение изменений
+function savePSData(event) {
+  event.preventDefault();
+
+  const id = document.getElementById('edit-id').value;
+  const updatedData = {
+    id: id,
+    model: document.getElementById('edit-model').value,
+    depo: document.getElementById('edit-depo').value,
+    type: document.getElementById('edit-type').value,
+    status: document.getElementById('edit-status').value,
+    decommissioned: document.getElementById('edit-decommissioned').value,
+    writtenOff: document.getElementById('edit-written-off').value,
+    scrapped: document.getElementById('edit-scrapped').value
+  };
+
+  // Сохраняем в localStorage
+  let database = JSON.parse(localStorage.getItem('ps_database')) || {};
+  database[id] = updatedData;
+  localStorage.setItem('ps_database', JSON.stringify(database));
+
+  // Обновляем отображение на странице без перезагрузки
+  updateDOMElement(id, updatedData);
+
+  closeEditModal();
+}
+
+// Вспомогательная функция для привязки событий клика к элементам ПС
+function makePSElementsClickable() {
+  const psElements = document.querySelectorAll('[data-ps-id]');
+  psElements.forEach(elem => {
+    elem.classList.add('ps-item-editable');
+    elem.addEventListener('click', function() {
+      const psId = this.getAttribute('data-ps-id');
+      
+      // Проверяем, есть ли уже сохраненные данные в localStorage
+      let database = JSON.parse(localStorage.getItem('ps_database')) || {};
+      let psData = database[psId];
+
+      if (!psData) {
+        // Если данных нет, читаем стартовые из атрибутов HTML
+        psData = {
+          id: psId,
+          model: this.getAttribute('data-model') || 'ТУ2',
+          depo: this.getAttribute('data-depo') || 'Основное',
+          type: this.getAttribute('data-type') || 'Тепловоз',
+          status: this.getAttribute('data-status') || 'В эксплуатации',
+          decommissioned: this.getAttribute('data-decommissioned') || 'Нет',
+          writtenOff: this.getAttribute('data-written-off') || 'Нет',
+          scrapped: this.getAttribute('data-scrapped') || 'Нет'
+        };
+      }
+
+      openEditModal(psData);
+    });
+  });
+}
+
+// Запуск при загрузке страницы
+document.addEventListener('DOMContentLoaded', () => {
+  makePSElementsClickable();
+});
     </script>
 </body>
 </html>
