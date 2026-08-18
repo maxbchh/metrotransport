@@ -725,6 +725,14 @@
                         <input type="date" id="formCommissionDate">
                     </div>
                     <div>
+                        <label>Дата списания:</label>
+                        <input type="date" id="formDecommissionDate">
+                    </div>
+                    <div>
+                        <label>Дата утилизации / порезки:</label>
+                        <input type="date" id="formScrapDate">
+                    </div>
+                    <div>
                         <label>Текущий статус:</label>
                         <select id="formStatus">
                             <option value="st-active">В эксплуатации (Действует)</option>
@@ -749,8 +757,8 @@
                         <input type="number" step="0.1" id="formBrake" value="8">
                     </div>
                     <div class="form-full">
-                        <label>История ремонтов / Примечания:</label>
-                        <textarea id="formNotes" rows="3"></textarea>
+                        <label>Примечание / История ремонтов:</label>
+                        <textarea id="formNotes" rows="3" placeholder="Укажите подробное примечание (причины списания, порезки, вывода из эксплуатации и т.д.)"></textarea>
                     </div>
                 </div>
 
@@ -884,8 +892,16 @@
             { id: "n1", title: "🚨 Алгоритм ДСП при неисправности стрелки", body: "1. Прекратить приготовление маршрутов.\n2. Вызвать ШЧ и ПЧ.\n3. Перевести стрелку на ручное управление." }
         ];
         let schedules = JSON.parse(localStorage.getItem('rp_schedules')) || [
-            { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Сосновый Бор", to: "Крутоборка", depTime: "08:30", arrTime: "09:25", track: "1 путь", days: "Ежедневно" },
-            { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Крутоборка", to: "Сосновый Бор", depTime: "10:15", arrTime: "11:10", track: "2 путь", days: "Ежедневно" }
+            { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Сосновый Бор", to: "Крутоборка", depTime: "08:30", arrTime: "09:25", track: "1 путь", days: "Ежедневно", timetable: [
+                { station: "Сосновый Бор", arr: "—", dep: "08:30", stop: "0 мин" },
+                { station: "Лельма", arr: "08:55", dep: "09:00", stop: "5 мин" },
+                { station: "Крутоборка", arr: "09:25", dep: "—", stop: "—" }
+            ]},
+            { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Крутоборка", to: "Сосновый Бор", depTime: "10:15", arrTime: "11:10", track: "2 путь", days: "Ежедневно", timetable: [
+                { station: "Крутоборка", arr: "—", dep: "10:15", stop: "0 мин" },
+                { station: "Лельма", arr: "10:40", dep: "10:45", stop: "5 мин" },
+                { station: "Сосновый Бор", arr: "11:10", dep: "—", stop: "—" }
+            ]}
         ];
 
         let selectedIds = new Set();
@@ -1099,6 +1115,8 @@
             document.getElementById('formFactory').value = item.factory || '';
             document.getElementById('formBuildYear').value = item.buildYear || '';
             document.getElementById('formCommissionDate').value = item.commissionDate || '';
+            document.getElementById('formDecommissionDate').value = item.decommissionDate || '';
+            document.getElementById('formScrapDate').value = item.scrapDate || '';
             document.getElementById('formStatus').value = item.status;
             document.getElementById('formWeight').value = item.weight || 15;
             document.getElementById('formLength').value = item.length || 10;
@@ -1121,6 +1139,8 @@
                 factory: document.getElementById('formFactory').value,
                 buildYear: parseInt(document.getElementById('formBuildYear').value) || '',
                 commissionDate: document.getElementById('formCommissionDate').value,
+                decommissionDate: document.getElementById('formDecommissionDate').value,
+                scrapDate: document.getElementById('formScrapDate').value,
                 status: document.getElementById('formStatus').value,
                 weight: parseFloat(document.getElementById('formWeight').value) || 0,
                 length: parseFloat(document.getElementById('formLength').value) || 0,
@@ -1158,6 +1178,8 @@
                     <div><b>Завод-изготовитель:</b> ${item.factory || '—'}</div>
                     <div><b>Год постройки:</b> ${item.buildYear || '—'}</div>
                     <div><b>Ввод в эксплуатацию:</b> ${item.commissionDate || '—'}</div>
+                    <div><b>Дата списания:</b> ${item.decommissionDate || '—'}</div>
+                    <div><b>Дата утилизации:</b> ${item.scrapDate || '—'}</div>
                     <div><b>Статус:</b> ${STATUS_MAP[item.status]}</div>
                     <div><b>Масса:</b> ${item.weight} т</div>
                     <div><b>Длина:</b> ${item.length} м</div>
@@ -1204,9 +1226,9 @@
         }
 
         function exportToCSV() {
-            let csv = 'Серия;Категория;Колея;Депо;Завод;Год;Ввод;Статус\n';
+            let csv = 'Серия;Категория;Колея;Депо;Завод;Год;Ввод;Списание;Утилизация;Статус\n';
             db.forEach(x => {
-                csv += `"${x.series}";"${getCategoryName(x.category)}";"${x.gauge}";"${x.depot}";"${x.factory}";"${x.buildYear}";"${x.commissionDate}";"${STATUS_MAP[x.status]}"\n`;
+                csv += `"${x.series}";"${getCategoryName(x.category)}";"${x.gauge}";"${x.depot}";"${x.factory}";"${x.buildYear}";"${x.commissionDate}";"${x.decommissionDate||''}";"${x.scrapDate||''}";"${STATUS_MAP[x.status]}"\n`;
             });
             const blob = new Blob([csv], { type: 'text/csv;charset=utf-8;' });
             const url = URL.createObjectURL(blob);
@@ -1399,7 +1421,8 @@
                 depTime: generatedStencilSchedule.depTime,
                 arrTime: generatedStencilSchedule.arrTime,
                 track: "1 путь",
-                days: "Ежедневно"
+                days: "Ежедневно",
+                timetable: generatedStencilSchedule.timetable
             };
 
             schedules.push(newItem);
@@ -1480,20 +1503,42 @@
             const bBody = document.getElementById('boardTableBody');
             bBody.innerHTML = '';
 
-            const filtered = schedules.filter(s => s.from === currentBoardStation || s.to === currentBoardStation);
+            const filtered = schedules.filter(s => {
+                if (s.from === currentBoardStation || s.to === currentBoardStation) return true;
+                if (s.timetable && Array.isArray(s.timetable)) {
+                    return s.timetable.some(t => t.station === currentBoardStation);
+                }
+                return false;
+            });
 
             if (filtered.length === 0) {
                 bBody.innerHTML = '<tr><td colspan="7" style="text-align:center;">Рейсов не найдено</td></tr>';
             } else {
                 filtered.forEach(s => {
-                    const isDeparture = s.from === currentBoardStation;
+                    let arrTime = '—';
+                    let depTime = '—';
+                    let stopDuration = '10 мин';
+
+                    if (s.timetable && Array.isArray(s.timetable)) {
+                        const stInfo = s.timetable.find(t => t.station === currentBoardStation);
+                        if (stInfo) {
+                            arrTime = stInfo.arr;
+                            depTime = stInfo.dep;
+                            stopDuration = stInfo.stop !== '—' ? stInfo.stop : '0 мин';
+                        }
+                    } else {
+                        const isDeparture = s.from === currentBoardStation;
+                        arrTime = isDeparture ? '—' : s.arrTime;
+                        depTime = isDeparture ? s.depTime : '—';
+                    }
+
                     const tr = document.createElement('tr');
                     tr.innerHTML = `
                         <td><b>${s.num}</b></td>
                         <td>ст. ${s.from} ➔ ст. ${s.to}</td>
-                        <td>${isDeparture ? '—' : s.arrTime}</td>
-                        <td>10 мин</td>
-                        <td>${isDeparture ? s.depTime : '—'}</td>
+                        <td>${arrTime}</td>
+                        <td>${stopDuration}</td>
+                        <td>${depTime}</td>
                         <td><b>${s.track}</b></td>
                         <td><span class="status-blink">ПОСАДКА / ГОТОВ</span></td>
                     `;
@@ -1522,16 +1567,45 @@
 
         function saveScheduleForm(e) {
             e.preventDefault();
+            const fromSt = document.getElementById('schFrom').value;
+            const toSt = document.getElementById('schTo').value;
+            const depTime = document.getElementById('schDepTime').value;
+            const arrTime = document.getElementById('schArrTime').value;
+
+            let startIndex = LINE_STATIONS.indexOf(fromSt);
+            let endIndex = LINE_STATIONS.indexOf(toSt);
+            let timetable = [];
+
+            if (startIndex !== -1 && endIndex !== -1 && startIndex !== endIndex) {
+                let route = startIndex < endIndex ? LINE_STATIONS.slice(startIndex, endIndex + 1) : LINE_STATIONS.slice(endIndex, startIndex + 1).reverse();
+                let startMins = parseTime(depTime);
+                let endMins = parseTime(arrTime);
+                let totalDiff = endMins >= startMins ? endMins - startMins : (endMins + 24 * 60) - startMins;
+                let step = Math.floor(totalDiff / (route.length - 1));
+
+                route.forEach((st, idx) => {
+                    if (idx === 0) {
+                        timetable.push({ station: st, arr: "—", dep: depTime, stop: "0 мин" });
+                    } else if (idx === route.length - 1) {
+                        timetable.push({ station: st, arr: arrTime, dep: "—", stop: "—" });
+                    } else {
+                        let currentArr = startMins + step * idx;
+                        timetable.push({ station: st, arr: formatTime(currentArr), dep: formatTime(currentArr + 5), stop: "5 мин" });
+                    }
+                });
+            }
+
             const newItem = {
                 id: 'sch-' + Date.now(),
                 num: document.getElementById('schNum').value,
                 cat: document.getElementById('schCat').value || 'Пригородный',
-                from: document.getElementById('schFrom').value,
-                to: document.getElementById('schTo').value,
-                depTime: document.getElementById('schDepTime').value,
-                arrTime: document.getElementById('schArrTime').value,
+                from: fromSt,
+                to: toSt,
+                depTime: depTime,
+                arrTime: arrTime,
                 track: document.getElementById('schTrack').value,
-                days: document.getElementById('schDays').value
+                days: document.getElementById('schDays').value,
+                timetable: timetable
             };
             schedules.push(newItem);
             saveData();
