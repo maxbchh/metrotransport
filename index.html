@@ -478,6 +478,24 @@
             outline: 1px solid var(--bp-link);
         }
 
+
+        /* ДОПОЛНЕНИЕ: КЛИКАБЕЛЬНЫЕ КАРТОЧКИ ПС В БАЗЕ */
+        table.bp-table tbody tr.vehicle-row-clickable {
+            cursor: pointer;
+        }
+        table.bp-table tbody tr.vehicle-row-clickable td {
+            transition: background-color 0.15s ease, box-shadow 0.15s ease;
+        }
+        table.bp-table tbody tr.vehicle-row-clickable:hover td {
+            box-shadow: inset 0 0 0 9999px rgba(37, 99, 235, 0.08);
+        }
+        .vehicle-click-hint {
+            color: var(--bp-link);
+            font-size: 9px;
+            margin-left: 5px;
+            opacity: 0.8;
+        }
+
         .type-badge {
             display: inline-block;
             padding: 2px 7px;
@@ -1162,6 +1180,10 @@
                 <button class="btn-gold" onclick="resetDatabaseToDefault()">🔄 Сброс к базовой БД</button>
                 <button class="btn-primary" onclick="openAddModal()">➕ Добавить единицу ПС</button>
             </div>
+        </div>
+
+        <div class="no-print" style="margin:-4px 0 12px 0; padding:8px 10px; background:rgba(37,99,235,0.08); border:1px solid var(--bp-border); border-radius:4px; color:var(--bp-text-muted); font-size:10px;">
+            💡 <b style="color:var(--bp-text);">Карточка ПС:</b> нажмите на любую строку базы (или дважды кликните по ней), чтобы открыть и настроить конкретную единицу — состояние, даты постройки/ввода/вывода/списания/утилизации, завод, историю ремонтов и примечания.
         </div>
 
         <!-- Виджеты общей статистики парка -->
@@ -2070,7 +2092,24 @@
 
             filtered.forEach((v) => {
                 let tr = document.createElement('tr');
-                tr.className = v.statusCls;
+                tr.className = v.statusCls + ' vehicle-row-clickable';
+                tr.title = `Открыть карточку ПС: ${v.model || ''} №${v.num || ''}`;
+                tr.setAttribute('role', 'button');
+                tr.setAttribute('tabindex', '0');
+                tr.onclick = function(event) {
+                    if (event.target.closest('input, button, a, select, textarea, label')) return;
+                    openEditModal(v.id);
+                };
+                tr.ondblclick = function(event) {
+                    if (event.target.closest('input, button, a, select, textarea, label')) return;
+                    openEditModal(v.id);
+                };
+                tr.onkeydown = function(event) {
+                    if ((event.key === 'Enter' || event.key === ' ') && event.target === tr) {
+                        event.preventDefault();
+                        openEditModal(v.id);
+                    }
+                };
 
                 let catLabel = '🚂 Локомотив';
                 if (v.category === 'pass_car') catLabel = '🚃 Вагон Пасс.';
@@ -2083,8 +2122,8 @@
                     <td class="no-print" onclick="event.stopPropagation()"><input type="checkbox" ${isChecked} onchange="toggleSelectRow('${v.id}', this.checked)"></td>
                     <td><span class="type-badge">${catLabel}</span></td>
                     <td><b>${v.park}</b></td>
-                    <td><b>${v.model}</b></td>
-                    <td><b>${v.num}</b></td>
+                    <td><b>${v.model}</b><span class="vehicle-click-hint">✎</span></td>
+                    <td><b>${v.num}</b><span class="vehicle-click-hint">открыть</span></td>
                     <td><span style="font-size:10px; opacity:0.8;">${v.gauge || '750мм'}</span></td>
                     <td>${v.statusText || getStatusLabel(v.statusCls)}</td>
                     <td>${v.buildDate || '—'}</td>
@@ -2093,7 +2132,7 @@
                     <td class="col-highlight-scrapped">${v.scrappedDate ? v.scrappedDate : '—'}</td>
                     <td>${v.manufacturer || '—'}</td>
                     <td class="no-print">
-                        <button class="btn-primary btn-sm" onclick="openEditModal('${v.id}')">✏️ Правка</button>
+                        <button class="btn-primary btn-sm" onclick="event.stopPropagation(); openEditModal('${v.id}')">✏️ Правка / карточка</button>
                     </td>
                 `;
                 tbody.appendChild(tr);
