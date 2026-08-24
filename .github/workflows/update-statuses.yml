@@ -1,0 +1,105 @@
+name: Update rolling stock statuses
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - 'index.html'
+      - '.github/workflows/update-statuses.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  update-statuses:
+    runs-on: ubuntu-latest
+    steps:
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      - name: Update only rolling-stock statuses
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          original = s
+
+          # 1) Replace the status color block, keeping all other CSS untouched.
+          status_css = '''        /* ==========================================================================\n           2. ЦВЕТОВАЯ ПАЛИТРА СТАТУСОВ ПОДВИЖНОГО СОСТАВА\n           ========================================================================== */\n        .st-active { background-color: rgba(43, 43, 43, 0.2) !important; color: var(--bp-text) !important; }\n        .st-not-operated { background-color: #2e5c2e !important; color: #ffffff !important; }\n        .st-inactive { background-color: #696969 !important; color: #ffffff !important; }\n        .st-out { background-color: #6b6b00 !important; color: #ffffff !important; }\n        .st-decomm { background-color: #8b0000 !important; color: #ffffff !important; }\n        .st-scrapped { background-color: #3a0000 !important; color: #aaaaaa !important; text-decoration: line-through; }\n        .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }\n        .st-trans { background-color: #512e5f !important; color: #ffffff !important; }\n        .st-museum { background-color: #0f5257 !important; color: #ffffff !important; }\n\n        body.light-theme .st-active { background-color: #ffffff !important; color: #0f172a !important; }'''
+          s, n = re.subn(r'        /\* ={10,}\n           2\. ЦВЕТОВАЯ ПАЛИТРА СТАТУСОВ ПОДВИЖНОГО СОСТАВА\n           ={10,} \*/.*?        body\.light-theme \.st-active \{.*?\n', status_css + '\n', s, flags=re.S)
+          assert n == 1, f'CSS status block replacement count={n}'
+
+          # 2) Replace the database status filter with the requested 9 states.
+          filter_block = '''                <select id="filterStatus" onchange="renderTable()">\n                    <option value="all">-- Все статусы --</option>\n                    <option value="st-active">В Эксплуатации</option>\n                    <option value="st-not-operated">Не эксплуатируется</option>\n                    <option value="st-out">В Ремонте</option>\n                    <option value="st-inactive">В Депо</option>\n                    <option value="st-scrapped">Порезан</option>\n                    <option value="st-decomm">Списан</option>\n                    <option value="st-museum">Музейный</option>\n                    <option value="st-trans">Переформирован</option>\n                    <option value="st-mod">Капитальный Ремонт</option>\n                </select>'''
+          s, n = re.subn(r'                <select id="filterStatus" onchange="renderTable\(\)">.*?                </select>', filter_block, s, count=1, flags=re.S)
+          assert n == 1, f'filterStatus replacement count={n}'
+
+          batch_block = '''                <select id="batchStatusSelect" style="padding:4px; font-size:11px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border);">\n                    <option value="">-- Изменить статус --</option>\n                    <option value="st-active">В Эксплуатации</option>\n                    <option value="st-not-operated">Не эксплуатируется</option>\n                    <option value="st-out">В Ремонте</option>\n                    <option value="st-inactive">В Депо</option>\n                    <option value="st-scrapped">Порезан</option>\n                    <option value="st-decomm">Списан</option>\n                    <option value="st-museum">Музейный</option>\n                    <option value="st-trans">Переформирован</option>\n                    <option value="st-mod">Капитальный Ремонт</option>\n                </select>'''
+          s, n = re.subn(r'                <select id="batchStatusSelect".*?>.*?                </select>', batch_block, s, count=1, flags=re.S)
+          assert n == 1, f'batchStatus replacement count={n}'
+
+          form_block = '''                        <select id="formStatus">\n                            <option value="st-active">В Эксплуатации</option>\n                            <option value="st-not-operated">Не эксплуатируется</option>\n                            <option value="st-out">В Ремонте</option>\n                            <option value="st-inactive">В Депо</option>\n                            <option value="st-scrapped">Порезан</option>\n                            <option value="st-decomm">Списан</option>\n                            <option value="st-museum">Музейный</option>\n                            <option value="st-trans">Переформирован</option>\n                            <option value="st-mod">Капитальный Ремонт</option>\n                        </select>'''
+          s, n = re.subn(r'                        <select id="formStatus">.*?                        </select>', form_block, s, count=1, flags=re.S)
+          assert n == 1, f'formStatus replacement count={n}'
+
+          # 3) Keep the database summary bar, but show all 9 requested states.
+          stats_block = '''        <div class="stats-summary-bar no-print">\n            <div class="stat-card"><div class="stat-card-title">Всего в базе</div><div class="stat-card-val" id="statTotal">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">В Эксплуатации</div><div class="stat-card-val" style="color:var(--bp-btn-success);" id="statActive">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Не эксплуатируется</div><div class="stat-card-val" id="statNotOperated">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">В Ремонте</div><div class="stat-card-val" style="color:#b58900;" id="statRepair">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">В Депо</div><div class="stat-card-val" style="color:#888;" id="statDepot">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Порезан</div><div class="stat-card-val" style="color:#ffaaaa;" id="statScrapped">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Списан</div><div class="stat-card-val" style="color:#ff8888;" id="statDecomm">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Музейный</div><div class="stat-card-val" style="color:var(--bp-accent-teal);" id="statMuseum">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Переформирован</div><div class="stat-card-val" style="color:#a66cff;" id="statReformed">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Капитальный Ремонт</div><div class="stat-card-val" style="color:#4b6f7e;" id="statMod">0</div></div>\n        </div>'''
+          s, n = re.subn(r'        <div class="stats-summary-bar no-print">.*?\n        </div>\n\n        <div class="category-tabs no-print">', stats_block + '\n\n        <div class="category-tabs no-print">', s, count=1, flags=re.S)
+          assert n == 1, f'stats block replacement count={n}'
+
+          # 4) Update visible status labels everywhere else without changing unrelated functionality.
+          replacements = {
+              'В эксплуатации (Действует)': 'В Эксплуатации',
+              'В эксплуатации': 'В Эксплуатации',
+              'В запасе / Консервация': 'В Депо',
+              'Выведен из эксплуатации': 'В Ремонте',
+              'Порезан / Утилизирован': 'Порезан',
+              'Модернизация / КРП': 'Капитальный Ремонт',
+              'Передан': 'Переформирован',
+          }
+          for old, new in replacements.items():
+              s = s.replace(old, new)
+
+          # 5) Update status map order/labels.
+          s, n = re.subn(r'        const STATUS_MAP = \{.*?        \};', '''        const STATUS_MAP = {\n            "st-active": "В Эксплуатации",\n            "st-not-operated": "Не эксплуатируется",\n            "st-out": "В Ремонте",\n            "st-inactive": "В Депо",\n            "st-scrapped": "Порезан",\n            "st-decomm": "Списан",\n            "st-museum": "Музейный",\n            "st-trans": "Переформирован",\n            "st-mod": "Капитальный Ремонт"\n        };''', s, count=1, flags=re.S)
+          assert n == 1, f'STATUS_MAP replacement count={n}'
+
+          # 6) Migrate existing browser localStorage values; do not discard user data.
+          needle = "        let db = JSON.parse(localStorage.getItem('rp_db')) || DEFAULT_DATABASE;\n"
+          migration = needle + '''        const STATUS_MIGRATION = {\n            "st-active": "st-active",\n            "st-not-operated": "st-not-operated",\n            "st-inactive": "st-inactive",\n            "st-out": "st-out",\n            "st-decomm": "st-decomm",\n            "st-scrapped": "st-scrapped",\n            "st-mod": "st-mod",\n            "st-trans": "st-trans",\n            "st-museum": "st-museum"\n        };\n        db = db.map(item => ({ ...item, status: STATUS_MIGRATION[item.status] || item.status }));\n'''
+          if needle not in s:
+              raise AssertionError('db initialization anchor not found')
+          s = s.replace(needle, migration, 1)
+
+          # 7) Show counts for all 9 requested states in the database summary.
+          old_counts = '''            document.getElementById('statTotal').innerText = db.length;\n            document.getElementById('statActive').innerText = db.filter(x => x.status === 'st-active').length;\n            document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;\n            document.getElementById('statOut').innerText = db.filter(x => x.status === 'st-out').length;\n            document.getElementById('statDecomm').innerText = db.filter(x => x.status === 'st-decomm').length;\n            document.getElementById('statScrapped').innerText = db.filter(x => x.status === 'st-scrapped').length;'''
+          new_counts = '''            document.getElementById('statTotal').innerText = db.length;\n            document.getElementById('statActive').innerText = db.filter(x => x.status === 'st-active').length;\n            document.getElementById('statNotOperated').innerText = db.filter(x => x.status === 'st-not-operated').length;\n            document.getElementById('statRepair').innerText = db.filter(x => x.status === 'st-out').length;\n            document.getElementById('statDepot').innerText = db.filter(x => x.status === 'st-inactive').length;\n            document.getElementById('statScrapped').innerText = db.filter(x => x.status === 'st-scrapped').length;\n            document.getElementById('statDecomm').innerText = db.filter(x => x.status === 'st-decomm').length;\n            document.getElementById('statMuseum').innerText = db.filter(x => x.status === 'st-museum').length;\n            document.getElementById('statReformed').innerText = db.filter(x => x.status === 'st-trans').length;\n            document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;'''
+          if old_counts not in s:
+              raise AssertionError('stats JS block not found')
+          s = s.replace(old_counts, new_counts, 1)
+
+          # 8) Preserve builder behavior: active and depot stock remain selectable; repair does not.
+          s = s.replace("db.filter(x => x.status === 'st-active' || x.status === 'st-inactive')", "db.filter(x => x.status === 'st-active' || x.status === 'st-inactive')", 1)
+
+          if s == original:
+              print('No changes needed.')
+              raise SystemExit(0)
+
+          p.write_text(s, encoding='utf-8')
+          print('Updated rolling-stock statuses only.')
+EOF
+
+          # Commit only if the file actually changed.
+          if git diff --quiet -- index.html; then
+            echo 'No index.html changes to commit.'
+            exit 0
+          fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add -- index.html
+          git commit -m 'feat: update rolling stock statuses'
+          git push
