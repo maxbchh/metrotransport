@@ -64,8 +64,8 @@
            ========================================================================== */
         .st-active { background-color: rgba(43, 43, 43, 0.2) !important; color: var(--bp-text) !important; }
         .st-not-operated { background-color: #2e5c2e !important; color: #ffffff !important; }
-        .st-inactive { background-color: #6b6b00 !important; color: #ffffff !important; }
-        .st-out { background-color: #696969 !important; color: #ffffff !important; }
+        .st-inactive { background-color: #696969 !important; color: #ffffff !important; }
+        .st-out { background-color: #6b6b00 !important; color: #ffffff !important; }
         .st-decomm { background-color: #8b0000 !important; color: #ffffff !important; }
         .st-scrapped { background-color: #3a0000 !important; color: #aaaaaa !important; text-decoration: line-through; }
         .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }
@@ -404,11 +404,15 @@
 
         <div class="stats-summary-bar no-print">
             <div class="stat-card"><div class="stat-card-title">Всего в базе</div><div class="stat-card-val" id="statTotal">0</div></div>
-            <div class="stat-card"><div class="stat-card-title">В эксплуатации</div><div class="stat-card-val" style="color:var(--bp-btn-success);" id="statActive">0</div></div>
-            <div class="stat-card"><div class="stat-card-title">Ремонт / КРП</div><div class="stat-card-val" style="color:var(--bp-accent-teal);" id="statMod">0</div></div>
-            <div class="stat-card"><div class="stat-card-title">Выведен из экспл.</div><div class="stat-card-val" style="color:#aaa;" id="statOut">0</div></div>
-            <div class="stat-card"><div class="stat-card-title">Списано</div><div class="stat-card-val" style="color:#ff8888;" id="statDecomm">0</div></div>
-            <div class="stat-card"><div class="stat-card-title">Порезано / Утилиз.</div><div class="stat-card-val" style="color:#ffaaaa;" id="statScrapped">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">В Эксплуатации</div><div class="stat-card-val" style="color:var(--bp-btn-success);" id="statActive">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Не эксплуатируется</div><div class="stat-card-val" id="statNotOperated">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">В Ремонте</div><div class="stat-card-val" id="statRepair">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">В Депо</div><div class="stat-card-val" id="statDepot">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Порезан</div><div class="stat-card-val" id="statScrapped">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Списан</div><div class="stat-card-val" id="statDecomm">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Музейный</div><div class="stat-card-val" id="statMuseum">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Переформирован</div><div class="stat-card-val" id="statReformed">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Капитальный Ремонт</div><div class="stat-card-val" id="statMod">0</div></div>
         </div>
 
         <div class="category-tabs no-print">
@@ -426,13 +430,15 @@
             <div>
                 <select id="filterStatus" onchange="renderTable()">
                     <option value="all">-- Все статусы --</option>
-                    <option value="st-active">В эксплуатации</option>
+                    <option value="st-active">В Эксплуатации</option>
                     <option value="st-not-operated">Не эксплуатируется</option>
-                    <option value="st-inactive">В запасе / Консервация</option>
-                    <option value="st-out">Выведен из эксплуатации</option>
+                    <option value="st-out">В Ремонте</option>
+                    <option value="st-inactive">В Депо</option>
+                    <option value="st-scrapped">Порезан</option>
                     <option value="st-decomm">Списан</option>
-                    <option value="st-scrapped">Порезан / Утилизирован</option>
-                    <option value="st-mod">Модернизация / КРП</option>
+                    <option value="st-museum">Музейный</option>
+                    <option value="st-trans">Переформирован</option>
+                    <option value="st-mod">Капитальный Ремонт</option>
                 </select>
             </div>
             <div>
@@ -450,12 +456,15 @@
             <div style="display:flex; gap:8px;">
                 <select id="batchStatusSelect" style="padding:4px; font-size:11px; background:var(--bp-input-bg); color:var(--bp-text); border:1px solid var(--bp-border);">
                     <option value="">-- Изменить статус --</option>
-                    <option value="st-active">В эксплуатации</option>
+                    <option value="st-active">В Эксплуатации</option>
                     <option value="st-not-operated">Не эксплуатируется</option>
-                    <option value="st-inactive">В запасе</option>
-                    <option value="st-out">Выведен из эксплуатации</option>
-                    <option value="st-decomm">Списан</option>
+                    <option value="st-out">В Ремонте</option>
+                    <option value="st-inactive">В Депо</option>
                     <option value="st-scrapped">Порезан</option>
+                    <option value="st-decomm">Списан</option>
+                    <option value="st-museum">Музейный</option>
+                    <option value="st-trans">Переформирован</option>
+                    <option value="st-mod">Капитальный Ремонт</option>
                 </select>
                 <button class="btn-primary btn-sm" onclick="applyBatchStatus()">Применить</button>
                 <button class="btn-danger btn-sm" onclick="deleteBatchSelected()">🗑 Удалить</button>
@@ -734,14 +743,16 @@
                     <div>
                         <label>Текущий статус:</label>
                         <select id="formStatus">
-                            <option value="st-active">В эксплуатации (Действует)</option>
-                            <option value="st-not-operated">Не эксплуатируется</option>
-                            <option value="st-inactive">В запасе / Консервация</option>
-                            <option value="st-out">Выведен из эксплуатации</option>
-                            <option value="st-decomm">Списан</option>
-                            <option value="st-scrapped">Порезан / Утилизирован</option>
-                            <option value="st-mod">Модернизация / КРП</option>
-                        </select>
+                    <option value="st-active">В Эксплуатации</option>
+                    <option value="st-not-operated">Не эксплуатируется</option>
+                    <option value="st-out">В Ремонте</option>
+                    <option value="st-inactive">В Депо</option>
+                    <option value="st-scrapped">Порезан</option>
+                    <option value="st-decomm">Списан</option>
+                    <option value="st-museum">Музейный</option>
+                    <option value="st-trans">Переформирован</option>
+                    <option value="st-mod">Капитальный Ремонт</option>
+                </select>
                     </div>
                     <div>
                         <label>Масса единицы (тонн):</label>
@@ -860,20 +871,21 @@
         ];
 
         const STATUS_MAP = {
-            "st-active": "В эксплуатации",
+            "st-active": "В Эксплуатации",
             "st-not-operated": "Не эксплуатируется",
-            "st-inactive": "В запасе / Консервация",
-            "st-out": "Выведен из эксплуатации",
+            "st-out": "В Ремонте",
+            "st-inactive": "В Депо",
+            "st-scrapped": "Порезан",
             "st-decomm": "Списан",
-            "st-scrapped": "Порезан / Утилизирован",
-            "st-mod": "Модернизация / КРП",
-            "st-trans": "Передан",
-            "st-museum": "Музейный"
+            "st-museum": "Музейный",
+            "st-trans": "Переформирован",
+            "st-mod": "Капитальный Ремонт"
         };
 
         const LINE_STATIONS = ["Максиград", "Москва"];
 
         let db = JSON.parse(localStorage.getItem('rp_db')) || DEFAULT_DATABASE;
+        db = db.map(item => ({ ...item, status: item.status || 'st-active' }));
         let profile = JSON.parse(localStorage.getItem('rp_profile')) || {
             name: "Иванов Иван Иванович",
             role: "Дежурный по станции (ДСП)",
@@ -1058,10 +1070,14 @@
 
             document.getElementById('statTotal').innerText = db.length;
             document.getElementById('statActive').innerText = db.filter(x => x.status === 'st-active').length;
-            document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;
-            document.getElementById('statOut').innerText = db.filter(x => x.status === 'st-out').length;
-            document.getElementById('statDecomm').innerText = db.filter(x => x.status === 'st-decomm').length;
+            document.getElementById('statNotOperated').innerText = db.filter(x => x.status === 'st-not-operated').length;
+            document.getElementById('statRepair').innerText = db.filter(x => x.status === 'st-out').length;
+            document.getElementById('statDepot').innerText = db.filter(x => x.status === 'st-inactive').length;
             document.getElementById('statScrapped').innerText = db.filter(x => x.status === 'st-scrapped').length;
+            document.getElementById('statDecomm').innerText = db.filter(x => x.status === 'st-decomm').length;
+            document.getElementById('statMuseum').innerText = db.filter(x => x.status === 'st-museum').length;
+            document.getElementById('statReformed').innerText = db.filter(x => x.status === 'st-trans').length;
+            document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;
 
             tbody.innerHTML = '';
             filtered.forEach(item => {
