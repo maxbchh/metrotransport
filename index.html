@@ -4,7 +4,7 @@
     <meta charset="UTF-8">
     <meta name="viewport" content="width=device-width, initial-scale=1.0">
     <meta http-equiv="X-UA-Compatible" content="IE=edge">
-    <title>RAILPHOTO — Полнофункциональная Система Базы Данных Подвижного Состава и Управления ДСП</title>
+    <title>Максиградская железная дорога — Система управления и база подвижного состава</title>
     <style>
         /* ==========================================================================
            1. ГЛОБАЛЬНЫЕ ПЕРЕМЕННЫЕ И ТЕМАТИЗАЦИЯ (CSS VARIABLES)
@@ -335,8 +335,8 @@
 
     <header class="no-print">
         <div>
-            <span class="logo-box">RAILPHOTO</span>
-            <span style="font-size:14px; font-weight:bold; margin-left:10px;">База Подвижного Состава, Управление ДСП & Аналитика</span>
+            <span class="logo-box">МЖД</span>
+            <span style="font-size:14px; font-weight:bold; margin-left:10px;">Максиградская железная дорога — база подвижного состава, управление ДСП и аналитика</span>
         </div>
         <div class="header-controls">
             <button class="nav-tab-btn active" id="btnViewProfile" onclick="switchPage('profile')">👤 Профиль</button>
@@ -368,7 +368,7 @@
                 </div>
                 <ul class="profile-info-list">
                     <li class="profile-info-item"><span class="profile-info-label">Табельный №:</span><span class="profile-info-value" id="profDisplayTabNum">ТБ-88402</span></li>
-                    <li class="profile-info-item"><span class="profile-info-label">Станция приписки:</span><span class="profile-info-value" id="profDisplayStation">ст. Сосновый Бор</span></li>
+                    <li class="profile-info-item"><span class="profile-info-label">Станция приписки:</span><span class="profile-info-value" id="profDisplayStation">ст. Максиград</span></li>
                     <li class="profile-info-item"><span class="profile-info-label">Квалификация:</span><span class="profile-info-value" id="profDisplayQual">ДСП 1-го класса</span></li>
                     <li class="profile-info-item"><span class="profile-info-label">Стаж работы:</span><span class="profile-info-value" id="profDisplayExp">5 лет 4 месяца</span></li>
                     <li class="profile-info-item"><span class="profile-info-label">Текущая смена:</span><span class="profile-info-value" style="color:var(--bp-btn-success);" id="profDisplayShift">На дежурстве</span></li>
@@ -417,7 +417,7 @@
             <div class="cat-tab" id="tabCatPass" onclick="setCategoryFilter('pass_car')">🚃 Пассажирские вагоны</div>
             <div class="cat-tab" id="tabCatCargo" onclick="setCategoryFilter('cargo_car')">📦 Грузовые вагоны</div>
             <div class="cat-tab" id="tabCatSpecial" onclick="setCategoryFilter('special')">🛠 Спецтехника</div>
-            <div class="cat-tab" id="tabCat750" onclick="setCategoryFilter('gauge_750')">📏 Узкая колея (750мм)</div>
+            <div class="cat-tab" id="tabCat750" onclick="setCategoryFilter('gauge_750')">📏 Колея 750 мм</div>
             <div class="cat-tab" id="tabCat1520" onclick="setCategoryFilter('gauge_1520')">📐 Широкая колея (1520мм)</div>
         </div>
 
@@ -488,10 +488,9 @@
     <!-- КОНСТРУКТОР, АВТОРАСЧЕТ И ВУ-45 -->
     <div id="pageBuilder" class="main-wrapper" style="display:none;">
         <div class="page-header">
-            <span>🚂 Конструктор Сборного Поезда, Авторасчёт Расписания по Трафарету и ВУ-45</span>
+            <span>🚂 Конструктор Сборного Поезда и ВУ-45</span>
             <div class="action-buttons no-print">
-                <button class="btn-gold" onclick="calculateTimeByStencil()">⏱ Авторасчёт по трафарету</button>
-                <button class="btn-success" onclick="generateVU45Ticket()">📝 Сформировать ВУ-45 + Расписание</button>
+                <button class="btn-success" onclick="generateVU45Ticket()">📝 Сформировать ВУ-45</button>
                 <button class="btn-primary" onclick="clearConsist()">🧹 Очистить состав</button>
             </div>
         </div>
@@ -508,17 +507,15 @@
             <div>
                 <label>Станция отправления:</label>
                 <select id="tripFromStation">
-                    <option value="Сосновый Бор">ст. Сосновый Бор</option>
-                    <option value="Лельма">ст. Лельма</option>
-                    <option value="Крутоборка">ст. Крутоборка</option>
+                    <option value="Максиград">ст. Максиград</option>
+                    <option value="Москва">ст. Москва</option>
                 </select>
             </div>
             <div>
                 <label>Станция назначения:</label>
                 <select id="tripToStation">
-                    <option value="Крутоборка" selected>ст. Крутоборка</option>
-                    <option value="Лельма">ст. Лельма</option>
-                    <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                    <option value="Москва" selected>ст. Москва</option>
+                    <option value="Максиград">ст. Максиград</option>
                 </select>
             </div>
             <div>
@@ -547,52 +544,6 @@
             </div>
         </div>
 
-        <!-- КАЛЬКУЛЯТОР ВРЕМЕНИ ДВИЖЕНИЯ ПО УЧАСТКАМ -->
-        <div class="calc-panel no-print">
-            <h4>🧮 Калькулятор времени прибытия/отправления по участкам (Крутоборка — Лельма — Сосновый Бор)</h4>
-            <div class="calc-grid">
-                <div>
-                    <label>Откуда:</label>
-                    <select id="calcFromStation">
-                        <option value="Сосновый Бор">ст. Сосновый Бор</option>
-                        <option value="Лельма">ст. Лельма</option>
-                        <option value="Крутоборка">ст. Крутоборка</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Куда:</label>
-                    <select id="calcToStation">
-                        <option value="Крутоборка" selected>ст. Крутоборка</option>
-                        <option value="Лельма">ст. Лельма</option>
-                        <option value="Сосновый Бор">ст. Сосновый Бор</option>
-                    </select>
-                </div>
-                <div>
-                    <label>Время старта:</label>
-                    <input type="time" id="calcStartTime" value="12:00">
-                </div>
-                <div>
-                    <label>Время хода между ст. (мин):</label>
-                    <input type="number" id="calcRunMins" value="20">
-                </div>
-                <div>
-                    <label>Стоянка (мин):</label>
-                    <input type="number" id="calcStopMins" value="5">
-                </div>
-                <div>
-                    <label>Приёмо-отправочный путь:</label>
-                    <input type="text" id="calcTrack" value="1 путь">
-                </div>
-                <div style="display:flex; align-items:flex-end; gap:6px;">
-                    <button class="btn-primary" style="width:100%; height:32px;" onclick="calculateRouteTime()">Рассчитать</button>
-                </div>
-            </div>
-            <div id="calcOutput" style="margin-top:12px; font-weight:bold; color:var(--bp-link); display:none;"></div>
-            <div style="margin-top:8px;">
-                <button class="btn-gold btn-sm" id="btnPushCalcToBoard" style="display:none;" onclick="pushCalcToBoard()">📤 Вывести расчёт на Информационное Табло</button>
-            </div>
-        </div>
-
         <div class="builder-layout" style="margin-top:18px;">
             <div class="builder-source">
                 <h4 style="margin-bottom:10px; border-bottom:1px solid var(--bp-border); padding-bottom:6px;">Доступный ПС из базы</h4>
@@ -612,13 +563,6 @@
                         <span>Тормозные нажатия: <span id="metricBrakes">0</span> тс</span>
                     </div>
                 </div>
-
-                <div id="stencilResultBox" style="margin-top:14px; display:none; background:var(--bp-card-bg); border:1px solid var(--bp-border); padding:12px; border-radius:4px;">
-                    <h4 style="color:var(--bp-accent-gold); margin-bottom:8px;">⏱ Сгенерированное расписание сборного маршрута по трафарету:</h4>
-                    <div id="stencilResultTable"></div>
-                    <button class="btn-primary btn-sm" style="margin-top:8px;" onclick="pushStencilToSchedule()">📤 Вывести расписание на Информационное Табло Станций</button>
-                </div>
-
                 <div id="vu45Container" style="display:none;">
                     <div class="vu45-ticket" id="vu45Ticket"></div>
                     <div class="action-buttons no-print" style="margin-top:12px;">
@@ -640,9 +584,8 @@
 
         <div class="station-selector-bar no-print">
             <div class="station-tabs-group">
-                <button class="station-tab-btn active" id="stTabSosnovy" onclick="selectStationBoard('Сосновый Бор')">🚉 ст. Сосновый Бор</button>
-                <button class="station-tab-btn" id="stTabLelma" onclick="selectStationBoard('Лельма')">🚉 ст. Лельма</button>
-                <button class="station-tab-btn" id="stTabKrutoborka" onclick="selectStationBoard('Крутоборка')">🚉 ст. Крутоборка</button>
+                <button class="station-tab-btn active" id="stTabSosnovy" onclick="selectStationBoard('Максиград')">🚉 ст. Максиград</button>
+                <button class="station-tab-btn" id="stTabKrutoborka" onclick="selectStationBoard('Москва')">🚉 ст. Москва</button>
             </div>
             <div style="font-weight:bold; color:var(--bp-accent-gold);" id="clockDisplay">00:00:00</div>
         </div>
@@ -650,7 +593,7 @@
         <div class="board-container">
             <div class="board-header">
                 <span>ТАБЛО ОТПРАВЛЕНИЯ И ПРИБЫТИЯ ПОЕЗДОВ</span>
-                <span id="boardStationTitle">СТАНЦИЯ СОСНОВЫЙ БОР</span>
+                <span id="boardStationTitle">СТАНЦИЯ МАКСИГРАД</span>
             </div>
             <table class="board-table">
                 <thead>
@@ -669,7 +612,7 @@
         </div>
 
         <div class="schedule-box">
-            <h3 style="margin-bottom:12px; font-size:14px;">Полная сводная ведомость движения по участкам Сосновый Бор — Лельма — Крутоборка</h3>
+            <h3 style="margin-bottom:12px; font-size:14px;">Полная сводная ведомость движения по участку Максиград — Москва</h3>
             <div class="table-container">
                 <table class="bp-table">
                     <thead>
@@ -760,13 +703,13 @@
                     <div>
                         <label>Ширина колеи (мм):</label>
                         <select id="formGauge">
-                            <option value="750">750 мм (Узкоколейный)</option>
+                            <option value="750">750 мм</option>
                             <option value="1520">1520 мм (Ширококолейный)</option>
                         </select>
                     </div>
                     <div>
                         <label>Депо приписки / Станция:</label>
-                        <input type="text" id="formDepot" placeholder="ТЧ-1 Сосновый Бор">
+                        <input type="text" id="formDepot" placeholder="ТЧ-1 Максиград">
                     </div>
                     <div>
                         <label>Завод-изготовитель:</label>
@@ -882,17 +825,15 @@
                     <div>
                         <label>Станция отправления:</label>
                         <select id="schFrom">
-                            <option value="Сосновый Бор">ст. Сосновый Бор</option>
-                            <option value="Лельма">ст. Лельма</option>
-                            <option value="Крутоборка">ст. Крутоборка</option>
+                            <option value="Максиград">ст. Максиград</option>
+                            <option value="Москва">ст. Москва</option>
                         </select>
                     </div>
                     <div>
                         <label>Станция назначения:</label>
                         <select id="schTo">
-                            <option value="Крутоборка">ст. Крутоборка</option>
-                            <option value="Лельма">ст. Лельма</option>
-                            <option value="Сосновый Бор">ст. Сосновый Бор</option>
+                            <option value="Москва">ст. Москва</option>
+                            <option value="Максиград">ст. Максиград</option>
                         </select>
                     </div>
                     <div><label>Время отправления:</label><input type="time" id="schDepTime" required></div>
@@ -911,11 +852,11 @@
     <!-- SCRIPTS -->
     <script>
         const DEFAULT_DATABASE = [
-            { id: "ps-1", series: "ТУ2-113", category: "loco", gauge: "750", depot: "ТЧ-1 Сосновый Бор", factory: "Калужский машиностроительный", buildYear: 1957, commissionDate: "1957-06-12", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Прошел КР в 2021 году. Исправен." },
-            { id: "ps-2", series: "ТУ2-048", category: "loco", gauge: "750", depot: "ТЧ-1 Сосновый Бор", factory: "Калужский машиностроительный", buildYear: 1956, commissionDate: "1956-08-20", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Окрашен в историческую ливрею." },
-            { id: "ps-3", series: "ПВ40-0012", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Пассажирский салон на 40 мест." },
-            { id: "ps-4", series: "ПВ40-0015", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Плановый ремонт пройден." },
-            { id: "ps-5", series: "ПВ40-0021", category: "pass_car", gauge: "750", depot: "ЛВПЧ Сосновый Бор", factory: "Демиховский машиностроительный", buildYear: 1984, commissionDate: "1984-07-01", decommissionDate: "", scrapDate: "", status: "st-mod", weight: 9.5, length: 11.1, brake: 8, notes: "Находится на КРП." }
+            { id: "ps-1", series: "ТУ2-113", category: "loco", gauge: "750", depot: "ТЧ-1 Максиград", factory: "Калужский машиностроительный", buildYear: 1957, commissionDate: "1957-06-12", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Прошел КР в 2021 году. Исправен." },
+            { id: "ps-2", series: "ТУ2-048", category: "loco", gauge: "750", depot: "ТЧ-1 Максиград", factory: "Калужский машиностроительный", buildYear: 1956, commissionDate: "1956-08-20", decommissionDate: "", scrapDate: "", status: "st-active", weight: 32, length: 10.7, brake: 24, notes: "Окрашен в историческую ливрею." },
+            { id: "ps-3", series: "ПВ40-0012", category: "pass_car", gauge: "750", depot: "ЛВПЧ Максиград", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Пассажирский салон на 40 мест." },
+            { id: "ps-4", series: "ПВ40-0015", category: "pass_car", gauge: "750", depot: "ЛВПЧ Максиград", factory: "Демиховский машиностроительный", buildYear: 1982, commissionDate: "1982-05-10", decommissionDate: "", scrapDate: "", status: "st-active", weight: 9.5, length: 11.1, brake: 8, notes: "Плановый ремонт пройден." },
+            { id: "ps-5", series: "ПВ40-0021", category: "pass_car", gauge: "750", depot: "ЛВПЧ Максиград", factory: "Демиховский машиностроительный", buildYear: 1984, commissionDate: "1984-07-01", decommissionDate: "", scrapDate: "", status: "st-mod", weight: 9.5, length: 11.1, brake: 8, notes: "Находится на КРП." }
         ];
 
         const STATUS_MAP = {
@@ -930,14 +871,14 @@
             "st-museum": "Музейный"
         };
 
-        const LINE_STATIONS = ["Сосновый Бор", "Лельма", "Крутоборка"];
+        const LINE_STATIONS = ["Максиград", "Москва"];
 
         let db = JSON.parse(localStorage.getItem('rp_db')) || DEFAULT_DATABASE;
         let profile = JSON.parse(localStorage.getItem('rp_profile')) || {
             name: "Иванов Иван Иванович",
             role: "Дежурный по станции (ДСП)",
             tabNum: "ТБ-88402",
-            station: "ст. Сосновый Бор",
+            station: "ст. Максиград",
             qual: "ДСП 1-го класса",
             exp: "5 лет 4 месяца",
             shift: "На дежурстве",
@@ -948,15 +889,13 @@
             { id: "n1", title: "🚨 Алгоритм ДСП при неисправности стрелки", body: "1. Прекратить приготовление маршрутов.\n2. Вызвать ШЧ и ПЧ.\n3. Перевести стрелку на ручное управление." }
         ];
         let schedules = JSON.parse(localStorage.getItem('rp_schedules')) || [
-            { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Сосновый Бор", to: "Крутоборка", depTime: "08:30", arrTime: "09:25", track: "1 путь", days: "Ежедневно", timetable: [
-                { station: "Сосновый Бор", arr: "—", dep: "08:30", stop: "0 мин", track: "1 путь" },
-                { station: "Лельма", arr: "08:55", dep: "09:00", stop: "5 мин", track: "1 путь" },
-                { station: "Крутоборка", arr: "09:25", dep: "—", stop: "—", track: "1 путь" }
+            { id: "sch-1", num: "№ 601", cat: "Пригородный", from: "Максиград", to: "Москва", depTime: "08:30", arrTime: "09:25", track: "1 путь", days: "Ежедневно", timetable: [
+                { station: "Максиград", arr: "—", dep: "08:30", stop: "0 мин", track: "1 путь" },
+                { station: "Москва", arr: "09:25", dep: "—", stop: "—", track: "1 путь" }
             ]},
-            { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Крутоборка", to: "Сосновый Бор", depTime: "10:15", arrTime: "11:10", track: "2 путь", days: "Ежедневно", timetable: [
-                { station: "Крутоборка", arr: "—", dep: "10:15", stop: "0 мин", track: "2 путь" },
-                { station: "Лельма", arr: "10:40", dep: "10:45", stop: "5 мин", track: "1 путь" },
-                { station: "Сосновый Бор", arr: "11:10", dep: "—", stop: "—", track: "2 путь" }
+            { id: "sch-2", num: "№ 602", cat: "Пригородный", from: "Москва", to: "Максиград", depTime: "10:15", arrTime: "11:10", track: "2 путь", days: "Ежедневно", timetable: [
+                { station: "Москва", arr: "—", dep: "10:15", stop: "0 мин", track: "2 путь" },
+                { station: "Максиград", arr: "11:10", dep: "—", stop: "—", track: "2 путь" }
             ]}
         ];
 
@@ -965,7 +904,7 @@
         let sortField = 'series';
         let sortAsc = true;
         let selectedConsist = [];
-        let currentBoardStation = 'Сосновый Бор';
+        let currentBoardStation = 'Максиград';
         let generatedStencilSchedule = null;
         let lastCalculatedData = null;
 
@@ -1673,7 +1612,7 @@
                 <div><b>Требуемое тормозное нажатие:</b> ${reqBrakes} тс</div>
                 <div><b>Фактическое тормозное нажатие:</b> ${brakes.toFixed(1)} тс</div>
                 <div><b>Давление в тормозной магистрали:</b> ${pressure} кгс/см²</div>
-                <div style="margin-top:10px;"><b>РАСПИСАНИЕ ПОЕЗДА ПО ТРАФАРЕТУ (СБОРНЫЙ МАРШРУТ):</b></div>
+                <div style="margin-top:10px;"><b>МАРШРУТ ПОЕЗДА:</b></div>
                 ${scheduleTableHtml}
                 <br>
                 <div style="display:flex; justify-content:space-between; font-weight:bold; margin-top:10px;">
@@ -1688,9 +1627,8 @@
 
         function selectStationBoard(stName) {
             currentBoardStation = stName;
-            document.getElementById('stTabSosnovy').classList.toggle('active', stName === 'Сосновый Бор');
-            document.getElementById('stTabLelma').classList.toggle('active', stName === 'Лельма');
-            document.getElementById('stTabKrutoborka').classList.toggle('active', stName === 'Крутоборка');
+            document.getElementById('stTabSosnovy').classList.toggle('active', stName === 'Максиград');
+            document.getElementById('stTabKrutoborka').classList.toggle('active', stName === 'Москва');
             document.getElementById('boardStationTitle').innerText = 'СТАНЦИЯ ' + stName.toUpperCase();
             renderScheduleBoard();
         }
@@ -1898,7 +1836,7 @@
 
             gContainer.innerHTML = `
                 <div class="progress-item">
-                    <div class="progress-label"><span>Узкая колея (750 мм)</span><span>${g750} шт. (${pct750}%)</span></div>
+                    <div class="progress-label"><span>Колея 750 мм</span><span>${g750} шт. (${pct750}%)</span></div>
                     <div class="progress-bg"><div class="progress-fill" style="width:${pct750}%; background:var(--bp-accent-gold);"></div></div>
                 </div>
                 <div class="progress-item">
