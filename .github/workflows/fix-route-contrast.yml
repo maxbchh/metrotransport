@@ -16,43 +16,34 @@ jobs:
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          if [[ "$COMMIT_MESSAGE" == *"fix: route table contrast"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"fix: force route row text colors"* ]]; then
             echo 'Fix commit detected; nothing to do.'
             exit 0
           fi
           python - <<'PY'
           from pathlib import Path
-          import re
           p = Path('railphoto-route-registry.js')
           s = p.read_text(encoding='utf-8')
+          marker = "body.innerHTML=routes.map(r=>{"
+          injection = "body.innerHTML=routes.map(r=>{"
           changed = False
-          patterns = [
-              r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';const rowText=.*?;",
-              r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';let rowText=.*?;"
-          ]
-          replacement = "const rowBg=c.color+'2A';const rowText=r.color==='black'?'#ffffff':'#0f172a';"
-          for pat in patterns:
-              ns, n = re.subn(pat, replacement, s, count=1)
-              if n:
-                  s = ns
-                  changed = True
-                  break
-          marker = '<tr style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
-          class_marker = '<tr class="rr-line-row rr-line-${r.color}" style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
-          if marker in s:
-              s = s.replace(marker, class_marker, 1)
+          # Keep the existing renderer and add an unconditional post-render contrast pass.
+          anchor = "}).join('')||'<tr><td colspan=\"13\" style=\"text-align:center;padding:16px\">Маршрутов пока нет</td></tr>';\n  }"
+          replacement = "}).join('')||'<tr><td colspan=\"13\" style=\"text-align:center;padding:16px\">Маршрутов пока нет</td></tr>';body.querySelectorAll('tr.rr-line-black td').forEach(td=>td.style.setProperty('color','#ffffff','important'));body.querySelectorAll('tr.rr-line-black b').forEach(el=>el.style.setProperty('color','#ffffff','important'));\n  }"
+          if anchor in s:
+              s = s.replace(anchor, replacement, 1)
               changed = True
-          if 'rr-line-black td' not in s:
-              anchor = '.rr-table tbody tr.rr-line-black{background:#1f2937!important}'
-              rule = anchor + '.rr-table tbody tr.rr-line-black td{color:#ffffff!important}'
-              if anchor in s:
-                  s = s.replace(anchor, rule, 1)
-                  changed = True
+          else:
+              print('Render anchor not found.')
+          # Also strengthen the CSS fallback for the freight row.
+          css_anchor = ".rr-table tbody tr.rr-line-black{background:#1f2937!important}"
+          css_rule = css_anchor + ".rr-table tbody tr.rr-line-black td,.rr-table tbody tr.rr-line-black td *{color:#ffffff!important;text-shadow:none!important;opacity:1!important}"
+          if css_anchor in s and ".rr-line-black td *{color:#ffffff!important" not in s:
+              s = s.replace(css_anchor, css_rule, 1)
+              changed = True
           if changed:
               p.write_text(s, encoding='utf-8')
-              print('Route contrast/class fix applied.')
-          else:
-              print('No source change required.')
+              print('Forceful freight-row contrast fix applied.')
           PY
       - name: Commit fix
         run: |
@@ -63,5 +54,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add railphoto-route-registry.js
-          git commit -m 'fix: freight route white text'
+          git commit -m 'fix: force route row text colors'
           git push
