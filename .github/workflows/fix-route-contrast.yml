@@ -12,11 +12,11 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Fix route row text contrast
+      - name: Normalize freight row appearance
         env:
           COMMIT_MESSAGE: ${{ github.event.head_commit.message }}
         run: |
-          if [[ "$COMMIT_MESSAGE" == *"fix: all freight route text"* ]]; then
+          if [[ "$COMMIT_MESSAGE" == *"fix: lighten freight rows"* ]]; then
             echo 'Fix commit detected; nothing to do.'
             exit 0
           fi
@@ -27,35 +27,30 @@ jobs:
           s = p.read_text(encoding='utf-8')
           changed = False
 
-          # Any route whose type is "Грузовой" is treated as a freight row,
-          # regardless of its selected line color. Black color remains freight too.
-          old = "const cls=`rr-line-row rr-line-${r.color}`;"
-          new = "const isFreight=r.type==='Грузовой'||r.color==='black';const cls=`rr-line-row rr-line-${r.color}${isFreight?' rr-freight-row':''}`;"
-          if old in s:
-              s = s.replace(old, new, 1)
-              changed = True
-
-          # Ensure every freight row and every element inside it has white text.
-          css_anchor = ".rr-table tbody tr.rr-line-black{background:#1f2937!important}.rr-table tbody tr.rr-line-black td,.rr-table tbody tr.rr-line-black td *{color:#ffffff!important;text-shadow:none!important;opacity:1!important}"
-          css_rule = ".rr-table tbody tr.rr-line-black{background:#1f2937!important}.rr-table tbody tr.rr-line-black td,.rr-table tbody tr.rr-line-black td *{color:#ffffff!important;text-shadow:none!important;opacity:1!important}.rr-table tbody tr.rr-freight-row td,.rr-table tbody tr.rr-freight-row td *{color:#ffffff!important;text-shadow:none!important;opacity:1!important}.rr-table tbody tr.rr-freight-row{font-weight:500!important}"
-          if css_anchor in s and ".rr-freight-row td *" not in s:
-              s = s.replace(css_anchor, css_rule, 1)
-              changed = True
-
-          # Also force white text after rendering so inline styles cannot override it.
-          render_anchor = "body.innerHTML=routes.map(r=>{"
-          if render_anchor in s and "body.querySelectorAll('tr.rr-freight-row td')" not in s:
-              marker = "}).join('')||'<tr><td colspan=\"13\" style=\"text-align:center;padding:16px\">Маршрутов пока нет</td></tr>';"
-              if marker in s:
-                  replacement = marker + "body.querySelectorAll('tr.rr-freight-row td, tr.rr-freight-row td *').forEach(el=>el.style.setProperty('color','#ffffff','important'));"
-                  s = s.replace(marker, replacement, 1)
+          replacements = [
+              (".rr-table tbody tr.rr-line-black{color:#ffffff!important}", ".rr-table tbody tr.rr-line-black{color:#0f172a!important}"),
+              (".rr-table tbody tr.rr-line-black td{color:inherit!important}", ".rr-table tbody tr.rr-line-black td{color:#0f172a!important}"),
+              (".rr-table tbody tr.rr-line-black{background:#1f2937!important}", ".rr-table tbody tr.rr-line-black{background:rgba(31,41,55,.18)!important}"),
+              (".rr-table tbody tr.rr-freight-row td,.rr-table tbody tr.rr-freight-row td *{color:#ffffff!important;text-shadow:none!important;opacity:1!important}", ".rr-table tbody tr.rr-freight-row td,.rr-table tbody tr.rr-freight-row td *{color:#0f172a!important;text-shadow:none!important;opacity:1!important}"),
+              ("const rowText=r.color==='black'?'#ffffff':'#0f172a';", "const rowText='#0f172a';"),
+              ("const rowText=r.color==='black'?'#ffffff':'#0f172a'", "const rowText='#0f172a'"),
+              ("style.setProperty('color','#ffffff','important')", "style.setProperty('color','#0f172a','important')"),
+          ]
+          for old, new in replacements:
+              if old in s:
+                  s = s.replace(old, new)
                   changed = True
+
+          s, n = re.subn(r"\.rr-table tbody tr\.rr-line-black\{background:#1f2937!important\}", ".rr-table tbody tr.rr-line-black{background:rgba(31,41,55,.18)!important}", s)
+          changed |= n > 0
+          s, n = re.subn(r"rr-line-black td\{color:inherit!important\}", "rr-line-black td{color:#0f172a!important}", s)
+          changed |= n > 0
 
           if changed:
               p.write_text(s, encoding='utf-8')
-              print('All freight-route contrast rules applied.')
+              print('Freight rows normalized to a lighter translucent dark shade with dark readable text.')
           else:
-              print('No source change required.')
+              print('No freight appearance changes were necessary.')
           PY
       - name: Commit fix
         run: |
@@ -66,5 +61,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add railphoto-route-registry.js
-          git commit -m 'fix: all freight route text'
+          git commit -m 'fix: lighten freight rows'
           git push
