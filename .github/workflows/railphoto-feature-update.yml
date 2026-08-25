@@ -1,0 +1,64 @@
+name: Update railphoto features
+on:
+  push:
+    branches: [main]
+    paths: ['.github/workflows/railphoto-feature-update.yml','index.html']
+  workflow_dispatch:
+permissions:
+  contents: write
+jobs:
+  update:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+          p=Path('index.html'); s=p.read_text(encoding='utf-8')
+          def once(old,new,label):
+            global s
+            if old in s: s=s.replace(old,new,1); return True
+            return False
+          # primary state
+          if '"st-out-of-service": "Выведен из эксплуатации"' not in s:
+            once('"st-mod": "Капитальный Ремонт"\n        };','"st-mod": "Капитальный Ремонт",\n            "st-out-of-service": "Выведен из эксплуатации"\n        };','map')
+            s=s.replace('<option value="st-mod">Капитальный Ремонт</option>\n                </select>','<option value="st-mod">Капитальный Ремонт</option>\n                    <option value="st-out-of-service">Выведен из эксплуатации</option>\n                </select>')
+          # secondary status map + dynamic stations
+          if 'const SECONDARY_STATUS_MAP' not in s:
+            once('const LINE_STATIONS = ["Максиград", "Москва"];', '''const SECONDARY_STATUS_MAP = { none:"—", washing:"На мойке", reformed:"Переформирован", recoupled:"Перецеплен", "depot-repair":"Деповской ремонт", maintenance:"Техническое обслуживание", inspection:"Осмотр", ready:"Подготовка к выпуску", "awaiting-repair":"Ожидание ремонта" };\n        let LINE_STATIONS = JSON.parse(localStorage.getItem('rp_stations')) || ["Максиград", "Москва"];''','stations')
+            once("<option value=\"special\">Спецтехника</option>","<option value=\"special\">Спецтехника</option>\n                            <option value=\"mvps\">МВПС</option>",'mvps')
+            once("'special': 'Спецтехника' }[cat]","'special': 'Спецтехника', 'mvps': 'МВПС' }[cat]",'mvps-map')
+            once("if (currentCategoryFilter === 'special' && item.category !== 'special') return false;","if (currentCategoryFilter === 'special' && item.category !== 'special') return false;\n                if (currentCategoryFilter === 'mvps' && item.category !== 'mvps') return false;",'mvps-filter')
+            once("'special': 'tabCatSpecial', ","'special': 'tabCatSpecial', 'mvps': 'tabCatMvps', ",'mvps-tab-map')
+            once("<div class=\"cat-tab\" id=\"tabCatSpecial\" onclick=\"setCategoryFilter('special')\">🛠 Спецтехника</div>","<div class=\"cat-tab\" id=\"tabCatSpecial\" onclick=\"setCategoryFilter('special')\">🛠 Спецтехника</div>\n            <div class=\"cat-tab\" id=\"tabCatMvps\" onclick=\"setCategoryFilter('mvps')\">🚆 МВПС</div>",'mvps-tab')
+            once("db = db.map(item => ({ ...item, status: item.status || 'st-active' }));","db = db.map(item => ({ ...item, status: item.status || 'st-active', secondaryStatus: item.secondaryStatus || 'none' }));",'migration')
+            once('<div><input type="text" id="filterSearch" placeholder="🔍 Поиск..." oninput="renderTable()"></div>', '''<div><input type="text" id="filterSearch" placeholder="🔍 Поиск..." oninput="renderTable()"></div>\n            <div><select id="filterSecondaryStatus" onchange="renderTable()"><option value="all">-- Второе состояние --</option><option value="none">Без доп. состояния</option><option value="washing">На мойке</option><option value="reformed">Переформирован</option><option value="recoupled">Перецеплен</option><option value="depot-repair">Деповской ремонт</option><option value="maintenance">Техническое обслуживание</option><option value="inspection">Осмотр</option><option value="ready">Подготовка к выпуску</option><option value="awaiting-repair">Ожидание ремонта</option></select></div>''','secondary-filter')
+            once('<th onclick="sortTable(\'statusText\')">Статус ⇳</th>','<th onclick="sortTable(\'statusText\')">Статус ⇳</th>\n                        <th onclick="sortTable(\'notes\')">Примечание ⇳</th>','notes-head')
+            once('<td><b>${STATUS_MAP[item.status] || item.status}</b></td>','<td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style="color:var(--bp-text-muted);">${SECONDARY_STATUS_MAP[item.secondaryStatus || \'none\'] || \'—\'}</small></td>\n                    <td title="${item.notes || \'\'}">${item.notes || \'—\'}</td>','notes-row')
+            once("document.getElementById('formStatus').value = item.status;","document.getElementById('formStatus').value = item.status;\n            document.getElementById('formSecondaryStatus').value = item.secondaryStatus || 'none';",'edit-secondary')
+            once("status: document.getElementById('formStatus').value,","status: document.getElementById('formStatus').value,\n                secondaryStatus: document.getElementById('formSecondaryStatus').value,",'save-secondary')
+            once('<div class="form-full">\n                        <label>Примечание / История ремонтов:</label>', '''<div>\n                        <label>Второе состояние:</label>\n                        <select id="formSecondaryStatus"><option value="none">Без доп. состояния</option><option value="washing">На мойке</option><option value="reformed">Переформирован</option><option value="recoupled">Перецеплен</option><option value="depot-repair">Деповской ремонт</option><option value="maintenance">Техническое обслуживание</option><option value="inspection">Осмотр</option><option value="ready">Подготовка к выпуску</option><option value="awaiting-repair">Ожидание ремонта</option></select>\n                    </div>\n                    <div class="form-full">\n                        <label>Примечание / История ремонтов:</label>''','form-secondary')
+            once("const statusFilter = document.getElementById('filterStatus').value;","const statusFilter = document.getElementById('filterStatus').value;\n            const secondaryStatusFilter = document.getElementById('filterSecondaryStatus')?.value || 'all';",'secondary-filter-js')
+            once("if (statusFilter !== 'all' && item.status !== statusFilter) return false;","if (statusFilter !== 'all' && item.status !== statusFilter) return false;\n                if (secondaryStatusFilter !== 'all' && (item.secondaryStatus || 'none') !== secondaryStatusFilter) return false;",'secondary-filter-condition')
+            once("document.getElementById('filterStatus').value = 'all';","document.getElementById('filterStatus').value = 'all';\n            if(document.getElementById('filterSecondaryStatus')) document.getElementById('filterSecondaryStatus').value='all';",'secondary-reset')
+            # station management
+            once('<div class="station-selector-bar no-print">','''<div class="schedule-box no-print" id="stationManagementPanel"><div class="page-header" style="margin-bottom:10px;"><span>🚉 Станции маршрута</span><div class="action-buttons"><input id="newStationName" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;"><button class="btn-secondary" onclick="addLineStation()">➕ Добавить станцию</button></div></div><div id="stationList" class="station-tabs-group"></div></div>\n\n        <div class="station-selector-bar no-print">''','station-panel')
+            once('function getRouteStations(fromSt, toSt) {','''function refreshStationSelectors(){ ['tripFromStation','tripToStation','schFrom','schTo'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const v=e.value;e.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');if(LINE_STATIONS.includes(v))e.value=v;});const l=document.getElementById('stationList');if(l)l.innerHTML=LINE_STATIONS.map((st,i)=>`<span class="type-badge">${st} ${i?`<button class="btn-danger btn-sm" onclick="removeLineStation(${i})">×</button>`:''}</span>`).join('');}\n        function addLineStation(){const e=document.getElementById('newStationName');const n=(e?.value||'').trim();if(!n||LINE_STATIONS.includes(n))return;LINE_STATIONS.push(n);profile.lineStations=LINE_STATIONS;saveData();refreshStationSelectors();}\n        function removeLineStation(i){if(i<=0)return;if(!confirm(`Удалить станцию «${LINE_STATIONS[i]}»?`))return;LINE_STATIONS.splice(i,1);profile.lineStations=LINE_STATIONS;saveData();refreshStationSelectors();renderScheduleBoard();}\n\n        function getRouteStations(fromSt, toSt) {''','station-functions')
+            once("localStorage.setItem('rp_schedules', JSON.stringify(schedules));","localStorage.setItem('rp_schedules', JSON.stringify(schedules));\n            localStorage.setItem('rp_stations', JSON.stringify(LINE_STATIONS));",'stations-save')
+            once('days: document.getElementById(\'schDays\').value,\n                timetable: timetable','days: document.getElementById(\'schDays\').value,\n                autoShow: document.getElementById(\'schAutoShow\')?.value !== \'false\',\n                autoMinutes: parseInt(document.getElementById(\'schAutoMinutes\')?.value || \'15\',10),\n                timetable: timetable','auto-data')
+            once('<div><label>Регулярность:</label><input type="text" id="schDays" value="Ежедневно"></div>','<div><label>Регулярность:</label><input type="text" id="schDays" value="Ежедневно"></div><div><label>Автовывод за (мин):</label><input type="number" id="schAutoMinutes" value="15" min="0"></div><div><label>Автовывод:</label><select id="schAutoShow"><option value="true">Да</option><option value="false">Нет</option></select></div>','auto-controls')
+            once('const filtered = schedules.filter(s => {','''const now=new Date(), nowMins=now.getHours()*60+now.getMinutes();\n            const filtered = schedules.filter(s => {\n                if(s.autoShow!==false){const dep=parseTime(s.depTime),arr=parseTime(s.arrTime),w=Math.max(0,parseInt(s.autoMinutes||15,10));const ok=(arr<dep)?(nowMins>=dep-w||nowMins<=arr+w):(nowMins>=dep-w&&nowMins<=arr+w);if(!ok)return false;}''','auto-filter')
+            once("if (clock) clock.innerText = now.toTimeString().split(' ')[0];\n        }, 1000);","if (clock) clock.innerText = now.toTimeString().split(' ')[0];\n            if(document.getElementById('pageSchedule')?.style.display !== 'none') renderScheduleBoard();\n        }, 15000);",'auto-refresh')
+          # status counter
+          once('<div class="stat-card"><div class="stat-card-title">Капитальный Ремонт</div><div class="stat-card-val" id="statMod">0</div></div>','<div class="stat-card"><div class="stat-card-title">Капитальный Ремонт</div><div class="stat-card-val" id="statMod">0</div></div>\n            <div class="stat-card"><div class="stat-card-title">Выведен из эксплуатации</div><div class="stat-card-val" id="statOutOfService">0</div></div>','counter-card')
+            once("document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;","document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;\n            document.getElementById('statOutOfService').innerText = db.filter(x => x.status === 'st-out-of-service').length;",'counter-js')
+          p.write_text(s,encoding='utf-8')
+      - name: Commit
+        run: |
+          git config user.name github-actions[bot]
+          git config user.email 41898282+github-actions[bot]@users.noreply.github.com
+          git add index.html
+          git commit -m 'feat: extend railphoto rolling stock and schedule tools' || exit 0
+          git push
