@@ -25,29 +25,34 @@ jobs:
           import re
           p = Path('railphoto-route-registry.js')
           s = p.read_text(encoding='utf-8')
+          changed = False
           patterns = [
               r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';const rowText=.*?;",
               r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';let rowText=.*?;"
           ]
           replacement = "const rowBg=c.color+'2A';const rowText=r.color==='black'?'#ffffff':'#0f172a';"
-          changed = False
           for pat in patterns:
               ns, n = re.subn(pat, replacement, s, count=1)
               if n:
                   s = ns
                   changed = True
                   break
+          marker = '<tr style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
+          class_marker = '<tr class="rr-line-row rr-line-${r.color}" style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
+          if marker in s:
+              s = s.replace(marker, class_marker, 1)
+              changed = True
+          if 'rr-line-black td' not in s:
+              anchor = '.rr-table tbody tr.rr-line-black{background:#1f2937!important}'
+              rule = anchor + '.rr-table tbody tr.rr-line-black td{color:#ffffff!important}'
+              if anchor in s:
+                  s = s.replace(anchor, rule, 1)
+                  changed = True
           if changed:
               p.write_text(s, encoding='utf-8')
-              print('Contrast fix applied.')
+              print('Route contrast/class fix applied.')
           else:
-              print('Route row color expression not found; checking for direct row style fallback.')
-              marker = '<tr style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
-              if marker in s and 'const rowText=r.color===\'black\'?' not in s:
-                  s = s.replace(marker, '<tr style="background:${rowBg};color:${r.color===\'black\'?\'#ffffff\':\'#0f172a\'};box-shadow:inset 6px 0 0 ${c.color};">', 1)
-                  p.write_text(s, encoding='utf-8')
-                  changed = True
-                  print('Fallback contrast fix applied.')
+              print('No source change required.')
           PY
       - name: Commit fix
         run: |
@@ -58,5 +63,5 @@ jobs:
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
           git add railphoto-route-registry.js
-          git commit -m 'fix: route table contrast'
+          git commit -m 'fix: freight route white text'
           git push
