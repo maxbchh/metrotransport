@@ -413,6 +413,7 @@
             <div class="stat-card"><div class="stat-card-title">Музейный</div><div class="stat-card-val" id="statMuseum">0</div></div>
             <div class="stat-card"><div class="stat-card-title">Переформирован</div><div class="stat-card-val" id="statReformed">0</div></div>
             <div class="stat-card"><div class="stat-card-title">Капитальный Ремонт</div><div class="stat-card-val" id="statMod">0</div></div>
+            <div class="stat-card"><div class="stat-card-title">Выведен из эксплуатации</div><div class="stat-card-val" id="statOutOfService">0</div></div>
         </div>
 
         <div class="category-tabs no-print">
@@ -421,12 +422,14 @@
             <div class="cat-tab" id="tabCatPass" onclick="setCategoryFilter('pass_car')">🚃 Пассажирские вагоны</div>
             <div class="cat-tab" id="tabCatCargo" onclick="setCategoryFilter('cargo_car')">📦 Грузовые вагоны</div>
             <div class="cat-tab" id="tabCatSpecial" onclick="setCategoryFilter('special')">🛠 Спецтехника</div>
+            <div class="cat-tab" id="tabCatMvps" onclick="setCategoryFilter('mvps')">🚆 МВПС</div>
             <div class="cat-tab" id="tabCat750" onclick="setCategoryFilter('gauge_750')">📏 Колея 750 мм</div>
             <div class="cat-tab" id="tabCat1520" onclick="setCategoryFilter('gauge_1520')">📐 Широкая колея (1520мм)</div>
         </div>
 
         <div class="filter-panel no-print">
             <div><input type="text" id="filterSearch" placeholder="🔍 Поиск..." oninput="renderTable()"></div>
+            <div><select id="filterSecondaryStatus" onchange="renderTable()"><option value="all">-- Второе состояние --</option><option value="none">Без доп. состояния</option><option value="washing">На мойке</option><option value="reformed">Переформирован</option><option value="recoupled">Перецеплен</option><option value="depot-repair">Деповской ремонт</option><option value="maintenance">Техническое обслуживание</option><option value="inspection">Осмотр</option><option value="ready">Подготовка к выпуску</option><option value="awaiting-repair">Ожидание ремонта</option></select></div>
             <div>
                 <select id="filterStatus" onchange="renderTable()">
                     <option value="all">-- Все статусы --</option>
@@ -439,6 +442,7 @@
                     <option value="st-museum">Музейный</option>
                     <option value="st-trans">Переформирован</option>
                     <option value="st-mod">Капитальный Ремонт</option>
+                    <option value="st-out-of-service">Выведен из эксплуатации</option>
                 </select>
             </div>
             <div>
@@ -465,6 +469,7 @@
                     <option value="st-museum">Музейный</option>
                     <option value="st-trans">Переформирован</option>
                     <option value="st-mod">Капитальный Ремонт</option>
+                    <option value="st-out-of-service">Выведен из эксплуатации</option>
                 </select>
                 <button class="btn-primary btn-sm" onclick="applyBatchStatus()">Применить</button>
                 <button class="btn-danger btn-sm" onclick="deleteBatchSelected()">🗑 Удалить</button>
@@ -486,6 +491,7 @@
                         <th onclick="sortTable('decommissionDate')">Списание ⇳</th>
                         <th onclick="sortTable('scrapDate')">Утилизация ⇳</th>
                         <th onclick="sortTable('statusText')">Статус ⇳</th>
+                        <th onclick="sortTable('notes')">Примечание ⇳</th>
                         <th style="text-align:center;">Действия</th>
                     </tr>
                 </thead>
@@ -590,6 +596,8 @@
                 <button class="btn-primary" onclick="openAddTrainScheduleModal()">➕ Добавить поезд в расписание</button>
             </div>
         </div>
+
+        <div class="schedule-box no-print" id="stationManagementPanel"><div class="page-header" style="margin-bottom:10px;"><span>🚉 Станции маршрута</span><div class="action-buttons"><input id="newStationName" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;"><button class="btn-secondary" onclick="addLineStation()">➕ Добавить станцию</button></div></div><div id="stationList" class="station-tabs-group"></div></div>
 
         <div class="station-selector-bar no-print">
             <div class="station-tabs-group">
@@ -707,6 +715,7 @@
                             <option value="pass_car">Пассажирский вагон</option>
                             <option value="cargo_car">Грузовой вагон</option>
                             <option value="special">Спецтехника</option>
+                            <option value="mvps">МВПС</option>
                         </select>
                     </div>
                     <div>
@@ -752,6 +761,7 @@
                     <option value="st-museum">Музейный</option>
                     <option value="st-trans">Переформирован</option>
                     <option value="st-mod">Капитальный Ремонт</option>
+                    <option value="st-out-of-service">Выведен из эксплуатации</option>
                 </select>
                     </div>
                     <div>
@@ -765,6 +775,10 @@
                     <div>
                         <label>Тормозное нажатие (тс):</label>
                         <input type="number" step="0.1" id="formBrake" value="8">
+                    </div>
+                    <div>
+                        <label>Второе состояние:</label>
+                        <select id="formSecondaryStatus"><option value="none">Без доп. состояния</option><option value="washing">На мойке</option><option value="reformed">Переформирован</option><option value="recoupled">Перецеплен</option><option value="depot-repair">Деповской ремонт</option><option value="maintenance">Техническое обслуживание</option><option value="inspection">Осмотр</option><option value="ready">Подготовка к выпуску</option><option value="awaiting-repair">Ожидание ремонта</option></select>
                     </div>
                     <div class="form-full">
                         <label>Примечание / История ремонтов:</label>
@@ -850,7 +864,7 @@
                     <div><label>Время отправления:</label><input type="time" id="schDepTime" required></div>
                     <div><label>Время прибытия:</label><input type="time" id="schArrTime" required></div>
                     <div><label>Назначенный путь:</label><input type="text" id="schTrack" value="1 путь"></div>
-                    <div><label>Регулярность:</label><input type="text" id="schDays" value="Ежедневно"></div>
+                    <div><label>Регулярность:</label><input type="text" id="schDays" value="Ежедневно"></div><div><label>Автовывод за (мин):</label><input type="number" id="schAutoMinutes" value="15" min="0"></div><div><label>Автовывод:</label><select id="schAutoShow"><option value="true">Да</option><option value="false">Нет</option></select></div>
                 </div>
                 <div class="action-buttons" style="margin-top:18px; justify-content:flex-end;">
                     <button type="button" class="btn-secondary" onclick="closeScheduleModal()">Отмена</button>
@@ -879,13 +893,15 @@
             "st-decomm": "Списан",
             "st-museum": "Музейный",
             "st-trans": "Переформирован",
-            "st-mod": "Капитальный Ремонт"
+            "st-mod": "Капитальный Ремонт",
+            "st-out-of-service": "Выведен из эксплуатации"
         };
 
-        const LINE_STATIONS = ["Максиград", "Москва"];
+        const SECONDARY_STATUS_MAP = { none:"—", washing:"На мойке", reformed:"Переформирован", recoupled:"Перецеплен", "depot-repair":"Деповской ремонт", maintenance:"Техническое обслуживание", inspection:"Осмотр", ready:"Подготовка к выпуску", "awaiting-repair":"Ожидание ремонта" };
+        let LINE_STATIONS = JSON.parse(localStorage.getItem('rp_stations')) || ["Максиград", "Москва"];
 
         let db = JSON.parse(localStorage.getItem('rp_db')) || DEFAULT_DATABASE;
-        db = db.map(item => ({ ...item, status: item.status || 'st-active' }));
+        db = db.map(item => ({ ...item, status: item.status || 'st-active', secondaryStatus: item.secondaryStatus || 'none' }));
         let profile = JSON.parse(localStorage.getItem('rp_profile')) || {
             name: "Иванов Иван Иванович",
             role: "Дежурный по станции (ДСП)",
@@ -925,6 +941,7 @@
             localStorage.setItem('rp_profile', JSON.stringify(profile));
             localStorage.setItem('rp_pinned', JSON.stringify(pinnedNotes));
             localStorage.setItem('rp_schedules', JSON.stringify(schedules));
+            localStorage.setItem('rp_stations', JSON.stringify(LINE_STATIONS));
         }
 
         function switchPage(pageId) {
@@ -1025,7 +1042,7 @@
             document.querySelectorAll('.cat-tab').forEach(t => t.classList.remove('active'));
             const activeTab = {
                 'all': 'tabCatAll', 'loco': 'tabCatLoco', 'pass_car': 'tabCatPass', 
-                'cargo_car': 'tabCatCargo', 'special': 'tabCatSpecial', 
+                'cargo_car': 'tabCatCargo', 'special': 'tabCatSpecial', 'mvps': 'tabCatMvps', 
                 'gauge_750': 'tabCat750', 'gauge_1520': 'tabCat1520'
             }[cat];
             if (activeTab) document.getElementById(activeTab).classList.add('active');
@@ -1042,6 +1059,7 @@
             const tbody = document.getElementById('tableBody');
             const search = document.getElementById('filterSearch').value.toLowerCase();
             const statusFilter = document.getElementById('filterStatus').value;
+            const secondaryStatusFilter = document.getElementById('filterSecondaryStatus')?.value || 'all';
             const gaugeFilter = document.getElementById('filterGauge').value;
 
             let filtered = db.filter(item => {
@@ -1049,10 +1067,12 @@
                 if (currentCategoryFilter === 'pass_car' && item.category !== 'pass_car') return false;
                 if (currentCategoryFilter === 'cargo_car' && item.category !== 'cargo_car') return false;
                 if (currentCategoryFilter === 'special' && item.category !== 'special') return false;
+                if (currentCategoryFilter === 'mvps' && item.category !== 'mvps') return false;
                 if (currentCategoryFilter === 'gauge_750' && item.gauge !== '750') return false;
                 if (currentCategoryFilter === 'gauge_1520' && item.gauge !== '1520') return false;
 
                 if (statusFilter !== 'all' && item.status !== statusFilter) return false;
+                if (secondaryStatusFilter !== 'all' && (item.secondaryStatus || 'none') !== secondaryStatusFilter) return false;
                 if (gaugeFilter !== 'all' && item.gauge !== gaugeFilter) return false;
 
                 const matchSearch = (item.series + " " + item.depot + " " + item.factory + " " + (item.notes||'')).toLowerCase();
@@ -1078,6 +1098,7 @@
             document.getElementById('statMuseum').innerText = db.filter(x => x.status === 'st-museum').length;
             document.getElementById('statReformed').innerText = db.filter(x => x.status === 'st-trans').length;
             document.getElementById('statMod').innerText = db.filter(x => x.status === 'st-mod').length;
+            document.getElementById('statOutOfService').innerText = db.filter(x => x.status === 'st-out-of-service').length;
 
             tbody.innerHTML = '';
             filtered.forEach(item => {
@@ -1100,7 +1121,8 @@
                     <td>${item.commissionDate || '-'}</td>
                     <td class="${item.decommissionDate ? 'col-highlight-decomm' : ''}">${item.decommissionDate || '-'}</td>
                     <td class="${item.scrapDate ? 'col-highlight-scrapped' : ''}">${item.scrapDate || '-'}</td>
-                    <td><b>${STATUS_MAP[item.status] || item.status}</b></td>
+                    <td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style="color:var(--bp-text-muted);">${SECONDARY_STATUS_MAP[item.secondaryStatus || 'none'] || '—'}</small></td>
+                    <td title="${item.notes || ''}">${item.notes || '—'}</td>
                     <td style="text-align:center;" onclick="event.stopPropagation()">
                         <button class="btn-secondary btn-sm" onclick="openEditModal('${item.id}')">✏️</button>
                         <button class="btn-danger btn-sm" onclick="deleteVehicle('${item.id}')">🗑</button>
@@ -1113,12 +1135,13 @@
         }
 
         function getCategoryName(cat) {
-            return { 'loco': 'Локомотив', 'pass_car': 'Пассажирский', 'cargo_car': 'Грузовой', 'special': 'Спецтехника' }[cat] || cat;
+            return { 'loco': 'Локомотив', 'pass_car': 'Пассажирский', 'cargo_car': 'Грузовой', 'special': 'Спецтехника', 'mvps': 'МВПС' }[cat] || cat;
         }
 
         function resetFilters() {
             document.getElementById('filterSearch').value = '';
             document.getElementById('filterStatus').value = 'all';
+            if(document.getElementById('filterSecondaryStatus')) document.getElementById('filterSecondaryStatus').value='all';
             document.getElementById('filterGauge').value = 'all';
             setCategoryFilter('all');
         }
@@ -1181,6 +1204,7 @@
             document.getElementById('formDecommissionDate').value = item.decommissionDate || '';
             document.getElementById('formScrapDate').value = item.scrapDate || '';
             document.getElementById('formStatus').value = item.status;
+            document.getElementById('formSecondaryStatus').value = item.secondaryStatus || 'none';
             document.getElementById('formWeight').value = item.weight || 15;
             document.getElementById('formLength').value = item.length || 10;
             document.getElementById('formBrake').value = item.brake || 8;
@@ -1205,6 +1229,7 @@
                 decommissionDate: document.getElementById('formDecommissionDate').value,
                 scrapDate: document.getElementById('formScrapDate').value,
                 status: document.getElementById('formStatus').value,
+                secondaryStatus: document.getElementById('formSecondaryStatus').value,
                 weight: parseFloat(document.getElementById('formWeight').value) || 0,
                 length: parseFloat(document.getElementById('formLength').value) || 0,
                 brake: parseFloat(document.getElementById('formBrake').value) || 0,
@@ -1386,6 +1411,10 @@
             const m = (mins % 60).toString().padStart(2, '0');
             return `${h}:${m}`;
         }
+
+        function refreshStationSelectors(){ ['tripFromStation','tripToStation','schFrom','schTo'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const v=e.value;e.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');if(LINE_STATIONS.includes(v))e.value=v;});const l=document.getElementById('stationList');if(l)l.innerHTML=LINE_STATIONS.map((st,i)=>`<span class="type-badge">${st} ${i?`<button class="btn-danger btn-sm" onclick="removeLineStation(${i})">×</button>`:''}</span>`).join('');}
+        function addLineStation(){const e=document.getElementById('newStationName');const n=(e?.value||'').trim();if(!n||LINE_STATIONS.includes(n))return;LINE_STATIONS.push(n);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();}
+        function removeLineStation(i){if(i<=0)return;if(!confirm(`Удалить станцию «${LINE_STATIONS[i]}»?`))return;LINE_STATIONS.splice(i,1);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();renderScheduleBoard();}
 
         function getRouteStations(fromSt, toSt) {
             let sIdx = LINE_STATIONS.indexOf(fromSt);
@@ -1653,7 +1682,9 @@
             const bBody = document.getElementById('boardTableBody');
             bBody.innerHTML = '';
 
+            const now=new Date(), nowMins=now.getHours()*60+now.getMinutes();
             const filtered = schedules.filter(s => {
+                if(s.autoShow!==false){const dep=parseTime(s.depTime),arr=parseTime(s.arrTime),w=Math.max(0,parseInt(s.autoMinutes||15,10));const ok=(arr<dep)?(nowMins>=dep-w||nowMins<=arr+w):(nowMins>=dep-w&&nowMins<=arr+w);if(!ok)return false;}
                 if (s.from === currentBoardStation || s.to === currentBoardStation) return true;
                 if (s.timetable && Array.isArray(s.timetable)) {
                     return s.timetable.some(t => t.station === currentBoardStation);
@@ -1756,6 +1787,8 @@
                 arrTime: arrTime,
                 track: trackName,
                 days: document.getElementById('schDays').value,
+                autoShow: document.getElementById('schAutoShow')?.value !== 'false',
+                autoMinutes: parseInt(document.getElementById('schAutoMinutes')?.value || '15',10),
                 timetable: timetable
             };
             schedules.push(newItem);
@@ -1774,7 +1807,8 @@
             const now = new Date();
             const clock = document.getElementById('clockDisplay');
             if (clock) clock.innerText = now.toTimeString().split(' ')[0];
-        }, 1000);
+            if(document.getElementById('pageSchedule')?.style.display !== 'none') renderScheduleBoard();
+        }, 15000);
 
         const TEST_MODULES = {
             pte: [
@@ -1863,6 +1897,7 @@
         }
 
         // Инициализация загрузки страницы
+        refreshStationSelectors();
         renderTable();
         renderProfile();
     </script>
