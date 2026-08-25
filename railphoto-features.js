@@ -23,6 +23,7 @@
       .railphoto-in-service-row { outline: 2px dashed #f59e0b !important; outline-offset: -2px; }
       .railphoto-service-badge { display:inline-block; margin:3px 0 0; padding:2px 6px; border-radius:3px; background:#7c2d12; color:#fff; font-size:9px; font-weight:bold; }
       .railphoto-qty-badge { display:inline-block; margin-left:5px; padding:1px 5px; border:1px solid var(--bp-border); border-radius:3px; font-size:9px; font-weight:bold; }
+      .railphoto-qty-cell { min-width:90px; text-align:center; font-weight:bold; }
       .railphoto-feature-panel { background:var(--bp-card-bg); border:1px solid var(--bp-border); border-radius:4px; padding:10px; margin-top:10px; }
     `;
     document.head.appendChild(style);
@@ -43,30 +44,44 @@
     if (changed && typeof saveData === 'function') saveData();
   }
 
+  function getItemForRow(tr) {
+    const seriesCell = tr.children[1];
+    const series = seriesCell ? seriesCell.textContent.replace(/\s+/g, ' ').trim() : '';
+    return db.find(x => String(x.series).trim() === series) || null;
+  }
+
   function addDatabaseColumn() {
     const table = document.querySelector('#pageDatabase table.bp-table');
     if (!table) return;
     const head = table.querySelector('thead tr');
+    if (!head) return;
+
+    let th = head.querySelector('.railphoto-qty-head');
+    if (!th) {
+      th = document.createElement('th');
+      th.className = 'railphoto-qty-head';
+      th.textContent = 'Кол-во вагонов / секций';
+      const actionTh = head.lastElementChild;
+      head.insertBefore(th, actionTh);
+    }
+
     const bodyRows = table.querySelectorAll('tbody tr');
-    if (!head || !bodyRows.length) return;
-    if (head.querySelector('.railphoto-qty-head')) return;
+    bodyRows.forEach(tr => {
+      if (!tr.children.length) return;
+      const item = getItemForRow(tr);
+      if (!item) return;
 
-    const th = document.createElement('th');
-    th.className = 'railphoto-qty-head';
-    th.textContent = 'Кол-во вагонов / секций';
-    const actionTh = head.lastElementChild;
-    head.insertBefore(th, actionTh);
+      let td = tr.querySelector('td.railphoto-qty-cell');
+      if (!td) {
+        td = document.createElement('td');
+        td.className = 'railphoto-qty-cell';
+        tr.insertBefore(td, tr.lastElementChild);
+      }
 
-    bodyRows.forEach((tr, idx) => {
-      const seriesCell = tr.children[1];
-      const series = seriesCell ? seriesCell.textContent.trim() : '';
-      const item = db.find(x => x.series === series);
-      const td = document.createElement('td');
-      const qty = Number(item?.compositionCount) || 1;
-      const service = item?.inService;
+      const qty = Math.max(1, parseInt(item.compositionCount, 10) || 1);
+      const service = item.inService;
       td.innerHTML = `<b>${qty}</b>${service ? `<br><span class="railphoto-service-badge">В рейсе №${esc(service.trainNum)}${service.from || service.to ? ` · ${esc(service.from || '')} → ${esc(service.to || '')}` : ''}</span>` : ''}`;
-      tr.insertBefore(td, tr.lastElementChild);
-      if (service) tr.classList.add('railphoto-in-service-row');
+      tr.classList.toggle('railphoto-in-service-row', !!service);
     });
   }
 
@@ -76,10 +91,16 @@
     if (typeof original !== 'function') return;
     window.renderTable = function () {
       original.apply(this, arguments);
-      setTimeout(addDatabaseColumn, 0);
+      setTimeout(() => {
+        ensureDataFields();
+        addDatabaseColumn();
+      }, 0);
     };
     window.__railphotoRenderTablePatched = true;
-    setTimeout(addDatabaseColumn, 50);
+    setTimeout(() => {
+      ensureDataFields();
+      addDatabaseColumn();
+    }, 50);
   }
 
   function addQuantityFieldToVehicleForm() {
@@ -106,7 +127,7 @@
         originalOpen.apply(this, arguments);
         const item = db.find(x => x.id === id);
         const input = document.getElementById('formCompositionCount');
-        if (input) input.value = Number(item?.compositionCount) || 1;
+        if (input) input.value = Math.max(1, parseInt(item?.compositionCount || '1', 10) || 1);
       };
     }
     if (typeof window.openAddModal === 'function') {
@@ -141,7 +162,7 @@
   function promptQuantity(item) {
     const isCounted = item.category === 'mvps' || item.category === 'pass_car';
     if (!isCounted) return 1;
-    const existing = Number(item.compositionCount) || 1;
+    const existing = Math.max(1, parseInt(item.compositionCount || '1', 10) || 1);
     const label = item.category === 'mvps' ? 'секций/вагонов МВПС' : 'пассажирских вагонов';
     const raw = prompt(`Сколько ${label} указать для «${item.series}» в составе?`, String(existing));
     if (raw === null) return null;
@@ -183,7 +204,7 @@
           track.innerHTML = '<div style="color:var(--bp-text-muted);font-style:italic;">Состав пуст. Нажмите «+ В поезд» в списке слева.</div>';
         } else {
           track.innerHTML = selectedConsist.map((item, idx) => {
-            const q = Number(item._compositionCount) || 1;
+            const q = Math.max(1, parseInt(item._compositionCount || '1', 10) || 1);
             const service = item.inService;
             return `<div class="consist-card"><span>${idx === 0 ? '🚂' : '🚃'} <b>${esc(item.series)}</b> <span class="railphoto-qty-badge">× ${q}</span>${service ? `<br><small class="railphoto-service-badge">В рейсе №${esc(service.trainNum)}</small>` : ''}</span><button style="background:none;border:none;color:var(--bp-btn-danger);cursor:pointer;font-weight:bold;" onclick="removeFromConsist(${idx})">❌</button></div>`;
           }).join('');
@@ -194,7 +215,7 @@
         const mw = document.getElementById('metricWeight');
         const ml = document.getElementById('metricLength');
         const mb = document.getElementById('metricBrakes');
-        if (mc) mc.innerText = selectedConsist.reduce((sum, x) => sum + (Number(x._compositionCount) || 1), 0);
+        if (mc) mc.innerText = selectedConsist.reduce((sum, x) => sum + (Math.max(1, parseInt(x._compositionCount || '1', 10) || 1)), 0);
         if (mw) mw.innerText = weight.toFixed(1);
         if (ml) ml.innerText = length.toFixed(1);
         if (mb) mb.innerText = brakes.toFixed(1);
@@ -293,6 +314,7 @@
     refreshBuilderSourceBadges();
     setInterval(() => {
       try {
+        ensureDataFields();
         addDatabaseColumn();
         refreshBuilderSourceBadges();
       } catch (_) {}
