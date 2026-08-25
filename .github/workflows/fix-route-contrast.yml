@@ -22,15 +22,32 @@ jobs:
           fi
           python - <<'PY'
           from pathlib import Path
+          import re
           p = Path('railphoto-route-registry.js')
           s = p.read_text(encoding='utf-8')
-          old = "const rowBg=c.color+'22';const rowText=['yellow','lime','sky'].includes(r.color)?'#111827':'#fff';"
-          new = "const rowBg=c.color+'2A';const rowText=r.color==='black'?'#ffffff':'#0f172a';"
-          if old not in s:
-              print('Target expression not found; no changes needed.')
-          else:
-              p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          patterns = [
+              r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';const rowText=.*?;",
+              r"const rowBg=c\.color\+'[0-9A-Fa-f]{2}';let rowText=.*?;"
+          ]
+          replacement = "const rowBg=c.color+'2A';const rowText=r.color==='black'?'#ffffff':'#0f172a';"
+          changed = False
+          for pat in patterns:
+              ns, n = re.subn(pat, replacement, s, count=1)
+              if n:
+                  s = ns
+                  changed = True
+                  break
+          if changed:
+              p.write_text(s, encoding='utf-8')
               print('Contrast fix applied.')
+          else:
+              print('Route row color expression not found; checking for direct row style fallback.')
+              marker = '<tr style="background:${rowBg};color:${rowText};box-shadow:inset 6px 0 0 ${c.color};">'
+              if marker in s and 'const rowText=r.color===\'black\'?' not in s:
+                  s = s.replace(marker, '<tr style="background:${rowBg};color:${r.color===\'black\'?\'#ffffff\':\'#0f172a\'};box-shadow:inset 6px 0 0 ${c.color};">', 1)
+                  p.write_text(s, encoding='utf-8')
+                  changed = True
+                  print('Fallback contrast fix applied.')
           PY
       - name: Commit fix
         run: |
