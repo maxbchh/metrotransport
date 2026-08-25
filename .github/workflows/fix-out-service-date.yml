@@ -1,0 +1,92 @@
+name: Add out-of-service date field
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-out-service-date.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          original = s
+
+          # 1) Make "Выведен из эксплуатации" a visible primary state in every status selector.
+          if 'value="st-out-of-service"' not in s:
+              s = s.replace(
+                  '<option value="st-mod">Капитальный Ремонт</option>',
+                  '<option value="st-mod">Капитальный Ремонт</option>\n                    <option value="st-out-of-service">Выведен из эксплуатации</option>'
+              )
+
+          # 2) Add a dedicated date for the moment a vehicle was taken out of service.
+          if 'id="formOutOfServiceDate"' not in s:
+              marker = '''                    <div>\n                        <label>Дата утилизации / порезки:</label>\n                        <input type="date" id="formScrapDate">\n                    </div>'''
+              insert = marker + '''\n                    <div>\n                        <label>Дата вывода из эксплуатации:</label>\n                        <input type="date" id="formOutOfServiceDate">\n                    </div>'''
+              if marker not in s:
+                  raise SystemExit('Не найден блок дат в форме ПС')
+              s = s.replace(marker, insert, 1)
+
+          # 3) Load/save the new field without disturbing existing fields.
+          if "formOutOfServiceDate" not in s[s.find('function openEditModal'):s.find('function closeVehicleModal')]:
+              old = "            document.getElementById('formDecommissionDate').value = item.decommissionDate || '';\n            document.getElementById('formScrapDate').value = item.scrapDate || '';"
+              new = "            document.getElementById('formDecommissionDate').value = item.decommissionDate || '';\n            document.getElementById('formScrapDate').value = item.scrapDate || '';\n            document.getElementById('formOutOfServiceDate').value = item.outOfServiceDate || '';"
+              if old in s:
+                  s = s.replace(old, new, 1)
+
+          old = "                decommissionDate: document.getElementById('formDecommissionDate').value,\n                scrapDate: document.getElementById('formScrapDate').value,"
+          new = "                decommissionDate: document.getElementById('formDecommissionDate').value,\n                scrapDate: document.getElementById('formScrapDate').value,\n                outOfServiceDate: document.getElementById('formOutOfServiceDate').value,"
+          if 'outOfServiceDate:' not in s and old in s:
+              s = s.replace(old, new, 1)
+
+          # 4) Put the date directly into the main table status cell.
+          old = "                    <td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style=\"color:var(--bp-text-muted);\">${SECONDARY_STATUS_MAP[item.secondaryStatus || 'none'] || '—'}</small></td>"
+          new = "                    <td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style=\"color:var(--bp-text-muted);\">${SECONDARY_STATUS_MAP[item.secondaryStatus || 'none'] || '—'}</small>${item.status === 'st-out-of-service' ? `<br><small style=\"color:#ff8888;font-weight:bold;\">Выведен: ${item.outOfServiceDate || 'дата не указана'}</small>` : ''}</td>"
+          if 'Выведен: ${item.outOfServiceDate' not in s:
+              if old not in s:
+                  raise SystemExit('Не найдено поле статуса в основной таблице')
+              s = s.replace(old, new, 1)
+
+          # 5) Show the same information in the vehicle detail card.
+          old = "                    <div><b>Статус:</b> ${STATUS_MAP[item.status]}</div>"
+          new = "                    <div><b>Статус:</b> ${STATUS_MAP[item.status]}${item.status === 'st-out-of-service' ? ` — Выведен: ${item.outOfServiceDate || 'дата не указана'}` : ''}</div>"
+          if old in s and 'item.outOfServiceDate || \'дата не указана\'' not in s:
+              s = s.replace(old, new, 1)
+
+          # 6) Style the new state.
+          if '.st-out-of-service' not in s:
+              marker = '.st-museum { background-color: #0f5257 !important; color: #ffffff !important; }'
+              s = s.replace(marker, marker + '\n        .st-out-of-service { background-color: #7f1d1d !important; color: #ffffff !important; }', 1)
+
+          # 7) Ensure the status map exposes the state even if an earlier patch was incomplete.
+          if '"st-out-of-service": "Выведен из эксплуатации"' not in s:
+              marker = '            "st-mod": "Капитальный Ремонт"'
+              s = s.replace(marker, marker + ',\n            "st-out-of-service": "Выведен из эксплуатации"', 1)
+
+          if s == original:
+              print('No changes needed')
+          else:
+              p.write_text(s, encoding='utf-8')
+              print('Patched index.html')
+          PY
+          git diff --check
+          if git diff --quiet -- index.html; then exit 0; fi
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: show out-of-service date in rolling stock'
+          git push
