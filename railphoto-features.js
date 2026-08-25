@@ -20,10 +20,15 @@
     const style = document.createElement('style');
     style.id = 'railphoto-consist-features-style';
     style.textContent = `
-      .railphoto-in-service-row { outline: 2px dashed #f59e0b !important; outline-offset: -2px; }
-      .railphoto-service-badge { display:inline-block; margin:3px 0 0; padding:2px 6px; border-radius:3px; background:#7c2d12; color:#fff; font-size:9px; font-weight:bold; }
+      .railphoto-in-service-row { 
+        outline: 2px dashed #f59e0b !important; 
+        outline-offset: -2px;
+        animation: railphotoServicePulse 1.8s ease-in-out infinite;
+      }
+      .railphoto-in-service-row td { box-shadow: inset 0 0 0 9999px rgba(245,158,11,.06); }
+      @keyframes railphotoServicePulse { 0%,100%{box-shadow:0 0 0 rgba(245,158,11,0)} 50%{box-shadow:0 0 14px rgba(245,158,11,.35)} }
+      .railphoto-service-badge { display:inline-block; margin-top:4px; padding:3px 7px; border-radius:4px; background:#7c2d12; color:#fff; font-size:9px; font-weight:bold; box-shadow:0 0 9px rgba(245,158,11,.45); }
       .railphoto-qty-badge { display:inline-block; margin-left:5px; padding:1px 5px; border:1px solid var(--bp-border); border-radius:3px; font-size:9px; font-weight:bold; }
-      .railphoto-qty-cell { min-width:90px; text-align:center; font-weight:bold; }
       .railphoto-feature-panel { background:var(--bp-card-bg); border:1px solid var(--bp-border); border-radius:4px; padding:10px; margin-top:10px; }
     `;
     document.head.appendChild(style);
@@ -44,44 +49,59 @@
     if (changed && typeof saveData === 'function') saveData();
   }
 
-  function getItemForRow(tr) {
-    const seriesCell = tr.children[1];
-    const series = seriesCell ? seriesCell.textContent.replace(/\s+/g, ' ').trim() : '';
-    return db.find(x => String(x.series).trim() === series) || null;
-  }
-
   function addDatabaseColumn() {
     const table = document.querySelector('#pageDatabase table.bp-table');
     if (!table) return;
     const head = table.querySelector('thead tr');
-    if (!head) return;
+    const rows = [...table.querySelectorAll('tbody tr')];
+    if (!head || !rows.length) return;
 
-    let th = head.querySelector('.railphoto-qty-head');
-    if (!th) {
-      th = document.createElement('th');
-      th.className = 'railphoto-qty-head';
-      th.textContent = 'Кол-во вагонов / секций';
-      const actionTh = head.lastElementChild;
-      head.insertBefore(th, actionTh);
+    let qtyHead = head.querySelector('.railphoto-qty-head');
+    let actionHead = head.lastElementChild;
+
+    if (!qtyHead) {
+      qtyHead = document.createElement('th');
+      qtyHead.className = 'railphoto-qty-head';
+      qtyHead.textContent = 'Кол-во вагонов / секций';
+      head.insertBefore(qtyHead, actionHead);
     }
 
-    const bodyRows = table.querySelectorAll('tbody tr');
-    bodyRows.forEach(tr => {
-      if (!tr.children.length) return;
-      const item = getItemForRow(tr);
-      if (!item) return;
+    rows.forEach(tr => {
+      const cells = [...tr.children];
+      const buttonCell = cells.find(td => td.querySelector('button'));
+      if (!buttonCell) return;
 
-      let td = tr.querySelector('td.railphoto-qty-cell');
-      if (!td) {
-        td = document.createElement('td');
-        td.className = 'railphoto-qty-cell';
-        tr.insertBefore(td, tr.lastElementChild);
+      const seriesCell = cells[1];
+      const series = seriesCell ? seriesCell.textContent.trim() : '';
+      const item = db.find(x => x.series === series);
+      const qty = Math.max(1, Number(item?.compositionCount) || 1);
+
+      // Remove a previously injected quantity cell, then rebuild it immediately before the action cell.
+      tr.querySelectorAll('.railphoto-qty-cell').forEach(td => td.remove());
+      const qtyTd = document.createElement('td');
+      qtyTd.className = 'railphoto-qty-cell';
+      qtyTd.style.textAlign = 'center';
+      qtyTd.innerHTML = `<b>${qty}</b>`;
+      tr.insertBefore(qtyTd, buttonCell);
+
+      // Make sure edit/delete buttons are always in the last visible column.
+      if (buttonCell !== tr.lastElementChild) tr.appendChild(buttonCell);
+
+      // Active run indicator is attached to the STATUS cell, not the quantity or action cell.
+      tr.classList.remove('railphoto-in-service-row');
+      const service = item?.inService;
+      const statusCell = [...tr.children].find(td => td.querySelector('b') && /Эксплуатации|эксплуатируется|Ремонте|Депо|Порезан|Списан|Музейный|Переформирован|Ремонт|Выведен/.test(td.textContent));
+      if (service) {
+        tr.classList.add('railphoto-in-service-row');
+        const host = statusCell || tr.children[Math.max(0, tr.children.length - 2)];
+        if (host) {
+          host.querySelectorAll('.railphoto-service-badge').forEach(x => x.remove());
+          const badge = document.createElement('div');
+          badge.className = 'railphoto-service-badge';
+          badge.textContent = `🚆 В РЕЙСЕ №${service.trainNum}${service.from || service.to ? ` · ${service.from || ''} → ${service.to || ''}` : ''}`;
+          host.appendChild(badge);
+        }
       }
-
-      const qty = Math.max(1, parseInt(item.compositionCount, 10) || 1);
-      const service = item.inService;
-      td.innerHTML = `<b>${qty}</b>${service ? `<br><span class="railphoto-service-badge">В рейсе №${esc(service.trainNum)}${service.from || service.to ? ` · ${esc(service.from || '')} → ${esc(service.to || '')}` : ''}</span>` : ''}`;
-      tr.classList.toggle('railphoto-in-service-row', !!service);
     });
   }
 
@@ -91,16 +111,10 @@
     if (typeof original !== 'function') return;
     window.renderTable = function () {
       original.apply(this, arguments);
-      setTimeout(() => {
-        ensureDataFields();
-        addDatabaseColumn();
-      }, 0);
+      setTimeout(addDatabaseColumn, 0);
     };
     window.__railphotoRenderTablePatched = true;
-    setTimeout(() => {
-      ensureDataFields();
-      addDatabaseColumn();
-    }, 50);
+    setTimeout(addDatabaseColumn, 50);
   }
 
   function addQuantityFieldToVehicleForm() {
@@ -127,7 +141,7 @@
         originalOpen.apply(this, arguments);
         const item = db.find(x => x.id === id);
         const input = document.getElementById('formCompositionCount');
-        if (input) input.value = Math.max(1, parseInt(item?.compositionCount || '1', 10) || 1);
+        if (input) input.value = Math.max(1, Number(item?.compositionCount) || 1);
       };
     }
     if (typeof window.openAddModal === 'function') {
@@ -145,9 +159,9 @@
       window.saveVehicleForm = function (e) {
         const idBefore = document.getElementById('formVehicleId')?.value || '';
         const seriesBefore = document.getElementById('formSeries')?.value || '';
+        const qty = Math.max(1, parseInt(document.getElementById('formCompositionCount')?.value || '1', 10) || 1);
         originalSave.apply(this, arguments);
         const item = idBefore ? db.find(x => x.id === idBefore) : db.find(x => x.series === seriesBefore);
-        const qty = Math.max(1, parseInt(document.getElementById('formCompositionCount')?.value || '1', 10) || 1);
         if (item) {
           item.compositionCount = qty;
           if (!item.inService) item.inService = null;
@@ -161,8 +175,8 @@
 
   function promptQuantity(item) {
     const isCounted = item.category === 'mvps' || item.category === 'pass_car';
-    if (!isCounted) return 1;
-    const existing = Math.max(1, parseInt(item.compositionCount || '1', 10) || 1);
+    if (!isCounted) return Math.max(1, Number(item.compositionCount) || 1);
+    const existing = Math.max(1, Number(item.compositionCount) || 1);
     const label = item.category === 'mvps' ? 'секций/вагонов МВПС' : 'пассажирских вагонов';
     const raw = prompt(`Сколько ${label} указать для «${item.series}» в составе?`, String(existing));
     if (raw === null) return null;
@@ -204,7 +218,7 @@
           track.innerHTML = '<div style="color:var(--bp-text-muted);font-style:italic;">Состав пуст. Нажмите «+ В поезд» в списке слева.</div>';
         } else {
           track.innerHTML = selectedConsist.map((item, idx) => {
-            const q = Math.max(1, parseInt(item._compositionCount || '1', 10) || 1);
+            const q = Number(item._compositionCount) || 1;
             const service = item.inService;
             return `<div class="consist-card"><span>${idx === 0 ? '🚂' : '🚃'} <b>${esc(item.series)}</b> <span class="railphoto-qty-badge">× ${q}</span>${service ? `<br><small class="railphoto-service-badge">В рейсе №${esc(service.trainNum)}</small>` : ''}</span><button style="background:none;border:none;color:var(--bp-btn-danger);cursor:pointer;font-weight:bold;" onclick="removeFromConsist(${idx})">❌</button></div>`;
           }).join('');
@@ -215,7 +229,7 @@
         const mw = document.getElementById('metricWeight');
         const ml = document.getElementById('metricLength');
         const mb = document.getElementById('metricBrakes');
-        if (mc) mc.innerText = selectedConsist.reduce((sum, x) => sum + (Math.max(1, parseInt(x._compositionCount || '1', 10) || 1)), 0);
+        if (mc) mc.innerText = selectedConsist.reduce((sum, x) => sum + (Number(x._compositionCount) || 1), 0);
         if (mw) mw.innerText = weight.toFixed(1);
         if (ml) ml.innerText = length.toFixed(1);
         if (mb) mb.innerText = brakes.toFixed(1);
@@ -248,12 +262,16 @@
       const text = div.querySelector('b');
       if (!text) return;
       const item = db.find(x => x.series === text.textContent.trim());
-      if (!item || !item.inService) return;
-      if (div.querySelector('.railphoto-service-badge')) return;
+      const existing = div.querySelector('.railphoto-service-badge');
+      if (!item || !item.inService) {
+        if (existing) existing.remove();
+        return;
+      }
+      if (existing) return;
       const target = div.firstElementChild;
       const badge = document.createElement('div');
       badge.className = 'railphoto-service-badge';
-      badge.textContent = `В рейсе №${item.inService.trainNum}`;
+      badge.textContent = `🚆 В РЕЙСЕ №${item.inService.trainNum}`;
       target.appendChild(badge);
     });
   }
@@ -314,7 +332,6 @@
     refreshBuilderSourceBadges();
     setInterval(() => {
       try {
-        ensureDataFields();
         addDatabaseColumn();
         refreshBuilderSourceBadges();
       } catch (_) {}
