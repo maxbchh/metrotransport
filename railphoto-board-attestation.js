@@ -1,12 +1,15 @@
-/* Railphoto — editable station-board notes + railway attestation add-ons */
+/* Railphoto — editable station-board notes + stable attestation sections */
 (function () {
   if (window.__railphotoBoardAttestationReady) return;
   window.__railphotoBoardAttestationReady = true;
 
   const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
+  let refreshTimer = null;
+  let observerStarted = false;
+  let rendering = false;
 
   function ready(fn) {
-    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn);
+    if (document.readyState === 'loading') document.addEventListener('DOMContentLoaded', fn, {once:true});
     else fn();
   }
 
@@ -18,9 +21,8 @@
 
   function saveState() {
     try {
-      if (typeof localStorage !== 'undefined' && typeof profile !== 'undefined') {
-        localStorage.setItem('rp_profile', JSON.stringify(profile));
-      }
+      const p = ensureProfile();
+      if (p && typeof localStorage !== 'undefined') localStorage.setItem('rp_profile', JSON.stringify(p));
       if (typeof saveData === 'function') saveData();
     } catch (e) { console.error(e); }
   }
@@ -36,7 +38,6 @@
       .railphoto-quick-notes{display:flex;gap:6px;flex-wrap:wrap;margin-top:8px}
       .railphoto-quick-notes button{padding:4px 8px;border:1px solid var(--bp-border);background:var(--bp-btn-secondary);color:var(--bp-text);border-radius:3px;cursor:pointer;font-size:10px}
       .railphoto-board-note-badge{display:inline-block;margin:3px 0 0 6px;padding:2px 6px;border-radius:3px;background:#0f766e;color:#fff;font-size:10px;font-weight:700;box-shadow:0 0 8px rgba(20,184,166,.35)}
-      .railphoto-extra-test h3{margin-bottom:8px}
       .railphoto-attestation-tabs{display:flex;gap:7px;flex-wrap:wrap;margin:8px 0 10px}
       .railphoto-attestation-tab{padding:6px 10px;border:1px solid var(--bp-border);background:var(--bp-btn-secondary);color:var(--bp-text);border-radius:4px;cursor:pointer;font-weight:700;font-size:10px}
       .railphoto-attestation-tab.active{background:var(--bp-link);color:#fff;border-color:var(--bp-link)}
@@ -63,13 +64,6 @@
         if (n !== undefined && n !== null && String(n).trim()) out.push(String(n).trim());
       });
     }
-    if (boardPage()) {
-      boardPage().querySelectorAll('tr,[class*="row"],[class*="item"],[class*="train"]').forEach(el => {
-        const text = el.textContent || '';
-        const m = text.match(/(?:№\s*)?(\d{1,6})\b/);
-        if (m) out.push(m[1]);
-      });
-    }
     return [...new Set(out)];
   }
 
@@ -82,15 +76,8 @@
         <button class="btn-success" id="railphotoSaveBoardNote" type="button">💾 Сохранить</button>
       </div>
       <div class="railphoto-quick-notes">
-        <button type="button" data-note="Посадка">Посадка</button>
-        <button type="button" data-note="Готов">Готов</button>
-        <button type="button" data-note="Стоянка">Стоянка</button>
-        <button type="button" data-note="Опаздывает">Опаздывает</button>
-        <button type="button" data-note="Ожидание посадки">Ожидание посадки</button>
-        <button type="button" data-note="Посадка окончена">Посадка окончена</button>
-        <button type="button" data-note="Отмена">Отмена</button>
+        <button type="button" data-note="Посадка">Посадка</button><button type="button" data-note="Готов">Готов</button><button type="button" data-note="Стоянка">Стоянка</button><button type="button" data-note="Опаздывает">Опаздывает</button><button type="button" data-note="Ожидание посадки">Ожидание посадки</button><button type="button" data-note="Посадка окончена">Посадка окончена</button><button type="button" data-note="Отмена">Отмена</button>
       </div>
-      <small style="display:block;margin-top:7px;color:var(--bp-text-muted)">Примечание сохраняется вместе с облачными данными и отображается на табло рядом с номером поезда.</small>
     </div>`;
   }
 
@@ -99,12 +86,11 @@
     if (!select) return;
     const current = select.value;
     const nums = schedulesForNotes();
-    select.innerHTML = nums.length ? nums.map(n => `<option value="${esc(n)}">№ ${esc(n)}</option>`).join('') : '<option value="">Введите номер в расписании</option>';
+    select.innerHTML = nums.length ? nums.map(n => `<option value="${esc(n)}">№ ${esc(n)}</option>`).join('') : '<option value="">Нет поездов в расписании</option>';
     if (current && nums.includes(current)) select.value = current;
     const p = ensureProfile();
-    const note = p?.boardNotes?.[select.value] || '';
     const input = document.getElementById('railphotoBoardNote');
-    if (input) input.value = note;
+    if (input) input.value = p?.boardNotes?.[select.value] || '';
   }
 
   function injectBoardNotePanel() {
@@ -114,157 +100,107 @@
     if (header) header.insertAdjacentHTML('afterend', notePanelHtml());
     else page.insertAdjacentHTML('afterbegin', notePanelHtml());
     populateNoteTrains();
-
     const select = document.getElementById('railphotoBoardTrain');
     const input = document.getElementById('railphotoBoardNote');
     select?.addEventListener('change', () => {
-      const p = ensureProfile();
-      if (input) input.value = p?.boardNotes?.[select.value] || '';
+      const p = ensureProfile(); if (input) input.value = p?.boardNotes?.[select.value] || '';
     });
     document.getElementById('railphotoSaveBoardNote')?.addEventListener('click', () => {
-      const p = ensureProfile();
-      const num = (select?.value || '').trim();
-      const note = (input?.value || '').trim();
+      const p = ensureProfile(); const num = (select?.value || '').trim(); const note = (input?.value || '').trim();
       if (!num) { alert('Выберите номер поезда.'); return; }
-      if (note) p.boardNotes[num] = note;
-      else delete p.boardNotes[num];
-      saveState();
-      renderBoardNotes();
-      alert(note ? `Примечание к поезду №${num} сохранено.` : `Примечание к поезду №${num} удалено.`);
+      if (note) p.boardNotes[num] = note; else delete p.boardNotes[num];
+      saveState(); renderBoardNotes();
     });
-    document.querySelectorAll('#railphotoBoardNotePanel [data-note]').forEach(btn => {
-      btn.addEventListener('click', () => { if (input) input.value = btn.getAttribute('data-note') || ''; input?.focus(); });
-    });
+    page.querySelectorAll('#railphotoBoardNotePanel [data-note]').forEach(btn => btn.addEventListener('click', () => { if (input) input.value = btn.dataset.note || ''; input?.focus(); }));
   }
 
   function renderBoardNotes() {
-    const page = boardPage();
-    const p = ensureProfile();
+    if (rendering) return;
+    const page = boardPage(); const p = ensureProfile();
     if (!page || !p) return;
-    page.querySelectorAll('[data-railphoto-board-note]').forEach(x => x.remove());
-    const notes = p.boardNotes || {};
-    Object.keys(notes).forEach(num => {
-      const note = String(notes[num] || '').trim();
-      if (!note) return;
-      const escaped = num.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
-      let candidates = [...page.querySelectorAll('tr,[class*="row"],[class*="item"],[class*="train"],div')]
-        .filter(el => !el.closest('#railphotoBoardNotePanel') && new RegExp(`(?:^|\\D)${escaped}(?:\\D|$)`).test(el.textContent || ''));
-      candidates = candidates.sort((a,b) => a.querySelectorAll('*').length - b.querySelectorAll('*').length);
-      const host = candidates[0];
-      if (host) {
-        const badge = document.createElement('span');
-        badge.className = 'railphoto-board-note-badge';
-        badge.dataset.railphotoBoardNote = num;
-        badge.textContent = `📝 ${note}`;
-        host.appendChild(badge);
-      }
-    });
+    rendering = true;
+    try {
+      page.querySelectorAll('[data-railphoto-board-note]').forEach(x => x.remove());
+      const notes = p.boardNotes || {};
+      Object.entries(notes).forEach(([num,note]) => {
+        const text = String(note || '').trim(); if (!text) return;
+        const escaped = num.replace(/[.*+?^${}()|[\]\\]/g,'\\$&');
+        const candidates = [...page.querySelectorAll('tr,[class*="row"],[class*="item"],[class*="train"]')].filter(el => !el.closest('#railphotoBoardNotePanel') && new RegExp(`(?:^|\\D)${escaped}(?:\\D|$)`).test(el.textContent || ''));
+        const host = candidates.sort((a,b)=>a.querySelectorAll('*').length-b.querySelectorAll('*').length)[0];
+        if (host) { const badge=document.createElement('span'); badge.className='railphoto-board-note-badge'; badge.dataset.railphotoBoardNote=num; badge.textContent=`📝 ${text}`; host.appendChild(badge); }
+      });
+    } finally { rendering = false; }
   }
 
-  const EXTRA_QUESTION_GROUPS = {
-    DSSP: [
-      {q:'Какова одна из основных задач ДССП на станции?',a:['Управлять движением поездов в пределах своих полномочий и обеспечивать согласованность станционной работы','Составлять коммерческие рекламные объявления','Определять стоимость билетов','Ремонтировать локомотивы'],c:0},
-      {q:'Что важно проверить перед выполнением операции по приёму или отправлению поезда?',a:['Только номер локомотива','Готовность установленного маршрута и наличие необходимой информации о движении','Только цвет формы работника','Только температуру воздуха'],c:1},
-      {q:'Что следует делать при получении противоречивой информации о движении поезда?',a:['Немедленно игнорировать её','Уточнить информацию по установленному каналу связи и действовать по утверждённому порядку','Самостоятельно изменить расписание без фиксации','Удалить поезд из табло'],c:1},
-      {q:'Для чего ДССП использует оперативную связь на станции?',a:['Для обмена служебной информацией, необходимой для безопасной и согласованной работы','Только для личных сообщений','Для рекламы','Только для передачи фотографий'],c:0},
-      {q:'Как правильнее поступить при выявлении обстоятельства, которое может повлиять на безопасность движения?',a:['Скрыть информацию до окончания смены','Немедленно довести информацию до ответственных работников и действовать по установленному регламенту','Продолжить работу без изменений','Удалить запись о событии'],c:1}
+  const QUESTION_GROUPS = {
+    DSP: [
+      {q:'Какова основная задача ДСП на станции?',a:['Обеспечение безопасного и организованного движения поездов и маневров в пределах станции','Продажа билетов','Ремонт локомотивов','Только информирование пассажиров'],c:0},
+      {q:'Что необходимо проверить перед приёмом или отправлением поезда?',a:['Только номер поезда','Готовность маршрута, сигналы и необходимые условия для безопасного выполнения операции','Только погоду','Только наличие пассажиров'],c:1},
+      {q:'Что делать при противоречивой информации о движении поезда?',a:['Игнорировать','Уточнить информацию по установленному каналу связи и действовать по регламенту','Самостоятельно отменить поезд','Удалить запись'],c:1},
+      {q:'Для чего ДСП использует поездную и оперативную связь?',a:['Для безопасной координации действий работников и передачи служебной информации','Для личных разговоров','Для рекламы','Для развлечений'],c:0},
+      {q:'Как действовать при обнаружении обстоятельства, угрожающего безопасности движения?',a:['Скрыть информацию','Немедленно сообщить ответственным работникам и действовать по установленному регламенту','Продолжить работу без изменений','Изменить данные задним числом'],c:1}
     ],
-    GENERAL: [
-      {q:'Какой сигнал светофора обычно имеет разрешающее значение для движения?',a:['Красный','Жёлтый','Зелёный','Синий'],c:2},
-      {q:'Для чего используется номер поезда на станции и табло?',a:['Для идентификации конкретного рейса и его движения','Только для оформления билетов','Только для расчёта массы','Только для архива'],c:0},
-      {q:'Что обычно означает стоянка поезда на станции?',a:['Поезд обязательно неисправен','Поезд находится на станции установленное время для выполнения необходимых операций','Поезд списан','Поезд выведен из эксплуатации'],c:1},
-      {q:'Какое действие правильно при получении информации об опоздании поезда?',a:['Скрыть информацию','Обновить сведения для диспетчерского управления и информирования пассажиров по установленному порядку','Удалить поезд из расписания','Изменить номер поезда без уведомления'],c:1},
-      {q:'Что необходимо сделать при обнаружении неисправности подвижного состава перед отправлением?',a:['Игнорировать её','Сообщить ответственному работнику и принять меры по установленному порядку','Сразу отправить поезд','Записать неисправность только после рейса'],c:1}
+    MACHINIST: [
+      {q:'Какое значение обычно имеет зелёный сигнал светофора?',a:['Движение запрещено','Движение разрешено в установленном направлении','Только маневры','Требуется немедленная остановка'],c:1},
+      {q:'Что должен сделать машинист при выявлении неисправности, влияющей на безопасность движения?',a:['Игнорировать','Сообщить о неисправности и действовать по установленному порядку','Ускориться','Скрыть неисправность'],c:1},
+      {q:'Для чего машинисту нужна информация о маршруте и ограничениях скорости?',a:['Для безопасного ведения поезда','Только для заполнения отчёта','Для расчёта стоимости билета','Только для табло'],c:0},
+      {q:'Что важно сделать перед отправлением поезда после стоянки?',a:['Проверить готовность к отправлению и действовать по установленной процедуре','Сразу увеличить скорость','Игнорировать сигналы','Выключить радиосвязь'],c:0},
+      {q:'Что делать при получении оперативного сообщения об изменении условий движения?',a:['Игнорировать сообщение','Принять информацию к исполнению и действовать в соответствии с переданными указаниями и регламентом','Удалить сообщение','Продолжить без изменений'],c:1}
     ]
   };
 
-  function makeQuestionSection(prefix, title, questions) {
-    const section = document.createElement('div');
-    section.className='railphoto-attestation-section';
-    section.dataset.group=prefix;
-    section.innerHTML = `<h4 style="margin:8px 0;color:var(--bp-text)">${esc(title)}</h4><p style="color:var(--bp-text-muted);margin-bottom:8px">5 дополнительных вопросов.</p>`;
+  function makeSection(prefix,title,questions) {
+    const section=document.createElement('div'); section.className='railphoto-attestation-section'; section.dataset.group=prefix;
+    section.innerHTML=`<h4 style="margin:8px 0;color:var(--bp-text)">${esc(title)}</h4><p style="color:var(--bp-text-muted);margin-bottom:8px">5 вопросов.</p>`;
     questions.forEach((x,i)=>{
-      const q = document.createElement('div');
-      q.className='railphoto-extra-question';
-      q.innerHTML = `<b>${i+1}. ${esc(x.q)}</b>` + x.a.map((a,j)=>`<label><input type="radio" name="${prefix}_q${i}" value="${j}"> ${esc(a)}</label>`).join('');
-      section.appendChild(q);
+      const q=document.createElement('div'); q.className='railphoto-extra-question';
+      q.innerHTML=`<b>${i+1}. ${esc(x.q)}</b>`+x.a.map((a,j)=>`<label><input type="radio" name="${prefix}_q${i}" value="${j}"> ${esc(a)}</label>`).join(''); section.appendChild(q);
     });
-    const actions=document.createElement('div');actions.className='action-buttons';
-    const check=document.createElement('button');check.className='btn-primary';check.type='button';check.textContent='✅ Проверить раздел';
-    const result=document.createElement('div');result.className='railphoto-extra-result';result.style.display='none';
-    check.onclick=()=>{
-      let score=0,answered=0;
-      questions.forEach((x,i)=>{const v=section.querySelector(`input[name="${prefix}_q${i}"]:checked`);if(v){answered++;if(Number(v.value)===x.c)score++;}});
-      result.style.display='block';
-      result.textContent=`Результат: ${score} из ${questions.length}. Отвечено: ${answered} из ${questions.length}.`;
-    };
-    actions.appendChild(check);section.appendChild(actions);section.appendChild(result);
-    return section;
+    const check=document.createElement('button'); check.type='button'; check.className='btn-primary'; check.textContent='✅ Проверить раздел';
+    const result=document.createElement('div'); result.className='railphoto-extra-result'; result.style.display='none';
+    check.onclick=()=>{let score=0,answered=0;questions.forEach((x,i)=>{const v=section.querySelector(`input[name="${prefix}_q${i}"]:checked`);if(v){answered++;if(Number(v.value)===x.c)score++;}});result.style.display='block';result.textContent=`Результат: ${score} из ${questions.length}. Отвечено: ${answered} из ${questions.length}.`;};
+    section.appendChild(check); section.appendChild(result); return section;
   }
 
-  function makeQuestionBlock(prefix) {
-    const wrap = document.createElement('section');
-    wrap.className = 'railphoto-extra-test';
-    wrap.dataset.railphotoExtraTest = prefix;
-    wrap.innerHTML = `<h3>🚆 Дополнительные вопросы по железнодорожной тематике</h3><p style="color:var(--bp-text-muted);margin-bottom:8px">Вопросы разделены по направлениям: ДССП и общая железнодорожная подготовка.</p>`;
+  function attestationPage(){
+    return document.getElementById('pageAttestation') || document.getElementById('pageCertification') || [...document.querySelectorAll('[id^="page"]')].find(el=>/аттестаци/i.test(el.textContent||'')) || null;
+  }
 
-    const tabs=document.createElement('div');
-    tabs.className='railphoto-attestation-tabs';
-    const contents={};
-    const groups=[['DSSP','ДССП'],['GENERAL','Общие вопросы ЖД']];
-    groups.forEach(([key,label],idx)=>{
-      const tab=document.createElement('button');
-      tab.type='button';tab.className='railphoto-attestation-tab'+(idx===0?' active':'');tab.textContent=label;
-      tab.onclick=()=>{
-        groups.forEach(([k])=>{contents[k].classList.toggle('active',k===key);});
-        tabs.querySelectorAll('.railphoto-attestation-tab').forEach((b,i)=>b.classList.toggle('active',i===idx));
-      };
+  function injectAttestation(){
+    const page=attestationPage(); if(!page || page.querySelector('#railphotoAttestationExtra')) return;
+    const wrap=document.createElement('section'); wrap.id='railphotoAttestationExtra'; wrap.className='railphoto-extra-test';
+    wrap.innerHTML='<h3>🚆 Аттестация — дополнительные вопросы</h3><p style="color:var(--bp-text-muted);margin-bottom:8px">10 вопросов: отдельные подгруппы для ДСП и машиниста.</p>';
+    const tabs=document.createElement('div'); tabs.className='railphoto-attestation-tabs';
+    const sections={};
+    [['DSP','ДСП'],['MACHINIST','Машинист']].forEach(([key,label],i)=>{
+      const tab=document.createElement('button'); tab.type='button'; tab.className='railphoto-attestation-tab'+(i===0?' active':''); tab.textContent=label;
+      const section=makeSection('rp_'+key,label,QUESTION_GROUPS[key]); sections[key]=section;
+      tab.onclick=()=>{Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===key));tabs.querySelectorAll('button').forEach(b=>b.classList.remove('active'));tab.classList.add('active');};
+      tabs.appendChild(tab); wrap.appendChild(tab); tab.replaceWith(tab); // keep only one DOM copy
       tabs.appendChild(tab);
-      contents[key]=makeQuestionSection(key+'_'+prefix,label,EXTRA_QUESTION_GROUPS[key]);
     });
-    wrap.appendChild(tabs);
-    wrap.appendChild(contents.DSSP);
-    wrap.appendChild(contents.GENERAL);
-    contents.DSSP.classList.add('active');
-    return wrap;
+    // Rebuild tab container safely after event setup.
+    tabs.innerHTML='';
+    [['DSP','ДСП'],['MACHINIST','Машинист']].forEach(([key,label],i)=>{
+      const tab=document.createElement('button'); tab.type='button'; tab.className='railphoto-attestation-tab'+(i===0?' active':''); tab.textContent=label;
+      tab.onclick=()=>{Object.keys(sections).forEach(k=>sections[k].classList.toggle('active',k===key));tabs.querySelectorAll('button').forEach(b=>b.classList.toggle('active',b===tab));};
+      tabs.appendChild(tab);
+    });
+    wrap.insertBefore(tabs,wrap.children[1]); wrap.appendChild(sections.DSP); wrap.appendChild(sections.MACHINIST); sections.DSP.classList.add('active');
+    page.appendChild(wrap);
   }
 
-  function attestationPage() {
-    return document.getElementById('pageAttestation') || document.getElementById('pageCertification') ||
-      [...document.querySelectorAll('[id^="page"]')].find(el => /аттестаци/i.test(el.textContent || '')) || null;
+  function refresh(){
+    if(refreshTimer) return;
+    refreshTimer=setTimeout(()=>{refreshTimer=null; injectBoardNotePanel(); populateNoteTrains(); renderBoardNotes(); injectAttestation();},120);
   }
 
-  function injectAttestationExtras() {
-    const page = attestationPage();
-    if (!page) return;
-    let targets = [...page.querySelectorAll('form,.test-card,.quiz-card,.test-panel,.attestation-test')];
-    targets = targets.filter(el => !el.closest('.railphoto-extra-test'));
-    if (!targets.length) targets = [page];
-    targets.forEach((target,i)=>{
-      if (target.querySelector('.railphoto-extra-test')) return;
-      target.appendChild(makeQuestionBlock(`rpAtt_${i}`));
-    });
-  }
-
-  function init() {
-    installStyles();
-    injectBoardNotePanel();
-    populateNoteTrains();
-    renderBoardNotes();
-    injectAttestationExtras();
-    const observer = new MutationObserver(() => {
-      injectBoardNotePanel();
-      populateNoteTrains();
-      renderBoardNotes();
-      injectAttestationExtras();
-    });
+  function init(){
+    installStyles(); refresh();
+    if(observerStarted) return;
+    observerStarted=true;
+    const observer=new MutationObserver(()=>refresh());
     observer.observe(document.body,{childList:true,subtree:true});
-    setInterval(()=>{
-      injectBoardNotePanel();
-      populateNoteTrains();
-      renderBoardNotes();
-      injectAttestationExtras();
-    },1500);
   }
 
   ready(init);
