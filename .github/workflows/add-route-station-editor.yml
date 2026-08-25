@@ -1,0 +1,185 @@
+name: Add route station editor
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/add-route-station-editor.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch index.html
+        shell: python
+        run: |
+          from pathlib import Path
+          import re
+
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+
+          marker = 'route-station-editor-v2'
+          if marker in s:
+              print('Route station editor already installed.')
+              raise SystemExit(0)
+
+          # Shared route station editor in VU-45 / train builder.
+          anchor = '<div class="page-header">\n            <span>🚂 Конструктор Сборного Поезда и ВУ-45</span>'
+          insert = '''<div class="page-header">
+            <span>🚂 Конструктор Сборного Поезда и ВУ-45</span>'''
+          s = s.replace(anchor, insert, 1)
+          header_end = '</div>\n\n        <div class="trip-form-panel no-print">'
+          builder_panel = '''</div>
+
+        <!-- route-station-editor-v2: управляет составом станций для расчёта маршрута, расписания и ВУ-45 -->
+        <div class="schedule-box no-print" style="margin-bottom:12px;">
+            <div class="page-header" style="margin-bottom:10px;">
+                <span>🚉 Маршрут: станции и последовательность</span>
+                <div class="action-buttons">
+                    <input id="newStationNameBuilder" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;">
+                    <button class="btn-secondary" type="button" onclick="addLineStation('newStationNameBuilder')">➕ Добавить станцию</button>
+                </div>
+            </div>
+            <div id="stationListBuilder" class="route-station-editor-list"></div>
+            <small style="color:var(--bp-text-muted);">Порядок сверху вниз используется при авторасчёте маршрута, в расписании и при формировании ВУ-45.</small>
+        </div>
+
+        <div class="trip-form-panel no-print">'''
+          if header_end not in s:
+              raise SystemExit('Builder anchor not found')
+          s = s.replace(header_end, builder_panel, 1)
+
+          # Replace the schedule-tab station manager with the same richer editor.
+          old_panel = re.compile(r'<div class="schedule-box no-print" id="stationManagementPanel">.*?</div>\n\n        <div class="station-selector-bar no-print">', re.S)
+          new_panel = '''<div class="schedule-box no-print" id="stationManagementPanel">
+            <div class="page-header" style="margin-bottom:10px;">
+                <span>🚉 Станции маршрута и последовательность</span>
+                <div class="action-buttons">
+                    <input id="newStationName" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;">
+                    <button class="btn-secondary" type="button" onclick="addLineStation('newStationName')">➕ Добавить станцию</button>
+                </div>
+            </div>
+            <div id="stationList" class="route-station-editor-list"></div>
+            <small style="color:var(--bp-text-muted);">Используйте ↑ ↓ для изменения порядка станций. Этот же порядок используется в ВУ-45 и авторасчёте расписания.</small>
+        </div>
+
+        <div class="station-selector-bar no-print">'''
+          s, n = old_panel.subn(new_panel, s, count=1)
+          if n != 1:
+              raise SystemExit('Schedule station panel not found')
+
+          # Add compact editor styles.
+          style_anchor = '.type-badge { display: inline-block; padding: 2px 7px;'
+          style_insert = '''.route-station-editor-list { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
+        .route-station-editor-item { display:inline-flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--bp-border); border-radius:4px; background:var(--bp-input-bg); }
+        .route-station-editor-item .route-index { color:var(--bp-text-muted); font-size:10px; font-weight:bold; }
+        .route-station-editor-item button { border:0; border-radius:3px; padding:2px 6px; cursor:pointer; font-weight:bold; }
+        .route-station-editor-item .route-up, .route-station-editor-item .route-down { background:var(--bp-btn-secondary); color:var(--bp-text); }
+        .route-station-editor-item .route-remove { background:var(--bp-btn-danger); color:#fff; }
+
+        .type-badge { display: inline-block; padding: 2px 7px;'''
+          if style_anchor not in s:
+              raise SystemExit('CSS anchor not found')
+          s = s.replace(style_anchor, style_insert, 1)
+
+          # Replace station utility functions so both pages share the same order.
+          old_funcs = '''        function refreshStationSelectors(){ ['tripFromStation','tripToStation','schFrom','schTo'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const v=e.value;e.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');if(LINE_STATIONS.includes(v))e.value=v;});const l=document.getElementById('stationList');if(l)l.innerHTML=LINE_STATIONS.map((st,i)=>`<span class="type-badge">${st} ${i?`<button class="btn-danger btn-sm" onclick="removeLineStation(${i})">×</button>`:''}</span>`).join('');}
+        function addLineStation(){const e=document.getElementById('newStationName');const n=(e?.value||'').trim();if(!n||LINE_STATIONS.includes(n))return;LINE_STATIONS.push(n);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();}
+        function removeLineStation(i){if(i<=0)return;if(!confirm(`Удалить станцию «${LINE_STATIONS[i]}»?`))return;LINE_STATIONS.splice(i,1);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();renderScheduleBoard();}
+'''
+          new_funcs = '''        function renderStationEditor(containerId) {
+            const el = document.getElementById(containerId);
+            if (!el) return;
+            el.innerHTML = LINE_STATIONS.map((st, i) => `
+                <div class="route-station-editor-item">
+                    <span class="route-index">${i + 1}</span>
+                    <span class="type-badge">${st}</span>
+                    <button type="button" class="route-up" title="Поднять" onclick="moveLineStation(${i}, -1)">↑</button>
+                    <button type="button" class="route-down" title="Опустить" onclick="moveLineStation(${i}, 1)">↓</button>
+                    <button type="button" class="route-remove" title="Удалить" onclick="removeLineStation(${i})">×</button>
+                </div>
+            `).join('');
+        }
+
+        function renderStationEditors() {
+            renderStationEditor('stationList');
+            renderStationEditor('stationListBuilder');
+        }
+
+        function refreshStationSelectors(){
+            ['tripFromStation','tripToStation','schFrom','schTo','calcFromStation','calcToStation'].forEach(id=>{
+                const e=document.getElementById(id);
+                if(!e)return;
+                const v=e.value;
+                e.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');
+                if(LINE_STATIONS.includes(v)) e.value=v;
+            });
+            renderStationEditors();
+        }
+
+        function addLineStation(inputId='newStationName'){
+            const e=document.getElementById(inputId);
+            const n=(e?.value||'').trim();
+            if(!n || LINE_STATIONS.includes(n)) return;
+            LINE_STATIONS.push(n);
+            profile.lineStations=[...LINE_STATIONS];
+            saveData();
+            if(e) e.value='';
+            refreshStationSelectors();
+            renderScheduleBoard();
+        }
+
+        function moveLineStation(i, direction){
+            const j=i+direction;
+            if(j<0 || j>=LINE_STATIONS.length) return;
+            [LINE_STATIONS[i],LINE_STATIONS[j]]=[LINE_STATIONS[j],LINE_STATIONS[i]];
+            profile.lineStations=[...LINE_STATIONS];
+            saveData();
+            refreshStationSelectors();
+            renderScheduleBoard();
+        }
+
+        function removeLineStation(i){
+            if(LINE_STATIONS.length<=2){ alert('Должно остаться минимум две станции маршрута.'); return; }
+            if(!confirm(`Удалить станцию «${LINE_STATIONS[i]}»?`)) return;
+            LINE_STATIONS.splice(i,1);
+            profile.lineStations=[...LINE_STATIONS];
+            saveData();
+            refreshStationSelectors();
+            renderScheduleBoard();
+        }
+'''
+          if old_funcs not in s:
+              raise SystemExit('Station functions not found')
+          s = s.replace(old_funcs, new_funcs, 1)
+
+          # Make newly added/reordered route available to existing saved schedule rows only when their timetable is regenerated.
+          # Add a visible route-order editor to VU-45 output as well, immediately above the ticket.
+          vu_anchor = '<div id="vu45Container" style="display:none;">\n                    <div class="vu45-ticket" id="vu45Ticket"></div>'
+          vu_repl = '''<div id="vu45Container" style="display:none;">
+                    <div class="schedule-box no-print" style="margin-bottom:10px;">
+                        <div style="font-weight:bold; margin-bottom:7px;">🚉 Маршрут ВУ-45</div>
+                        <div id="stationListVU45" class="route-station-editor-list"></div>
+                    </div>
+                    <div class="vu45-ticket" id="vu45Ticket"></div>'''
+          if vu_anchor not in s:
+              raise SystemExit('VU45 anchor not found')
+          s = s.replace(vu_anchor, vu_repl, 1)
+
+          # Render the VU-45 route list whenever station editors refresh.
+          s = s.replace("            renderStationEditor('stationListBuilder');\n        }", "            renderStationEditor('stationListBuilder');\n            renderStationEditor('stationListVU45');\n        }", 1)
+
+          p.write_text(s, encoding='utf-8')
+          print('Route station editor installed.')
+
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add index.html
+          git commit -m 'feat: add editable station sequence to schedule and VU-45'
+          git push
