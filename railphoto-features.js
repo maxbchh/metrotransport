@@ -123,6 +123,7 @@
 
       const copy = {...item};
       copy._compositionCount = qty;
+      copy.compositionCount = qty;
       copy.weight = (Number(item.weight)||0) * qty;
       copy.length = (Number(item.length)||0) * qty;
       copy.brake = (Number(item.brake)||0) * qty;
@@ -222,8 +223,7 @@
       if(actionCell!==tr.lastElementChild) tr.appendChild(actionCell);
 
       tr.classList.remove('railphoto-in-service-row');
-      const old=tr.querySelectorAll('.railphoto-service-badge');
-      old.forEach(x=>x.remove());
+      tr.querySelectorAll('.railphoto-service-badge').forEach(x=>x.remove());
       if(item.inService){
         tr.classList.add('railphoto-in-service-row');
         const statusCell=cells.find(td=>/В Эксплуатации|Не эксплуатируется|В Ремонте|В Депо|Порезан|Списан|Музейный|Переформирован|Капитальный Ремонт|Выведен из эксплуатации/.test(td.textContent));
@@ -261,7 +261,7 @@
     db.forEach(item=>{if(ids.includes(item.id)) item.inService=service;});
     if(typeof saveData==='function') saveData();
     addDatabaseRunInfo();
-    renderBuilderSourceQuantities();
+    renderBuilderQuantities();
     alert(`Состав №${trainNum} отправлен в рейс.`);
   }
 
@@ -271,10 +271,8 @@
     db.forEach(item=>{if(ids.includes(item.id)) item.inService=null;});
     if(typeof saveData==='function') saveData();
     addDatabaseRunInfo();
-    renderBuilderSourceQuantities();
+    renderBuilderQuantities();
   }
-
-  function renderBuilderSourceQuantities(){renderBuilderQuantities();}
 
   function init(){
     installStyles();
@@ -284,13 +282,13 @@
     addBuilderButtons();
     patchTableRefresh();
     addDatabaseRunInfo();
-    renderBuilderSourceQuantities();
+    renderBuilderQuantities();
     setInterval(()=>{
       patchAddToConsist();
       patchConsistRendering();
       addBuilderButtons();
       addDatabaseRunInfo();
-      renderBuilderSourceQuantities();
+      renderBuilderQuantities();
     },1000);
   }
 
