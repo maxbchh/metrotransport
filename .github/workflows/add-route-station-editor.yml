@@ -16,8 +16,9 @@ jobs:
     steps:
       - uses: actions/checkout@v4
       - name: Patch index.html
-        shell: python
+        shell: bash
         run: |
+          python3 - <<'PY'
           from pathlib import Path
           import re
 
@@ -29,11 +30,9 @@ jobs:
               print('Route station editor already installed.')
               raise SystemExit(0)
 
-          # Shared route station editor in VU-45 / train builder.
           anchor = '<div class="page-header">\n            <span>🚂 Конструктор Сборного Поезда и ВУ-45</span>'
-          insert = '''<div class="page-header">
-            <span>🚂 Конструктор Сборного Поезда и ВУ-45</span>'''
-          s = s.replace(anchor, insert, 1)
+          if anchor not in s:
+              raise SystemExit('Builder header anchor not found')
           header_end = '</div>\n\n        <div class="trip-form-panel no-print">'
           builder_panel = '''</div>
 
@@ -52,10 +51,9 @@ jobs:
 
         <div class="trip-form-panel no-print">'''
           if header_end not in s:
-              raise SystemExit('Builder anchor not found')
+              raise SystemExit('Builder form anchor not found')
           s = s.replace(header_end, builder_panel, 1)
 
-          # Replace the schedule-tab station manager with the same richer editor.
           old_panel = re.compile(r'<div class="schedule-box no-print" id="stationManagementPanel">.*?</div>\n\n        <div class="station-selector-bar no-print">', re.S)
           new_panel = '''<div class="schedule-box no-print" id="stationManagementPanel">
             <div class="page-header" style="margin-bottom:10px;">
@@ -74,7 +72,6 @@ jobs:
           if n != 1:
               raise SystemExit('Schedule station panel not found')
 
-          # Add compact editor styles.
           style_anchor = '.type-badge { display: inline-block; padding: 2px 7px;'
           style_insert = '''.route-station-editor-list { display:flex; flex-wrap:wrap; gap:8px; align-items:center; margin-bottom:8px; }
         .route-station-editor-item { display:inline-flex; align-items:center; gap:6px; padding:5px 7px; border:1px solid var(--bp-border); border-radius:4px; background:var(--bp-input-bg); }
@@ -88,7 +85,6 @@ jobs:
               raise SystemExit('CSS anchor not found')
           s = s.replace(style_anchor, style_insert, 1)
 
-          # Replace station utility functions so both pages share the same order.
           old_funcs = '''        function refreshStationSelectors(){ ['tripFromStation','tripToStation','schFrom','schTo'].forEach(id=>{const e=document.getElementById(id);if(!e)return;const v=e.value;e.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');if(LINE_STATIONS.includes(v))e.value=v;});const l=document.getElementById('stationList');if(l)l.innerHTML=LINE_STATIONS.map((st,i)=>`<span class="type-badge">${st} ${i?`<button class="btn-danger btn-sm" onclick="removeLineStation(${i})">×</button>`:''}</span>`).join('');}
         function addLineStation(){const e=document.getElementById('newStationName');const n=(e?.value||'').trim();if(!n||LINE_STATIONS.includes(n))return;LINE_STATIONS.push(n);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();}
         function removeLineStation(i){if(i<=0)return;if(!confirm(`Удалить станцию «${LINE_STATIONS[i]}»?`))return;LINE_STATIONS.splice(i,1);profile.lineStations=[...LINE_STATIONS];saveData();refreshStationSelectors();renderScheduleBoard();}
@@ -110,6 +106,7 @@ jobs:
         function renderStationEditors() {
             renderStationEditor('stationList');
             renderStationEditor('stationListBuilder');
+            renderStationEditor('stationListVU45');
         }
 
         function refreshStationSelectors(){
@@ -159,8 +156,6 @@ jobs:
               raise SystemExit('Station functions not found')
           s = s.replace(old_funcs, new_funcs, 1)
 
-          # Make newly added/reordered route available to existing saved schedule rows only when their timetable is regenerated.
-          # Add a visible route-order editor to VU-45 output as well, immediately above the ticket.
           vu_anchor = '<div id="vu45Container" style="display:none;">\n                    <div class="vu45-ticket" id="vu45Ticket"></div>'
           vu_repl = '''<div id="vu45Container" style="display:none;">
                     <div class="schedule-box no-print" style="margin-bottom:10px;">
@@ -172,11 +167,9 @@ jobs:
               raise SystemExit('VU45 anchor not found')
           s = s.replace(vu_anchor, vu_repl, 1)
 
-          # Render the VU-45 route list whenever station editors refresh.
-          s = s.replace("            renderStationEditor('stationListBuilder');\n        }", "            renderStationEditor('stationListBuilder');\n            renderStationEditor('stationListVU45');\n        }", 1)
-
           p.write_text(s, encoding='utf-8')
           print('Route station editor installed.')
+          PY
 
           git config user.name 'github-actions[bot]'
           git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
