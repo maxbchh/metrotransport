@@ -71,6 +71,7 @@
         .st-mod { background-color: #4b6f7e !important; color: #ffffff !important; }
         .st-trans { background-color: #512e5f !important; color: #ffffff !important; }
         .st-museum { background-color: #0f5257 !important; color: #ffffff !important; }
+        .st-out-of-service { background-color: #7f1d1d !important; color: #ffffff !important; }
 
         body.light-theme .st-active { background-color: #ffffff !important; color: #0f172a !important; }
 
@@ -750,6 +751,10 @@
                         <input type="date" id="formScrapDate">
                     </div>
                     <div>
+                        <label>Дата вывода из эксплуатации:</label>
+                        <input type="date" id="formOutOfServiceDate">
+                    </div>
+                    <div>
                         <label>Текущий статус:</label>
                         <select id="formStatus">
                     <option value="st-active">В Эксплуатации</option>
@@ -1121,7 +1126,7 @@
                     <td>${item.commissionDate || '-'}</td>
                     <td class="${item.decommissionDate ? 'col-highlight-decomm' : ''}">${item.decommissionDate || '-'}</td>
                     <td class="${item.scrapDate ? 'col-highlight-scrapped' : ''}">${item.scrapDate || '-'}</td>
-                    <td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style="color:var(--bp-text-muted);">${SECONDARY_STATUS_MAP[item.secondaryStatus || 'none'] || '—'}</small></td>
+                    <td><b>${STATUS_MAP[item.status] || item.status}</b><br><small style="color:var(--bp-text-muted);">${SECONDARY_STATUS_MAP[item.secondaryStatus || 'none'] || '—'}</small>${item.status === 'st-out-of-service' ? `<br><small style="color:#ff8888;font-weight:bold;">Выведен: ${item.outOfServiceDate || 'дата не указана'}</small>` : ''}</td>
                     <td title="${item.notes || ''}">${item.notes || '—'}</td>
                     <td style="text-align:center;" onclick="event.stopPropagation()">
                         <button class="btn-secondary btn-sm" onclick="openEditModal('${item.id}')">✏️</button>
@@ -1203,6 +1208,7 @@
             document.getElementById('formCommissionDate').value = item.commissionDate || '';
             document.getElementById('formDecommissionDate').value = item.decommissionDate || '';
             document.getElementById('formScrapDate').value = item.scrapDate || '';
+            document.getElementById('formOutOfServiceDate').value = item.outOfServiceDate || '';
             document.getElementById('formStatus').value = item.status;
             document.getElementById('formSecondaryStatus').value = item.secondaryStatus || 'none';
             document.getElementById('formWeight').value = item.weight || 15;
@@ -1228,6 +1234,7 @@
                 commissionDate: document.getElementById('formCommissionDate').value,
                 decommissionDate: document.getElementById('formDecommissionDate').value,
                 scrapDate: document.getElementById('formScrapDate').value,
+                outOfServiceDate: document.getElementById('formOutOfServiceDate').value,
                 status: document.getElementById('formStatus').value,
                 secondaryStatus: document.getElementById('formSecondaryStatus').value,
                 weight: parseFloat(document.getElementById('formWeight').value) || 0,
