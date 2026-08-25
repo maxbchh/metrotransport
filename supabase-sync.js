@@ -36,7 +36,18 @@
   async function signup(){const email=cloudEmail.value.trim(),password=cloudPassword.value;if(!email||!password)return msg('Введите email и пароль.');if(password.length<6)return msg('Пароль должен содержать минимум 6 символов.');const r=await sb.auth.signUp({email,password});if(r.error)return msg('Ошибка регистрации: '+r.error.message);msg(r.data.session?'Аккаунт создан.':'Аккаунт создан. Подтвердите email, затем войдите.');}
   async function rows(table){const r=await sb.from(table).select('id,data').eq('user_id',user.id);if(r.error)throw r.error;return r.data||[];}
 
-  // ===== Объём маршрута: станции, добавление и изменение последовательности =====
+  function ensureStationsReady() {
+    if (typeof LINE_STATIONS !== 'undefined') return;
+    try {
+      const saved = JSON.parse(localStorage.getItem('rp_stations') || 'null');
+      if (Array.isArray(saved) && saved.length >= 2) {
+        window.LINE_STATIONS = saved;
+        return;
+      }
+    } catch (e) {}
+    window.LINE_STATIONS = ['Максиград', 'Москва'];
+  }
+
   function routePanelHtml(idPrefix) {
     const inputId = `routeStationInput_${idPrefix}`;
     const listId = `routeStationList_${idPrefix}`;
@@ -71,7 +82,7 @@
   }
 
   function refreshRouteSelectors() {
-    if (typeof LINE_STATIONS === 'undefined') return;
+    ensureStationsReady();
     ['tripFromStation','tripToStation','schFrom','schTo','calcFromStation','calcToStation'].forEach(id => {
       const el = document.getElementById(id);
       if (!el) return;
@@ -83,6 +94,7 @@
   }
 
   function persistRouteStations() {
+    ensureStationsReady();
     if (typeof profile !== 'undefined') profile.lineStations = [...LINE_STATIONS];
     localStorage.setItem('rp_stations', JSON.stringify(LINE_STATIONS));
     if (typeof saveData === 'function') saveData();
@@ -91,6 +103,7 @@
   }
 
   window.railphotoAddStation = function(inputId) {
+    ensureStationsReady();
     const el = document.getElementById(inputId);
     const name = (el?.value || '').trim();
     if (!name) return;
@@ -101,6 +114,7 @@
   };
 
   window.railphotoMoveStation = function(index, direction) {
+    ensureStationsReady();
     const target = index + direction;
     if (target < 0 || target >= LINE_STATIONS.length) return;
     [LINE_STATIONS[index], LINE_STATIONS[target]] = [LINE_STATIONS[target], LINE_STATIONS[index]];
@@ -108,6 +122,7 @@
   };
 
   window.railphotoRemoveStation = function(index) {
+    ensureStationsReady();
     if (LINE_STATIONS.length <= 2) { alert('Должно остаться минимум две станции маршрута.'); return; }
     if (!confirm(`Удалить станцию «${LINE_STATIONS[index]}»?`)) return;
     LINE_STATIONS.splice(index, 1);
@@ -115,23 +130,22 @@
   };
 
   function installRoutePanels() {
-    if (typeof LINE_STATIONS === 'undefined') return;
+    ensureStationsReady();
     if (!document.getElementById('routePanel_schedule')) {
-      const schedulePage = document.getElementById('pageSchedule');
       const stationManager = document.getElementById('stationManagementPanel');
-      if (schedulePage && stationManager) {
-        stationManager.insertAdjacentHTML('beforebegin', routePanelHtml('schedule'));
-      }
+      if (stationManager) stationManager.insertAdjacentHTML('beforebegin', routePanelHtml('schedule'));
     }
     if (!document.getElementById('routePanel_vu45')) {
       const builderPage = document.getElementById('pageBuilder');
-      const tripPanel = builderPage?.querySelector('.trip-form-panel.no-print');
-      if (builderPage && tripPanel) tripPanel.insertAdjacentHTML('beforebegin', routePanelHtml('vu45'));
+      const tripPanel = builderPage && builderPage.querySelector('.trip-form-panel.no-print');
+      if (tripPanel) tripPanel.insertAdjacentHTML('beforebegin', routePanelHtml('vu45'));
     }
     refreshRouteSelectors();
   }
 
   async function saveCloud(){if(!user)return;status('☁️ сохраняю...');try{
+    ensureStationsReady();
+    if (typeof profile !== 'undefined') profile.lineStations = [...LINE_STATIONS];
     const vr=db.map(data=>({user_id:user.id,id:data.id,data})),nr=pinnedNotes.map(data=>({user_id:user.id,id:data.id,data})),sr=schedules.map(data=>({user_id:user.id,id:data.id,data}));
     const rr=await Promise.all([sb.from('uzd_vehicles').upsert(vr,{onConflict:'user_id,id'}),sb.from('uzd_profiles').upsert({user_id:user.id,id:'main',data:profile},{onConflict:'user_id,id'}),sb.from('uzd_notes').upsert(nr,{onConflict:'user_id,id'}),sb.from('uzd_schedules').upsert(sr,{onConflict:'user_id,id'})]);
     const bad=rr.find(x=>x.error);if(bad)throw bad.error;
@@ -139,11 +153,14 @@
     status('☁️ сохранено');
   }catch(e){console.error(e);status('⚠️ ошибка синхронизации');}}
   function queueSave(){clearTimeout(timer);timer=setTimeout(saveCloud,250);}
-  async function loadCloud(){const [v,p,n,s]=await Promise.all([rows('uzd_vehicles'),sb.from('uzd_profiles').select('data').eq('user_id',user.id).eq('id','main').maybeSingle(),rows('uzd_notes'),rows('uzd_schedules')]);if(p.error)throw p.error;
+  async function loadCloud(){
+    ensureStationsReady();
+    const [v,p,n,s]=await Promise.all([rows('uzd_vehicles'),sb.from('uzd_profiles').select('data').eq('user_id',user.id).eq('id','main').maybeSingle(),rows('uzd_notes'),rows('uzd_schedules')]);
+    if(p.error)throw p.error;
     if(!v.length&&!n.length&&!s.length&&!p.data){await saveCloud();installRoutePanels();return;}
     db=v.map(x=>x.data);if(p.data)profile=p.data.data;pinnedNotes=n.map(x=>x.data);schedules=s.map(x=>x.data);
     if (Array.isArray(profile.lineStations) && profile.lineStations.length >= 2) {
-      LINE_STATIONS = [...profile.lineStations];
+      window.LINE_STATIONS = [...profile.lineStations];
       localStorage.setItem('rp_stations', JSON.stringify(LINE_STATIONS));
     }
     localStorage.setItem('rp_db',JSON.stringify(db));localStorage.setItem('rp_profile',JSON.stringify(profile));localStorage.setItem('rp_pinned',JSON.stringify(pinnedNotes));localStorage.setItem('rp_schedules',JSON.stringify(schedules));
@@ -153,5 +170,8 @@
   function realtime(){if(channel)sb.removeChannel(channel);channel=sb.channel('railphoto-sync').on('postgres_changes',{event:'*',schema:'public',table:'uzd_vehicles',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_profiles',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_notes',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_schedules',filter:`user_id=eq.${user.id}`},refresh).subscribe();}
   async function start(session){user=session&&session.user;if(!user){status('🔐 требуется вход');authBox();return;}hideAuth();status('☁️ загрузка...');try{await loadCloud();if(!originalSave){originalSave=window.saveData;window.saveData=function(){originalSave();queueSave();}}realtime()}catch(e){console.error(e);authBox('Ошибка Supabase: '+e.message);status('⚠️ ошибка Supabase');}}
   function boot(){const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';script.onload=async()=>{sb=window.supabase.createClient(URL,KEY);const r=await sb.auth.getSession();await start(r.data.session);sb.auth.onAuthStateChange((_e,s)=>start(s));};script.onerror=()=>status('⚠️ не удалось загрузить Supabase');document.head.appendChild(script);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installRoutePanels();boot();});else{installRoutePanels();boot();}
+  function bootRoutePanels() {
+    try { ensureStationsReady(); installRoutePanels(); } catch(e) { console.error('Route panel init failed', e); }
+  }
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{bootRoutePanels();boot();});else{bootRoutePanels();boot();}
 })();
