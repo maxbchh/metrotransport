@@ -1,0 +1,68 @@
+name: Fix editable quantity input
+
+on:
+  push:
+    branches: [main]
+    paths:
+      - '.github/workflows/fix-quantity-input.yml'
+  workflow_dispatch:
+
+permissions:
+  contents: write
+
+jobs:
+  patch:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Patch quantity field
+        shell: bash
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('railphoto-features.js')
+          s = p.read_text(encoding='utf-8')
+          old = '''  function addQuantityFieldToVehicleForm() {
+    const form = document.getElementById('vehicleForm');
+    const notes = document.getElementById('formNotes');
+    if (!form || !notes || document.getElementById('formCompositionCount')) return;
+    const wrap = document.createElement('div');
+    wrap.innerHTML = `
+      <label>Количество вагонов / секций:</label>
+      <input type="number" min="1" step="1" id="formCompositionCount" value="1" placeholder="1">
+    `;
+    const field = wrap.firstElementChild;
+    const grid = notes.closest('.form-grid') || form.querySelector('.form-grid');
+    const full = notes.closest('.form-full');
+    if (grid && full) grid.insertBefore(field, full);
+  }
+'''
+          new = '''  function addQuantityFieldToVehicleForm() {
+    const form = document.getElementById('vehicleForm');
+    if (!form || document.getElementById('formCompositionCount')) return;
+
+    const grid = form.querySelector('.form-grid');
+    if (!grid) return;
+
+    const field = document.createElement('div');
+    field.id = 'railphotoCompositionCountField';
+    field.innerHTML = `
+      <label for="formCompositionCount">Количество вагонов / секций:</label>
+      <input type="number" min="1" step="1" id="formCompositionCount" value="1" placeholder="1">
+    `;
+
+    const notes = document.getElementById('formNotes');
+    const notesBlock = notes ? notes.closest('.form-full') : null;
+    if (notesBlock) grid.insertBefore(field, notesBlock);
+    else grid.appendChild(field);
+  }
+'''
+          if old not in s:
+              raise SystemExit('quantity field block not found')
+          p.write_text(s.replace(old, new, 1), encoding='utf-8')
+          PY
+          git config user.name 'github-actions[bot]'
+          git config user.email '41898282+github-actions[bot]@users.noreply.github.com'
+          git add railphoto-features.js
+          git commit -m 'fix: render editable quantity input in vehicle form'
+          git push
