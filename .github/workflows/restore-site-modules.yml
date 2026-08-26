@@ -1,0 +1,48 @@
+name: Restore full Railphoto feature modules
+
+on:
+  push:
+    branches: [main]
+
+permissions:
+  contents: write
+
+jobs:
+  restore-modules:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Restore feature module loading without removing existing code
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('index.html')
+          s = p.read_text(encoding='utf-8')
+          marker = '<script src="supabase-sync.js"></script>'
+          modules = [
+              'railphoto-route-registry.js',
+              'railphoto-station-auto.js',
+              'railphoto-operations.js',
+              'railphoto-control-center.js',
+              'railphoto-release-control.js',
+          ]
+          tags = '\n'.join(f'<script src="{m}?v=restore1"></script>' for m in modules)
+          if 'railphoto-route-registry.js?v=restore1' not in s:
+              if marker not in s:
+                  raise SystemExit('supabase-sync marker not found')
+              s = s.replace(marker, tags + '\n    ' + marker, 1)
+              p.write_text(s, encoding='utf-8')
+          else:
+              print('Feature module tags already present; nothing to do.')
+          PY
+      - name: Commit restored module loading
+        run: |
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add index.html
+          if git diff --cached --quiet; then
+            echo "No changes to commit."
+          else
+            git commit -m "fix: restore full site feature modules"
+            git push
+          fi
