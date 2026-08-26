@@ -5,20 +5,7 @@
   const esc = v => String(v ?? '').replace(/[&<>"']/g, ch => ({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[ch]));
   function waitForApp(){if(typeof db==='undefined'||typeof selectedConsist==='undefined'){setTimeout(waitForApp,200);return;}init();}
   function installStyles(){if(document.getElementById('railphoto-features-style'))return;const style=document.createElement('style');style.id='railphoto-features-style';style.textContent=`.railphoto-in-service-row{outline:3px solid #f59e0b!important;outline-offset:-3px;animation:railphotoPulse 1.7s ease-in-out infinite}.railphoto-in-service-row td{box-shadow:inset 0 0 0 9999px rgba(245,158,11,.08)}@keyframes railphotoPulse{0%,100%{filter:brightness(1)}50%{filter:brightness(1.13)}}.railphoto-service-badge{display:inline-block;margin-top:4px;padding:3px 7px;border-radius:4px;background:#7c2d12;color:#fff;font-size:10px;font-weight:700;box-shadow:0 0 10px rgba(245,158,11,.5)}.railphoto-builder-qty{width:62px!important;padding:5px!important;text-align:center;margin-right:6px}.railphoto-builder-qty-wrap{display:inline-flex;align-items:center;gap:4px;margin-right:6px;font-size:10px}.st-transfer-depot{background-color:#6b4f8a!important;color:#fff!important}.st-transfer-railway{background-color:#4f638a!important;color:#fff!important}`;document.head.appendChild(style);}
-  function installTransferStatus(){
-    if(typeof STATUS_MAP!=='undefined'){
-      STATUS_MAP['st-transfer-depot']='Передан в другое депо';
-      STATUS_MAP['st-transfer-railway']='Передан в другую дорогу';
-      delete STATUS_MAP['st-transfer-other'];
-    }
-    const selects=['filterStatus','batchStatusSelect','formStatus'];
-    selects.forEach(id=>{
-      const select=document.getElementById(id);if(!select)return;
-      if(!select.querySelector('option[value="st-transfer-depot"]')){const opt=document.createElement('option');opt.value='st-transfer-depot';opt.textContent='Передан в другое депо';select.appendChild(opt);}
-      if(!select.querySelector('option[value="st-transfer-railway"]')){const opt=document.createElement('option');opt.value='st-transfer-railway';opt.textContent='Передан в другую дорогу';select.appendChild(opt);}
-      const old=select.querySelector('option[value="st-transfer-other"]');if(old)old.remove();
-    });
-  }
+  function installTransferStatus(){if(typeof STATUS_MAP!=='undefined'){STATUS_MAP['st-transfer-depot']='Передан в другое депо';STATUS_MAP['st-transfer-railway']='Передан в другую дорогу';delete STATUS_MAP['st-transfer-other'];}const selects=['filterStatus','batchStatusSelect','formStatus'];selects.forEach(id=>{const select=document.getElementById(id);if(!select)return;if(!select.querySelector('option[value="st-transfer-depot"]')){const opt=document.createElement('option');opt.value='st-transfer-depot';opt.textContent='Передан в другое депо';select.appendChild(opt);}if(!select.querySelector('option[value="st-transfer-railway"]')){const opt=document.createElement('option');opt.value='st-transfer-railway';opt.textContent='Передан в другую дорогу';select.appendChild(opt);}const old=select.querySelector('option[value="st-transfer-other"]');if(old)old.remove();});}
   function ensureData(){let changed=false;db.forEach(item=>{if(!Number.isFinite(Number(item.compositionCount))||Number(item.compositionCount)<1){item.compositionCount=1;changed=true;}if(!Object.prototype.hasOwnProperty.call(item,'inService')){item.inService=null;changed=true;}if(item.status==='st-transfer-other'){item.status='st-transfer-depot';changed=true;}});if(changed&&typeof saveData==='function')saveData();}
   function getBuilderInputId(item){return'railphoto_qty_'+String(item.id).replace(/[^a-zA-Z0-9_-]/g,'_');}
   function isCounted(item){return item&&(item.category==='mvps'||item.category==='pass_car');}
@@ -34,6 +21,7 @@
   function loadControlCenter(){if(document.getElementById('railphotoControlCenterScript'))return;const s=document.createElement('script');s.id='railphotoControlCenterScript';s.src='railphoto-control-center.js?v=1';document.head.appendChild(s);}
   function loadRouteRegistry(){if(document.getElementById('railphotoRouteRegistryScript'))return;const s=document.createElement('script');s.id='railphotoRouteRegistryScript';s.src='railphoto-route-registry.js?v=1';document.head.appendChild(s);}
   function loadReleaseControl(){if(document.getElementById('railphotoReleaseControlScript'))return;const s=document.createElement('script');s.id='railphotoReleaseControlScript';s.src='railphoto-release-control.js?v=1';document.head.appendChild(s);}
-  function init(){installStyles();installTransferStatus();ensureData();patchConsistRendering();patchAddToConsist();addBuilderButtons();patchTableRefresh();addDatabaseRunInfo();renderBuilderQuantities();loadControlCenter();loadRouteRegistry();loadReleaseControl();setInterval(()=>{installTransferStatus();patchAddToConsist();patchConsistRendering();addBuilderButtons();addDatabaseRunInfo();renderBuilderQuantities();},1000);}
+  function loadOperationsCenter(){if(document.getElementById('railphotoOperationsScript'))return;const s=document.createElement('script');s.id='railphotoOperationsScript';s.src='railphoto-operations.js?v=1';document.head.appendChild(s);}
+  function init(){installStyles();installTransferStatus();ensureData();patchConsistRendering();patchAddToConsist();addBuilderButtons();patchTableRefresh();addDatabaseRunInfo();renderBuilderQuantities();loadControlCenter();loadRouteRegistry();loadReleaseControl();loadOperationsCenter();setInterval(()=>{installTransferStatus();patchAddToConsist();patchConsistRendering();addBuilderButtons();addDatabaseRunInfo();renderBuilderQuantities();},1000);}
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',waitForApp);else waitForApp();
 })();
