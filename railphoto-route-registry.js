@@ -6,25 +6,40 @@
   const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 
   const LINE_COLORS={
-    yellow:{label:'Жёлтый — международные / дальние',color:'#facc15'},
-    lime:{label:'Салатовый — межрегиональные эконом-класса 1520 мм',color:'#84cc16'},
-    green:{label:'Зелёный — межрегиональные эконом-класса УЖД',color:'#16a34a'},
-    blue:{label:'Синий — региональные линии / электрички',color:'#2563eb'},
+    yellow:{label:'Жёлтый — международные / бизнес-класс',color:'#facc15'},
+    lime:{label:'Салатовый — межрегиональные 1520 мм',color:'#84cc16'},
+    green:{label:'Зелёный — межрегиональные УЖД',color:'#16a34a'},
+    blue:{label:'Синий — региональные / электрички',color:'#2563eb'},
     sky:{label:'Голубой — будущие региональные линии',color:'#38bdf8'},
     red:{label:'Красный — городские линии',color:'#ef4444'},
     black:{label:'Чёрный — грузовые',color:'#111827'}
   };
 
+  /* Exact train-numbering stencil supplied for the railway game. */
+  const NUMBERING_RULES=[
+    {min:1,max:200,category:'international',label:'1–200 — Международные поезда (скоростные или фирменные)'},
+    {min:301,max:498,category:'international_long_distance',label:'301–498 — Международные поезда дальнего следования'},
+    {min:601,max:698,category:'interregional_economy_1520',label:'601–698 — Межрегиональные поезда ЖД/УЖД (обычные)'},
+    {min:701,max:730,category:'interregional_business',label:'701–730 — Межрегиональные поезда бизнес-класса скорого типа'},
+    {min:731,max:798,category:'regional_business',label:'731–798 — Региональные поезда бизнес-класса'},
+    {min:951,max:958,category:'interregional_passenger_freight',label:'951–958 — Межрегиональные (грузопассажирские)'},
+    {min:2001,max:2998,category:'cargo',label:'2001–2998 — Грузовые поезда'},
+    {min:6001,max:6998,category:'regional_economy',label:'6001–6998 — Региональные поезда эконом-класса (электрички)'},
+    {min:7001,max:7998,category:'city',label:'7001–7998 — Городские линии'}
+  ];
+
   const ROUTE_CATEGORIES={
-    international:{label:'Международные линии',color:'yellow',gauge:''},
-    interregional_business:{label:'Межрегиональные линии бизнес-класса',color:'yellow',gauge:'1520'},
-    interregional_economy_1520:{label:'Межрегиональные линии эконом-класса — 1520 мм',color:'lime',gauge:'1520'},
-    interregional_economy_uzhd:{label:'Межрегиональные линии эконом-класса — УЖД',color:'green',gauge:'750'},
-    regional_business:{label:'Региональные линии бизнес-класса',color:'blue',gauge:'1520'},
-    regional_economy:{label:'Региональные линии эконом-класса',color:'blue',gauge:'1520'},
-    future_regional:{label:'Региональные линии — будущие',color:'sky',gauge:'1520'},
-    city:{label:'Городские линии',color:'red',gauge:'1520'},
-    cargo:{label:'Грузовые линии',color:'black',gauge:''}
+    international:{label:'1–200 — Международные поезда (скоростные или фирменные)',color:'yellow',gauge:''},
+    international_long_distance:{label:'301–498 — Международные поезда дальнего следования',color:'yellow',gauge:''},
+    interregional_business:{label:'701–730 — Межрегиональные поезда бизнес-класса скорого типа',color:'yellow',gauge:'1520'},
+    interregional_economy_1520:{label:'601–698 — Межрегиональные поезда ЖД/УЖД (обычные) — 1520 мм',color:'lime',gauge:'1520'},
+    interregional_economy_uzhd:{label:'601–698 — Межрегиональные поезда ЖД/УЖД (обычные) — УЖД',color:'green',gauge:'750'},
+    regional_business:{label:'731–798 — Региональные поезда бизнес-класса',color:'blue',gauge:'1520'},
+    regional_economy:{label:'6001–6998 — Региональные поезда эконом-класса (электрички)',color:'blue',gauge:'1520'},
+    future_regional:{label:'Будущие региональные линии',color:'sky',gauge:'1520'},
+    interregional_passenger_freight:{label:'951–958 — Межрегиональные (грузопассажирские)',color:'lime',gauge:'1520'},
+    city:{label:'7001–7998 — Городские линии',color:'red',gauge:'1520'},
+    cargo:{label:'2001–2998 — Грузовые поезда',color:'black',gauge:''}
   };
 
   const TRAIN_TYPES=['Скорый','Пассажирский','Скоростной','Грузовой','Пригородный','Городской'];
@@ -32,7 +47,7 @@
   const DEFAULT_ROUTES=[
     {id:'route-101',num:'101',from:'',to:'',type:'Скорый',color:'yellow',routeCategory:'international',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Невский экспресс'},
     {id:'route-148',num:'148',from:'Калининград',to:'Москва',type:'Скорый',color:'yellow',routeCategory:'international',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'ЧС8'},
-    {id:'route-743',num:'743',from:'Максиград',to:'Москва',type:'Скорый',color:'lime',routeCategory:'interregional_economy_1520',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ласточка'},
+    {id:'route-743',num:'743',from:'Максиград',to:'Москва',type:'Скорый',color:'yellow',routeCategory:'interregional_business',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ласточка'},
     {id:'route-601',num:'601',from:'Забайкалье',to:'Байкальск',type:'Пассажирский',color:'green',routeCategory:'interregional_economy_uzhd',gauge:'750',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'УЖД'},
     {id:'route-6143',num:'6143',from:'Байкальск',to:'Пилотная',type:'Пригородный',color:'blue',routeCategory:'regional_economy',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ответвление от аэропортной линии'},
     {id:'route-6741',num:'6741',from:'Аэропорт',to:'Минск',type:'Пригородный',color:'blue',routeCategory:'regional_economy',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:''},
@@ -40,19 +55,26 @@
     {id:'route-2891',num:'2891',from:'',to:'',type:'Грузовой',color:'black',routeCategory:'cargo',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Грузовой'}
   ];
 
+  function numberRule(num){
+    const n=Number(String(num||'').trim());
+    if(!Number.isInteger(n))return null;
+    return NUMBERING_RULES.find(x=>n>=x.min&&n<=x.max)||null;
+  }
+
   function inferCategory(r){
+    const rule=numberRule(r.num);
+    if(rule){
+      /* 601–698 may be either ordinary 1520-mm railway or UZhD; gauge decides. */
+      if(rule.category==='interregional_economy_1520'){
+        if(String(r.gauge)==='750' || /ужд|узк|750/i.test(String(r.notes||'')))return 'interregional_economy_uzhd';
+        return 'interregional_economy_1520';
+      }
+      return rule.category;
+    }
     if(r.routeCategory && ROUTE_CATEGORIES[r.routeCategory]) return r.routeCategory;
     const note=String(r.notes||'').toLowerCase();
     if(r.gauge==='750' || /ужд|узк|750/.test(note)) return 'interregional_economy_uzhd';
-    if(r.color==='green'){
-      try{
-        const items=Array.isArray(window.db)?window.db:[];
-        const text=[r.consist,r.cars,r.notes].filter(Boolean).join(' ').toLowerCase();
-        const has1520=items.some(x=>x.gauge==='1520' && text.includes(String(x.series||'').toLowerCase()));
-        if(has1520) return 'interregional_economy_1520';
-      }catch(e){}
-      return 'interregional_economy_uzhd';
-    }
+    if(r.color==='green') return 'interregional_economy_uzhd';
     if(r.color==='lime') return 'interregional_economy_1520';
     if(r.color==='red' || r.type==='Городской') return 'city';
     if(r.color==='black' || r.type==='Грузовой') return 'cargo';
@@ -71,6 +93,10 @@
     if(x.routeCategory==='interregional_economy_uzhd') x.gauge='750';
     if(x.routeCategory==='interregional_economy_1520') x.color='lime';
     if(x.routeCategory==='interregional_economy_uzhd') x.color='green';
+    if(x.routeCategory==='interregional_business') x.color='yellow';
+    if(x.routeCategory==='international' || x.routeCategory==='international_long_distance') x.color='yellow';
+    if(x.routeCategory==='regional_business' || x.routeCategory==='regional_economy') x.color='blue';
+    if(x.routeCategory==='interregional_passenger_freight') x.color='lime';
     if(x.routeCategory==='city') x.color='red';
     if(x.routeCategory==='cargo') x.color='black';
     return x;
@@ -131,6 +157,7 @@
       .rr-form input,.rr-form select,.rr-form textarea{width:100%;padding:7px 9px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px}
       .rr-span-2{grid-column:span 2}.rr-span-3{grid-column:span 3}
       .rr-category-hint{font-size:10px;color:var(--bp-text-muted);margin-top:4px}
+      .rr-numbering-hint{font-size:10px;color:var(--bp-text-muted);margin-top:4px;line-height:1.35}
       .rr-composition-box{border:1px solid var(--bp-border);background:rgba(37,99,235,.06);border-radius:5px;padding:10px;margin-top:2px}
       .rr-composition-tabs{display:flex;gap:6px;flex-wrap:wrap;margin-bottom:8px}
       .rr-composition-tab{border:1px solid var(--bp-border);background:var(--bp-btn-secondary);color:var(--bp-text);padding:6px 9px;border-radius:4px;cursor:pointer;font-size:10px;font-weight:700}
@@ -163,7 +190,7 @@
     return `<div class="rr-composition-box rr-span-3"><label><b>Составность:</b> выбери способ задания состава</label><div class="rr-composition-tabs"><button type="button" class="rr-composition-tab active" data-comp-mode="manual">✍️ Вручную</button><button type="button" class="rr-composition-tab" data-comp-mode="existing">📋 Выбрать существующие ПС</button><button type="button" class="rr-composition-tab" data-comp-mode="builder">🚆 Взять из конструктора</button></div><div id="rrCompManual" class="rr-composition-source active"><input id="rrConsist" placeholder="Например: ЧС8 + 8 вагонов"><span class="rr-composition-hint">Можно полностью написать состав вручную, как раньше.</span></div><div id="rrCompExisting" class="rr-composition-source"><select id="rrExistingPs" class="rr-existing-select" multiple>${options||'<option disabled>База ПС пока пуста</option>'}</select><div class="action-buttons" style="margin-top:7px"><button type="button" class="btn-secondary btn-sm" id="rrUseExisting">Добавить выбранные ПС</button></div><span class="rr-composition-hint">Можно выбрать несколько единиц из существующей базы ПС.</span></div><div id="rrCompBuilder" class="rr-composition-source"><div class="action-buttons"><button type="button" class="btn-secondary" id="rrUseBuilder">📋 Взять текущий состав из конструктора</button><button type="button" class="btn-secondary" id="rrOpenBuilder">🛠 Открыть конструктор</button></div><span class="rr-composition-hint">Берётся текущий состав, который сейчас собран во вкладке «Конструктор».</span></div></div>`;
   }
 
-  function modalHtml(){return `<div id="rrModal" class="rr-modal"><div class="rr-modal-card"><div class="page-header"><span id="rrModalTitle">Добавить маршрут</span><button type="button" class="btn-secondary" id="rrClose">×</button></div><form id="rrForm" class="rr-form"><div><label>Номер поезда:</label><input id="rrNum" required></div><div><label>Станция отправления:</label><input id="rrFrom"></div><div><label>Станция прибытия:</label><input id="rrTo"></div><div><label>Категория маршрута:</label><select id="rrRouteCategory">${categoryOptions('regional_economy')}</select><div class="rr-category-hint">1520 мм и УЖД теперь выбираются как разные категории.</div></div><div><label>Колея маршрута:</label><select id="rrGauge"><option value="1520">1520 мм</option><option value="750">750 мм — УЖД</option></select></div><div><label>Тип поезда:</label><select id="rrTrainType">${TRAIN_TYPES.map(x=>`<option>${x}</option>`).join('')}</select></div><div><label>Цвет линии/поезда:</label><select id="rrColor">${Object.entries(LINE_COLORS).map(([k,v])=>`<option value="${k}">${esc(v.label)}</option>`).join('')}</select></div><div><label>Время прибытия:</label><input id="rrArr" type="time"></div><div><label>Время отправления:</label><input id="rrDep" type="time"></div>${compositionSourcesHtml()}<div><label>Поездов на маршруте всего:</label><input id="rrTrains" type="number" min="0"></div><div><label>Вагонов в поезде:</label><input id="rrWagons" type="number" min="0"></div><div class="rr-span-2"><label>Какие вагоны:</label><input id="rrCars" placeholder="Например: плацкарт × 6, купе × 2"></div><div class="rr-span-3"><label>Примечание:</label><textarea id="rrNotes" rows="3"></textarea></div><div class="rr-span-3 action-buttons" style="justify-content:flex-end"><button type="button" class="btn-secondary" id="rrCancel">Отмена</button><button type="submit" class="btn-primary">Сохранить маршрут</button></div></form></div></div>`;}
+  function modalHtml(){return `<div id="rrModal" class="rr-modal"><div class="rr-modal-card"><div class="page-header"><span id="rrModalTitle">Добавить маршрут</span><button type="button" class="btn-secondary" id="rrClose">×</button></div><form id="rrForm" class="rr-form"><div><label>Номер поезда:</label><input id="rrNum" required><div class="rr-numbering-hint" id="rrNumberingHint">Категория и цвет определяются по номеру поезда.</div></div><div><label>Станция отправления:</label><input id="rrFrom"></div><div><label>Станция прибытия:</label><input id="rrTo"></div><div><label>Категория маршрута:</label><select id="rrRouteCategory">${categoryOptions('regional_economy')}</select><div class="rr-category-hint">Для номеров из трафарета категория автоматически выбирается по номеру. Для 601–698 колея определяет ЖД 1520 мм или УЖД.</div></div><div><label>Колея маршрута:</label><select id="rrGauge"><option value="1520">1520 мм</option><option value="750">750 мм — УЖД</option></select></div><div><label>Тип поезда:</label><select id="rrTrainType">${TRAIN_TYPES.map(x=>`<option>${x}</option>`).join('')}</select></div><div><label>Цвет линии/поезда:</label><select id="rrColor">${Object.entries(LINE_COLORS).map(([k,v])=>`<option value="${k}">${esc(v.label)}</option>`).join('')}</select></div><div><label>Время прибытия:</label><input id="rrArr" type="time"></div><div><label>Время отправления:</label><input id="rrDep" type="time"></div>${compositionSourcesHtml()}<div><label>Поездов на маршруте всего:</label><input id="rrTrains" type="number" min="0"></div><div><label>Вагонов в поезде:</label><input id="rrWagons" type="number" min="0"></div><div class="rr-span-2"><label>Какие вагоны:</label><input id="rrCars" placeholder="Например: плацкарт × 6, купе × 2"></div><div class="rr-span-3"><label>Примечание:</label><textarea id="rrNotes" rows="3"></textarea></div><div class="rr-span-3 action-buttons" style="justify-content:flex-end"><button type="button" class="btn-secondary" id="rrCancel">Отмена</button><button type="submit" class="btn-primary">Сохранить маршрут</button></div></form></div></div>`;}
 
   let editId=null;
   let compositionMode='manual';
@@ -214,6 +241,22 @@
     const gauge=document.getElementById('rrGauge');if(gauge&&meta.gauge)gauge.value=meta.gauge;
   }
 
+  function applyNumberingToForm(){
+    const num=document.getElementById('rrNum')?.value?.trim()||'';
+    const rule=numberRule(num);
+    const hint=document.getElementById('rrNumberingHint');
+    const cat=document.getElementById('rrRouteCategory');
+    const gauge=document.getElementById('rrGauge');
+    const color=document.getElementById('rrColor');
+    if(!rule){if(hint)hint.textContent='Номер вне заданных диапазонов — категорию можно выбрать вручную.';return;}
+    let category=rule.category;
+    if(category==='interregional_economy_1520')category=(gauge?.value==='750')?'interregional_economy_uzhd':'interregional_economy_1520';
+    if(cat)cat.value=category;
+    const meta=ROUTE_CATEGORIES[category];
+    if(meta){if(color)color.value=meta.color;if(meta.gauge&&gauge)gauge.value=meta.gauge;}
+    if(hint)hint.textContent=rule.label+(rule.min===601?' — для 601–698: 1520 мм = ЖД, 750 мм = УЖД.':'');
+  }
+
   function openModal(id){
     editId=id||null;
     const r=ensureProfileRoutes().find(x=>x.id===id);
@@ -244,6 +287,7 @@
     }
     document.getElementById('rrModal').style.display='flex';
     setCompositionMode(compositionMode);
+    applyNumberingToForm();
   }
 
   function closeModal(){document.getElementById('rrModal').style.display='none';}
@@ -251,11 +295,23 @@
   function saveForm(e){
     e.preventDefault();
     const routes=ensureProfileRoutes();
-    const cat=document.getElementById('rrRouteCategory').value;
+    const num=document.getElementById('rrNum').value.trim();
+    const rule=numberRule(num);
+    let cat=document.getElementById('rrRouteCategory').value;
+    const gauge=document.getElementById('rrGauge').value;
+    if(rule){
+      cat=rule.category==='interregional_economy_1520'?(gauge==='750'?'interregional_economy_uzhd':'interregional_economy_1520'):rule.category;
+    }
     const meta=ROUTE_CATEGORIES[cat]||ROUTE_CATEGORIES.regional_economy;
-    const rec={id:editId||('route-'+Date.now()),num:document.getElementById('rrNum').value.trim(),from:document.getElementById('rrFrom').value.trim(),to:document.getElementById('rrTo').value.trim(),routeCategory:cat,gauge:document.getElementById('rrGauge').value,type:document.getElementById('rrTrainType').value,color:document.getElementById('rrColor').value||meta.color,arr:document.getElementById('rrArr').value,dep:document.getElementById('rrDep').value,consist:document.getElementById('rrConsist').value.trim(),trains:document.getElementById('rrTrains').value,wagons:document.getElementById('rrWagons').value,cars:document.getElementById('rrCars').value.trim(),notes:document.getElementById('rrNotes').value.trim(),compositionSource:compositionMode};
+    const rec={id:editId||('route-'+Date.now()),num,from:document.getElementById('rrFrom').value.trim(),to:document.getElementById('rrTo').value.trim(),routeCategory:cat,gauge:gauge,type:document.getElementById('rrTrainType').value,color:document.getElementById('rrColor').value||meta.color,arr:document.getElementById('rrArr').value,dep:document.getElementById('rrDep').value,consist:document.getElementById('rrConsist').value.trim(),trains:document.getElementById('rrTrains').value,wagons:document.getElementById('rrWagons').value,cars:document.getElementById('rrCars').value.trim(),notes:document.getElementById('rrNotes').value.trim(),compositionSource:compositionMode};
     if(cat==='interregional_economy_1520')rec.color='lime',rec.gauge='1520';
     if(cat==='interregional_economy_uzhd')rec.color='green',rec.gauge='750';
+    if(cat==='interregional_business')rec.color='yellow';
+    if(cat==='international'||cat==='international_long_distance')rec.color='yellow';
+    if(cat==='regional_business'||cat==='regional_economy')rec.color='blue';
+    if(cat==='interregional_passenger_freight')rec.color='lime';
+    if(cat==='city')rec.color='red';
+    if(cat==='cargo')rec.color='black';
     const idx=routes.findIndex(x=>x.id===editId);if(idx>=0)routes[idx]=rec;else routes.push(rec);
     saveRoutes(routes);closeModal();render();
     if(typeof window.refreshTrainSelector==='function')window.refreshTrainSelector();
@@ -277,7 +333,7 @@
 
   function render(){
     const routes=filtered(),summary=document.getElementById('rrSummary');
-    if(summary)summary.innerHTML=`<div class="rr-card"><b>Маршрутов</b><div style="font-size:20px">${routes.length}</div></div><div class="rr-card"><b>Городских</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='city').length}</div></div><div class="rr-card"><b>Грузовых</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='cargo').length}</div></div><div class="rr-card"><b>Межрегиональных 1520 мм</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_1520').length}</div></div><div class="rr-card"><b>Межрегиональных УЖД</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_uzhd').length}</div></div>`;
+    if(summary)summary.innerHTML=`<div class="rr-card"><b>Маршрутов</b><div style="font-size:20px">${routes.length}</div></div><div class="rr-card"><b>Международных</b><div style="font-size:20px">${routes.filter(r=>['international','international_long_distance'].includes(r.routeCategory||inferCategory(r))).length}</div></div><div class="rr-card"><b>Межрегиональных 1520 мм</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_1520').length}</div></div><div class="rr-card"><b>Межрегиональных УЖД</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_uzhd').length}</div></div><div class="rr-card"><b>Городских</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='city').length}</div></div><div class="rr-card"><b>Грузовых</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='cargo').length}</div></div>`;
     const body=document.getElementById('rrBody');if(!body)return;
     body.innerHTML=routes.map(r=>{
       const nr=normalizeRoute(r),c=LINE_COLORS[nr.color]||LINE_COLORS.blue,cat=ROUTE_CATEGORIES[nr.routeCategory]||ROUTE_CATEGORIES.regional_economy;
@@ -305,6 +361,8 @@
     document.getElementById('rrTypeFilter').onchange=render;
     document.getElementById('rrCategoryFilter').onchange=render;
     document.getElementById('rrRouteCategory').onchange=applyCategoryToForm;
+    document.getElementById('rrNum').oninput=applyNumberingToForm;
+    document.getElementById('rrGauge').onchange=applyNumberingToForm;
     document.getElementById('rrBody').onclick=e=>{const ed=e.target.closest('[data-edit]'),de=e.target.closest('[data-del]');if(ed)openModal(ed.dataset.edit);if(de)del(de.dataset.del);};
     document.querySelectorAll('[data-comp-mode]').forEach(b=>b.onclick=()=>setCompositionMode(b.dataset.compMode));
     document.getElementById('rrUseExisting').onclick=useExistingComposition;
