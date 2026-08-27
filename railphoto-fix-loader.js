@@ -54,8 +54,8 @@
 
   /* -------------------------------------------------------------------------
      Separate top-level "Рейсы" workspace.
-     The old small dispatcher tabs are hidden; their useful information is
-     presented here in one dedicated place without changing the existing data.
+     The old small dispatcher tabs are hidden from their old location and
+     their useful functions are collected here. Existing data/functions stay.
      ------------------------------------------------------------------------- */
   function installRunsTab(){
     if(document.getElementById('railphotoRunsTab'))return;
@@ -63,9 +63,10 @@
     const style=document.createElement('style');
     style.id='railphoto-runs-style';
     style.textContent=`
-      #railphotoRunsTab{display:none!important;}
-      #railphotoRunsTab.railphoto-runs-visible{display:block!important;}
+      #railphotoRunsTab{display:flex!important;}
+      #railphotoRunsTab.railphoto-runs-visible{display:flex!important;}
       #railphotoRunsPanel{display:none;background:var(--bp-card-bg);border:1px solid var(--bp-border);border-radius:6px;box-shadow:var(--bp-box-shadow);margin:16px 20px;padding:16px;position:relative;z-index:20;}
+      #railphotoRunsPanel.railphoto-runs-fullscreen{margin:0;min-height:calc(100vh - 90px);border:0;border-radius:0;box-shadow:none;}
       #railphotoRunsPanel h2{font-size:18px;margin:0 0 12px;color:var(--bp-text);}
       .railphoto-runs-toolbar{display:flex;gap:7px;flex-wrap:wrap;margin-bottom:12px;}
       .railphoto-runs-toolbar button{background:var(--bp-btn-secondary);color:var(--bp-text);border:1px solid var(--bp-border);padding:7px 12px;border-radius:4px;cursor:pointer;font-size:11px;font-weight:bold;}
@@ -82,6 +83,15 @@
       .railphoto-run-empty{padding:20px;text-align:center;color:var(--bp-text-muted);border:1px dashed var(--bp-border);border-radius:5px;}
       .railphoto-runs-stat{display:inline-block;margin-right:14px;font-size:11px;color:var(--bp-text-muted);}
       .railphoto-runs-stat b{color:var(--bp-link);font-size:15px;}
+      .railphoto-run-section-title{font-size:13px;font-weight:bold;margin:14px 0 7px;color:var(--bp-text);}
+      .railphoto-run-history{width:100%;border-collapse:collapse;font-size:11px;}
+      .railphoto-run-history th,.railphoto-run-history td{border:1px solid var(--bp-border);padding:7px;text-align:left;}
+      .railphoto-run-history th{background:var(--bp-table-header);color:var(--bp-text);}
+      .railphoto-run-map{display:flex;gap:7px;align-items:center;overflow:auto;padding:18px 4px;}
+      .railphoto-run-station{min-width:125px;text-align:center;padding:10px;border:2px solid var(--bp-link);border-radius:8px;background:var(--bp-card-bg);color:var(--bp-text);font-weight:bold;}
+      .railphoto-run-line{height:4px;min-width:35px;background:var(--bp-link);border-radius:4px;}
+      .railphoto-run-map-note{color:var(--bp-text-muted);font-size:10px;margin-top:5px;}
+      .railphoto-runs-back{float:right;}
     `;
     document.head.appendChild(style);
 
@@ -98,11 +108,13 @@
     const panel=document.createElement('section');
     panel.id='railphotoRunsPanel';
     panel.innerHTML=`
-      <h2>🚆 Рейсы</h2>
+      <div class="page-header"><span>🚆 Рейсы</span><button type="button" class="btn-secondary railphoto-runs-back" id="railphotoRunsBack">← Вернуться</button></div>
       <div class="railphoto-runs-toolbar">
         <button type="button" data-runs-view="active" class="active">Активные рейсы</button>
         <button type="button" data-runs-view="all">Все рейсы</button>
         <button type="button" data-runs-view="routes">Маршруты и расписание</button>
+        <button type="button" data-runs-view="map">Схема ЖД</button>
+        <button type="button" data-runs-view="history">История ПС</button>
       </div>
       <div id="railphotoRunsStats"></div>
       <div id="railphotoRunsContent"></div>
@@ -110,11 +122,30 @@
     const wrapper=document.querySelector('.main-wrapper');
     if(wrapper)wrapper.insertBefore(panel,wrapper.firstChild);else document.body.insertBefore(panel,document.body.firstChild);
 
+    let hiddenMain=[];
+    function hideMainForRuns(){
+      const w=document.querySelector('.main-wrapper');
+      if(!w)return;
+      hiddenMain=[];
+      Array.from(w.children).forEach(el=>{
+        if(el===panel)return;
+        hiddenMain.push([el,el.style.display]);
+        el.style.display='none';
+      });
+      panel.classList.add('railphoto-runs-fullscreen');
+    }
+    function restoreMain(){
+      hiddenMain.forEach(([el,display])=>{el.style.display=display;});
+      hiddenMain=[];
+      panel.classList.remove('railphoto-runs-fullscreen');
+    }
+
     btn.addEventListener('click',()=>{
       const visible=panel.style.display==='block';
       if(visible){showMain();return;}
       showRuns('active');
     });
+    document.getElementById('railphotoRunsBack')?.addEventListener('click',showMain);
     panel.querySelectorAll('[data-runs-view]').forEach(b=>b.addEventListener('click',()=>showRuns(b.dataset.runsView)));
 
     function hideOldDispatcherTabs(){
@@ -150,12 +181,20 @@
       return Object.values(map);
     }
 
+    function getHistory(){
+      try{
+        const x=JSON.parse(localStorage.getItem('rp_control_center')||'{}');
+        return Array.isArray(x.history)?x.history:[];
+      }catch(e){return[];}
+    }
+
     function esc(v){return String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));}
 
     function showRuns(view){
       panel.style.display='block';
       btn.classList.add('active');
       document.body.classList.add('railphoto-runs-mode');
+      hideMainForRuns();
       document.querySelectorAll('#railphotoRunsPanel [data-runs-view]').forEach(x=>x.classList.toggle('active',x.dataset.runsView===view));
       hideOldDispatcherTabs();
       render(view);
@@ -164,6 +203,8 @@
     function showMain(){
       panel.style.display='none';
       btn.classList.remove('active');
+      document.body.classList.remove('railphoto-runs-mode');
+      restoreMain();
     }
 
     function render(view){
@@ -176,7 +217,21 @@
 
       if(view==='routes'){
         if(!routes.length){content.innerHTML='<div class="railphoto-run-empty">Маршруты пока не созданы.</div>';return;}
-        content.innerHTML=routes.map(r=>`<div class="railphoto-run-card"><div class="railphoto-run-head"><span class="railphoto-run-number">№ ${esc(r.num||'—')}</span><span class="railphoto-run-route">${esc(r.from||'—')} → ${esc(r.to||'—')}</span></div><div class="railphoto-run-meta"><span>Тип: ${esc(r.type||'Пассажирский')}</span><span>Отправление: ${esc(r.dep||'—')}</span><span>Вагоны/секции: ${esc(r.wagons||'—')}</span></div><div class="railphoto-run-ps">Состав: ${esc(r.cars||r.consist||'не указан')}</div></div>`).join('');
+        content.innerHTML=routes.map(r=>`<div class="railphoto-run-card"><div class="railphoto-run-head"><span class="railphoto-run-number">№ ${esc(r.num||'—')}</span><span class="railphoto-run-route">${esc(r.from||'—')} → ${esc(r.to||'—')}</span></div><div class="railphoto-run-meta"><span>Тип: ${esc(r.type||'Пассажирский')}</span><span>Прибытие: ${esc(r.arr||'—')}</span><span>Отправление: ${esc(r.dep||'—')}</span><span>Вагоны/секции: ${esc(r.wagons||'—')}</span><span>Поездов на маршруте: ${esc(r.trains||'—')}</span></div><div class="railphoto-run-ps">Состав: ${esc(r.cars||r.consist||'не указан')}</div><div class="railphoto-run-ps">Примечание: ${esc(r.notes||'—')}</div></div>`).join('');
+        return;
+      }
+
+      if(view==='map'){
+        const seen=[];
+        routes.forEach(r=>{[r.from,r.to].forEach(s=>{if(s&&s!=='—'&&!seen.includes(s))seen.push(s);});});
+        const stations=seen.length?seen:['Максиград','Тверь','Минск','Москва'];
+        content.innerHTML=`<div class="railphoto-run-section-title">🗺️ Схема ЖД</div><div class="railphoto-run-map">${stations.map((x,i)=>(i?'<div class="railphoto-run-line"></div>':'')+`<div class="railphoto-run-station">🚉<br>${esc(x)}</div>`).join('')}</div><div class="railphoto-run-map-note">Схема отображает станции, которые сейчас указаны в маршрутах. Старый раздел «Схема ЖД» из профиля скрыт и доступен здесь.</div>`;
+        return;
+      }
+
+      if(view==='history'){
+        const h=getHistory();
+        content.innerHTML=`<div class="railphoto-run-section-title">📋 История ПС и рейсов</div><table class="railphoto-run-history"><thead><tr><th>Дата/время</th><th>Событие</th><th>Поезд</th><th>ПС</th></tr></thead><tbody>${h.length?h.slice().reverse().map(x=>`<tr><td>${esc(x.at)}</td><td>${esc(x.event)}</td><td>${esc(x.train||'')}</td><td>${esc(x.ps||'')}</td></tr>`).join(''):'<tr><td colspan="4">История пока пуста.</td></tr>'}</tbody></table>`;
         return;
       }
 
@@ -187,7 +242,7 @@
       }
 
       if(!routes.length){content.innerHTML='<div class="railphoto-run-empty">Рейсов и маршрутов пока нет.</div>';return;}
-      content.innerHTML=routes.map(r=>`<div class="railphoto-run-card"><div class="railphoto-run-head"><span class="railphoto-run-number">№ ${esc(r.num||'—')}</span><span class="railphoto-run-route">${esc(r.from||'—')} → ${esc(r.to||'—')}</span></div><div class="railphoto-run-meta"><span>Тип: ${esc(r.type||'Пассажирский')}</span><span>Отправление: ${esc(r.dep||'—')}</span><span>Вагонов/секций: ${esc(r.wagons||'—')}</span></div><div class="railphoto-run-ps">Состав: ${esc(r.cars||r.consist||'не указан')}</div></div>`).join('');
+      content.innerHTML=routes.map(r=>`<div class="railphoto-run-card"><div class="railphoto-run-head"><span class="railphoto-run-number">№ ${esc(r.num||'—')}</span><span class="railphoto-run-route">${esc(r.from||'—')} → ${esc(r.to||'—')}</span></div><div class="railphoto-run-meta"><span>Тип: ${esc(r.type||'Пассажирский')}</span><span>Прибытие: ${esc(r.arr||'—')}</span><span>Отправление: ${esc(r.dep||'—')}</span><span>Вагонов/секций: ${esc(r.wagons||'—')}</span><span>Поездов на маршруте: ${esc(r.trains||'—')}</span></div><div class="railphoto-run-ps">Состав: ${esc(r.cars||r.consist||'не указан')}</div><div class="railphoto-run-ps">Примечание: ${esc(r.notes||'—')}</div></div>`).join('');
     }
 
     function runCard(r){
