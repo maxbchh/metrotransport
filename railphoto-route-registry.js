@@ -46,7 +46,7 @@
   const DEFAULT_ROUTES=[
     {id:'route-101',num:'101',from:'',to:'',type:'Скорый',color:'yellow',routeCategory:'international',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Невский экспресс'},
     {id:'route-148',num:'148',from:'Калининград',to:'Москва',type:'Скорый',color:'yellow',routeCategory:'international',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'ЧС8'},
-    {id:'route-743',num:'743',from:'Максиград',to:'Москва',type:'Скорый',color:'yellow',routeCategory:'interregional_business',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ласточка'},
+    {id:'route-743',num:'743',from:'Максиград',to:'Москва',type:'Скорый',color:'lime',routeCategory:'interregional_business',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ласточка'},
     {id:'route-601',num:'601',from:'Забайкалье',to:'Байкальск',type:'Пассажирский',color:'green',routeCategory:'interregional_economy_uzhd',gauge:'750',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'УЖД'},
     {id:'route-6143',num:'6143',from:'Байкальск',to:'Пилотная',type:'Пригородный',color:'blue',routeCategory:'regional_economy',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:'Ответвление от аэропортной линии'},
     {id:'route-6741',num:'6741',from:'Аэропорт',to:'Минск',type:'Пригородный',color:'blue',routeCategory:'regional_economy',gauge:'1520',arr:'',dep:'',trains:'',wagons:'',cars:'',notes:''},
@@ -93,7 +93,7 @@
     if(x.routeCategory==='interregional_economy_uzhd') x.gauge='750';
     if(x.routeCategory==='interregional_economy_1520') x.color='lime';
     if(x.routeCategory==='interregional_economy_uzhd') x.color='green';
-    if(x.routeCategory==='interregional_business') x.color='yellow';
+    if(x.routeCategory==='interregional_business') x.color=(String(x.num).trim()==='743'?'lime':'yellow');
     if(x.routeCategory==='international' || x.routeCategory==='international_long_distance') x.color='yellow';
     if(x.routeCategory==='regional_business' || x.routeCategory==='regional_economy') x.color='blue';
     if(x.routeCategory==='interregional_passenger_freight') x.color='lime';
@@ -301,7 +301,7 @@
     const rec={id:editId||('route-'+Date.now()),num,from:document.getElementById('rrFrom').value.trim(),to:document.getElementById('rrTo').value.trim(),routeCategory:cat,gauge:gauge,type:document.getElementById('rrTrainType').value,color:document.getElementById('rrColor').value||meta.color,arr:document.getElementById('rrArr').value,dep:document.getElementById('rrDep').value,consist:document.getElementById('rrConsist').value.trim(),trains:document.getElementById('rrTrains').value,wagons:document.getElementById('rrWagons').value,cars:document.getElementById('rrCars').value.trim(),notes:document.getElementById('rrNotes').value.trim(),compositionSource:compositionMode};
     if(cat==='interregional_economy_1520')rec.color='lime',rec.gauge='1520';
     if(cat==='interregional_economy_uzhd')rec.color='green',rec.gauge='750';
-    if(cat==='interregional_business')rec.color='yellow';
+    if(cat==='interregional_business')rec.color=(String(num).trim()==='743'?'lime':'yellow');
     if(cat==='international'||cat==='international_long_distance')rec.color='yellow';
     if(cat==='regional_business'||cat==='regional_economy')rec.color='blue';
     if(cat==='interregional_passenger_freight')rec.color='lime';
