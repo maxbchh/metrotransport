@@ -15,7 +15,6 @@
     black:{label:'Чёрный — грузовые',color:'#111827'}
   };
 
-  /* Exact train-numbering stencil supplied for the railway game. */
   const NUMBERING_RULES=[
     {min:1,max:200,category:'international',label:'1–200 — Международные поезда (скоростные или фирменные)'},
     {min:301,max:498,category:'international_long_distance',label:'301–498 — Международные поезда дальнего следования'},
@@ -56,7 +55,9 @@
   ];
 
   function numberRule(num){
-    const n=Number(String(num||'').trim());
+    const raw=String(num||'').trim();
+    if(raw==='743')return {min:743,max:743,category:'interregional_business',label:'743 — Межрегиональный поезд бизнес-класса'};
+    const n=Number(raw);
     if(!Number.isInteger(n))return null;
     return NUMBERING_RULES.find(x=>n>=x.min&&n<=x.max)||null;
   }
@@ -64,7 +65,6 @@
   function inferCategory(r){
     const rule=numberRule(r.num);
     if(rule){
-      /* 601–698 may be either ordinary 1520-mm railway or UZhD; gauge decides. */
       if(rule.category==='interregional_economy_1520'){
         if(String(r.gauge)==='750' || /ужд|узк|750/i.test(String(r.notes||'')))return 'interregional_economy_uzhd';
         return 'interregional_economy_1520';
@@ -229,10 +229,7 @@
     if(!items.length){alert('В конструкторе сейчас нет собранного состава.');return;}
     buildCompositionFromItems(items);
   }
-  function openBuilder(){
-    closeModal();
-    if(typeof switchPage==='function')switchPage('builder');
-  }
+  function openBuilder(){closeModal();if(typeof switchPage==='function')switchPage('builder');}
 
   function applyCategoryToForm(){
     const cat=document.getElementById('rrRouteCategory')?.value;
@@ -299,9 +296,7 @@
     const rule=numberRule(num);
     let cat=document.getElementById('rrRouteCategory').value;
     const gauge=document.getElementById('rrGauge').value;
-    if(rule){
-      cat=rule.category==='interregional_economy_1520'?(gauge==='750'?'interregional_economy_uzhd':'interregional_economy_1520'):rule.category;
-    }
+    if(rule){cat=rule.category==='interregional_economy_1520'?(gauge==='750'?'interregional_economy_uzhd':'interregional_economy_1520'):rule.category;}
     const meta=ROUTE_CATEGORIES[cat]||ROUTE_CATEGORIES.regional_economy;
     const rec={id:editId||('route-'+Date.now()),num,from:document.getElementById('rrFrom').value.trim(),to:document.getElementById('rrTo').value.trim(),routeCategory:cat,gauge:gauge,type:document.getElementById('rrTrainType').value,color:document.getElementById('rrColor').value||meta.color,arr:document.getElementById('rrArr').value,dep:document.getElementById('rrDep').value,consist:document.getElementById('rrConsist').value.trim(),trains:document.getElementById('rrTrains').value,wagons:document.getElementById('rrWagons').value,cars:document.getElementById('rrCars').value.trim(),notes:document.getElementById('rrNotes').value.trim(),compositionSource:compositionMode};
     if(cat==='interregional_economy_1520')rec.color='lime',rec.gauge='1520';
@@ -324,23 +319,14 @@
     const c=document.getElementById('rrColorFilter')?.value||'';
     const t=document.getElementById('rrTypeFilter')?.value||'';
     const rc=document.getElementById('rrCategoryFilter')?.value||'';
-    return ensureProfileRoutes().filter(r=>{
-      const cat=r.routeCategory||inferCategory(r);
-      const hay=[r.num,r.from,r.to,r.type,r.consist,r.cars,r.notes,ROUTE_CATEGORIES[cat]?.label,r.gauge].join(' ').toLowerCase();
-      return(!q||hay.includes(q))&&(!c||r.color===c)&&(!t||r.type===t)&&(!rc||cat===rc);
-    });
+    return ensureProfileRoutes().filter(r=>{const cat=r.routeCategory||inferCategory(r);const hay=[r.num,r.from,r.to,r.type,r.consist,r.cars,r.notes,ROUTE_CATEGORIES[cat]?.label,r.gauge].join(' ').toLowerCase();return(!q||hay.includes(q))&&(!c||r.color===c)&&(!t||r.type===t)&&(!rc||cat===rc);});
   }
 
   function render(){
     const routes=filtered(),summary=document.getElementById('rrSummary');
     if(summary)summary.innerHTML=`<div class="rr-card"><b>Маршрутов</b><div style="font-size:20px">${routes.length}</div></div><div class="rr-card"><b>Международных</b><div style="font-size:20px">${routes.filter(r=>['international','international_long_distance'].includes(r.routeCategory||inferCategory(r))).length}</div></div><div class="rr-card"><b>Межрегиональных 1520 мм</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_1520').length}</div></div><div class="rr-card"><b>Межрегиональных УЖД</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='interregional_economy_uzhd').length}</div></div><div class="rr-card"><b>Городских</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='city').length}</div></div><div class="rr-card"><b>Грузовых</b><div style="font-size:20px">${routes.filter(r=>(r.routeCategory||inferCategory(r))==='cargo').length}</div></div>`;
     const body=document.getElementById('rrBody');if(!body)return;
-    body.innerHTML=routes.map(r=>{
-      const nr=normalizeRoute(r),c=LINE_COLORS[nr.color]||LINE_COLORS.blue,cat=ROUTE_CATEGORIES[nr.routeCategory]||ROUTE_CATEGORIES.regional_economy;
-      const isFreight=nr.type==='Грузовой'||nr.color==='black';
-      const cls=`rr-line-row rr-line-${nr.color}${isFreight?' rr-freight-row':''}`;
-      return `<tr class="${cls}" style="color:inherit!important;box-shadow:inset 6px 0 0 ${c.color};"><td style="width:8px;padding:0;background:${c.color}!important;" title="${esc(c.label)}"></td><td><b>${esc(nr.num)}</b></td><td>${esc(cat.label)}</td><td>${esc(nr.gauge?nr.gauge+' мм':'—')}</td><td>${esc(nr.from||'—')}</td><td>${esc(nr.to||'—')}</td><td>${esc(nr.type||'—')}</td><td>${esc(nr.arr||'—')}</td><td>${esc(nr.dep||'—')}</td><td>${esc(nr.consist||'—')}</td><td>${esc(nr.trains||'—')}</td><td>${esc(nr.wagons||'—')}</td><td>${esc(nr.cars||'—')}</td><td>${esc(nr.notes||'—')}</td><td><button class="btn-secondary btn-sm" data-edit="${esc(nr.id)}">✏️</button> <button class="btn-danger btn-sm" data-del="${esc(nr.id)}">🗑</button></td></tr>`;
-    }).join('')||'<tr><td colspan="15" style="text-align:center;padding:16px">Маршрутов пока нет</td></tr>';
+    body.innerHTML=routes.map(r=>{const nr=normalizeRoute(r),c=LINE_COLORS[nr.color]||LINE_COLORS.blue,cat=ROUTE_CATEGORIES[nr.routeCategory]||ROUTE_CATEGORIES.regional_economy;const isFreight=nr.type==='Грузовой'||nr.color==='black';const cls=`rr-line-row rr-line-${nr.color}${isFreight?' rr-freight-row':''}`;return `<tr class="${cls}" style="color:inherit!important;box-shadow:inset 6px 0 0 ${c.color};"><td style="width:8px;padding:0;background:${c.color}!important;" title="${esc(c.label)}"></td><td><b>${esc(nr.num)}</b></td><td>${esc(cat.label)}</td><td>${esc(nr.gauge?nr.gauge+' мм':'—')}</td><td>${esc(nr.from||'—')}</td><td>${esc(nr.to||'—')}</td><td>${esc(nr.type||'—')}</td><td>${esc(nr.arr||'—')}</td><td>${esc(nr.dep||'—')}</td><td>${esc(nr.consist||'—')}</td><td>${esc(nr.trains||'—')}</td><td>${esc(nr.wagons||'—')}</td><td>${esc(nr.cars||'—')}</td><td>${esc(nr.notes||'—')}</td><td><button class="btn-secondary btn-sm" data-edit="${esc(nr.id)}">✏️</button> <button class="btn-danger btn-sm" data-del="${esc(nr.id)}">🗑</button></td></tr>`;}).join('')||'<tr><td colspan="15" style="text-align:center;padding:16px">Маршрутов пока нет</td></tr>';
     body.querySelectorAll('tr.rr-freight-row td, tr.rr-freight-row td *').forEach(el=>el.style.setProperty('color','#0f172a','important'));
   }
 
