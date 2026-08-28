@@ -142,13 +142,13 @@
     if(!header)return;
     const buttons=[...header.querySelectorAll('button.nav-tab-btn,a.nav-tab-btn')];
     const norm=v=>(v||'').replace(/\s+/g,' ').trim();
-    const isDsp=b=>/^🛠?\s*ДСП$/u.test(norm(b.textContent));
+    const isDsp=b=>/ДСП/i.test(norm(b.textContent));
     const isMap=b=>/^🗺️?\s*Карта$/u.test(norm(b.textContent));
     const dspButtons=buttons.filter(isDsp);
     const mapButtons=buttons.filter(isMap);
-    const keep=dspButtons[0]||mapButtons[0];
+    const keep=dspButtons.find(b=>b.id==='railphotoDspBtn')||dspButtons[0]||mapButtons[0];
     if(!keep)return;
-    [...dspButtons.slice(1),...mapButtons].forEach(b=>{if(b!==keep)b.remove();});
+    [...dspButtons.filter(b=>b!==keep),...mapButtons.filter(b=>b!==keep)].forEach(b=>b.remove());
     keep.id='railphotoDspBtn';
     keep.textContent='🛠 ДСП';
     keep.onclick=open;
