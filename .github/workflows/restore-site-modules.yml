@@ -28,6 +28,7 @@ jobs:
               'railphoto-news.js?v=restore2',
               'railphoto-metro.js?v=restore1',
               'railphoto-metro-modal.js?v=modal1',
+              'railphoto-dsp.js?v=dsp1',
           ]
           missing = [m for m in modules if f'<script src="{m}"></script>' not in s]
           if missing:
