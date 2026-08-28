@@ -1,0 +1,51 @@
+name: DSP navigation repair
+
+on:
+  push:
+    branches:
+      - main
+
+permissions:
+  contents: write
+
+jobs:
+  fix:
+    runs-on: ubuntu-latest
+    steps:
+      - uses: actions/checkout@v4
+      - name: Fix navigation
+        run: |
+          python3 - <<'PY'
+          from pathlib import Path
+          p = Path('railphoto-dsp.js')
+          s = p.read_text(encoding='utf-8')
+          start = s.index('  function replaceMapButton(){')
+          end = s.index('\n  function ensureButton(){', start)
+          new_func = '''  function replaceMapButton(){
+    const header=document.querySelector('header');
+    if(!header)return;
+    const buttons=[...header.querySelectorAll('button.nav-tab-btn,a.nav-tab-btn')];
+    const norm=v=>(v||'').replace(/\\s+/g,' ').trim();
+    const isDsp=b=>/^🛠?\\s*ДСП$/u.test(norm(b.textContent));
+    const isMap=b=>/^🗺️?\\s*Карта$/u.test(norm(b.textContent));
+    const dspButtons=buttons.filter(isDsp);
+    const mapButtons=buttons.filter(isMap);
+    const keep=dspButtons[0]||mapButtons[0];
+    if(!keep)return;
+    [...dspButtons.slice(1),...mapButtons].forEach(b=>{if(b!==keep)b.remove();});
+    keep.id='railphotoDspBtn';
+    keep.textContent='🛠 ДСП';
+    keep.onclick=open;
+    keep.removeAttribute('href');
+    keep.style.display='flex';
+    document.getElementById('pageMap')?.remove();
+  }'''
+          s = s[:start] + new_func + s[end:]
+          p.write_text(s, encoding='utf-8')
+          PY
+          rm -f .github/workflows/fix-dsp-nav-once.yml nav-fix-trigger.txt
+          git config user.name "github-actions[bot]"
+          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
+          git add railphoto-dsp.js .github/workflows/fix-dsp-nav-once.yml nav-fix-trigger.txt
+          git commit -m "fix: keep only one DSP navigation tab automatically"
+          git push
