@@ -138,16 +138,23 @@
   function back(){document.getElementById('railphotoDspPage').style.display='none';document.querySelectorAll('.main-wrapper').forEach(x=>{if(x.id!=='railphotoDspPage')x.style.removeProperty('display')});document.getElementById('railphotoDspBtn')?.classList.remove('active')}
 
   function replaceMapButton(){
-    document.querySelectorAll('button.nav-tab-btn,a.nav-tab-btn').forEach(b=>{
-      if(b.closest('#railphotoDspPage'))return;
-      const t=(b.textContent||'').replace(/\s+/g,' ').trim();
-      if(t==='Карта'||t==='🗺️ Карта'||t==='🗺 Карта'){
-        b.id='railphotoDspBtn';b.textContent='🛠 ДСП';b.onclick=open;b.removeAttribute('href');b.style.display='flex';return;
-      }
-    });
-    const oldPage=document.getElementById('pageMap');if(oldPage)oldPage.remove();
-    document.querySelectorAll('.main-wrapper').forEach(x=>{if(x===document.getElementById('railphotoDspPage'))return;const tx=(x.innerText||'').trim();if(/^🗺?\s*Карта\s+Максиграда/i.test(tx)||tx.includes('Схематическая цветная карта города'))x.remove()});
-    document.querySelectorAll('img').forEach(img=>{const s=((img.alt||'')+' '+(img.title||'')+' '+(img.src||'')).toLowerCase();if(s.includes('map')||s.includes('карта'))img.remove()});
+    const header=document.querySelector('header');
+    if(!header)return;
+    const buttons=[...header.querySelectorAll('button.nav-tab-btn,a.nav-tab-btn')];
+    const norm=v=>(v||'').replace(/\s+/g,' ').trim();
+    const isDsp=b=>/^🛠?\s*ДСП$/u.test(norm(b.textContent));
+    const isMap=b=>/^🗺️?\s*Карта$/u.test(norm(b.textContent));
+    const dspButtons=buttons.filter(isDsp);
+    const mapButtons=buttons.filter(isMap);
+    const keep=dspButtons[0]||mapButtons[0];
+    if(!keep)return;
+    [...dspButtons.slice(1),...mapButtons].forEach(b=>{if(b!==keep)b.remove();});
+    keep.id='railphotoDspBtn';
+    keep.textContent='🛠 ДСП';
+    keep.onclick=open;
+    keep.removeAttribute('href');
+    keep.style.display='flex';
+    document.getElementById('pageMap')?.remove();
   }
   function ensureButton(){
     let btn=document.getElementById('railphotoDspBtn');if(btn)return;
