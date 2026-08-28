@@ -12,28 +12,31 @@ jobs:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Restore feature module loading without removing existing code
+      - name: Restore and attach feature modules without removing existing code
         run: |
           python3 - <<'PY'
           from pathlib import Path
           p = Path('index.html')
           s = p.read_text(encoding='utf-8')
-          marker = '<script src="supabase-sync.js"></script>'
+          marker = '</body>'
           modules = [
-              'railphoto-route-registry.js',
-              'railphoto-station-auto.js',
-              'railphoto-operations.js',
-              'railphoto-control-center.js',
-              'railphoto-release-control.js',
+              'railphoto-route-registry.js?v=restore1',
+              'railphoto-station-auto.js?v=restore1',
+              'railphoto-operations.js?v=restore1',
+              'railphoto-control-center.js?v=restore1',
+              'railphoto-release-control.js?v=restore1',
+              'railphoto-news.js?v=restore2',
+              'railphoto-metro.js?v=restore1',
           ]
-          tags = '\n'.join(f'<script src="{m}?v=restore1"></script>' for m in modules)
-          if 'railphoto-route-registry.js?v=restore1' not in s:
+          missing = [m for m in modules if f'<script src="{m}"></script>' not in s]
+          if missing:
               if marker not in s:
-                  raise SystemExit('supabase-sync marker not found')
-              s = s.replace(marker, tags + '\n    ' + marker, 1)
+                  raise SystemExit('body marker not found')
+              tags = '\n'.join(f'<script src="{m}"></script>' for m in missing)
+              s = s.replace(marker, tags + '\n' + marker, 1)
               p.write_text(s, encoding='utf-8')
           else:
-              print('Feature module tags already present; nothing to do.')
+              print('All feature module tags already present; nothing to do.')
           PY
       - name: Commit restored module loading
         run: |
@@ -43,6 +46,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "fix: restore full site feature modules"
+            git commit -m "feat: add Metro workspace and preserve site modules"
             git push
           fi
