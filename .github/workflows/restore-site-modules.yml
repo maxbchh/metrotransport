@@ -27,6 +27,7 @@ jobs:
               'railphoto-release-control.js?v=restore1',
               'railphoto-news.js?v=restore2',
               'railphoto-metro.js?v=restore1',
+              'railphoto-metro-modal.js?v=modal1',
           ]
           missing = [m for m in modules if f'<script src="{m}"></script>' not in s]
           if missing:
@@ -46,6 +47,6 @@ jobs:
           if git diff --cached --quiet; then
             echo "No changes to commit."
           else
-            git commit -m "feat: add Metro workspace and preserve site modules"
+            git commit -m "feat: load Metro full edit modal"
             git push
           fi
