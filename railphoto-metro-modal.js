@@ -4,7 +4,7 @@
 if(window.__rpmMetroModalLoaded)return;window.__rpmMetroModalLoaded=true;
 const DEPOTS=['ТЧ-1 Метродепо','ТЧ-2 Электродепо','ТЧ-3 Выхино'];
 const STATES=['На мойке','В ремонте','В депо','Эксплуатируется','Не эксплуатируется','Перекрашен','Переименован','Утилизирован','Списан'];
-const esc=v=>String(v??'').replace(/[&<>"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','"':'&quot;',"'":'&#39;'}[c]));
+const esc=v=>String(v??'').replace(/[&<>\"']/g,c=>({'&':'&amp;','<':'&lt;','>':'&gt;','\"':'&quot;',"'":'&#39;'}[c]));
 function metro(){
   if(typeof profile==='undefined'||!profile)return null;
   if(!profile.metro)profile.metro={lines:[],trains:[]};
@@ -102,4 +102,39 @@ function init(){
  document.addEventListener('click',intercept,true);
 }
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
+})();
+
+/* Надёжное подключение вкладки «Карта». Выполняется из уже подключённого файла,
+   поэтому отдельный <script> в index.html не требуется. */
+(function(){
+  'use strict';
+  function installMap(){
+    if(document.getElementById('rgmBtn'))return;
+    const h=document.querySelector('header .header-controls');
+    if(!h)return;
+    const b=document.createElement('button');
+    b.id='rgmBtn'; b.type='button'; b.className='nav-tab-btn'; b.textContent='🗺 Карта';
+    const analytics=document.getElementById('btnViewAnalytics');
+    if(analytics) h.insertBefore(b,analytics); else h.appendChild(b);
+    b.addEventListener('click',function(){
+      const existing=document.getElementById('rgmPage');
+      if(existing){
+        document.querySelectorAll('.main-wrapper').forEach(x=>x.style.display=x===existing?'block':'none');
+        document.querySelectorAll('.nav-tab-btn').forEach(x=>x.classList.remove('active')); b.classList.add('active');
+        return;
+      }
+      const s=document.createElement('script');
+      s.src='railphoto-map.js?mapfix='+Date.now();
+      s.onload=function(){
+        setTimeout(function(){
+          if(window.__railphotoMapLoaded)return;
+          console.error('[Railphoto] Не удалось загрузить карту.');
+        },1500);
+      };
+      s.onerror=function(){alert('Не удалось загрузить модуль карты. Обновите страницу через Ctrl+F5.');};
+      document.body.appendChild(s);
+    });
+  }
+  function boot(){installMap();let n=0;const t=setInterval(()=>{installMap();if(++n>20)clearInterval(t)},500)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
