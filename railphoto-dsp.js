@@ -149,11 +149,11 @@
     const keep=dspButtons.find(b=>b.id==='railphotoDspBtn')||dspButtons[0]||mapButtons[0];
     if(!keep)return;
     [...dspButtons.filter(b=>b!==keep),...mapButtons.filter(b=>b!==keep)].forEach(b=>b.remove());
-    keep.id='railphotoDspBtn';
-    keep.textContent='🛠 ДСП';
+    if(keep.id!=='railphotoDspBtn')keep.id='railphotoDspBtn';
+    if(keep.textContent!=='🛠 ДСП')keep.textContent='🛠 ДСП';
     keep.onclick=open;
-    keep.removeAttribute('href');
-    keep.style.display='flex';
+    if(keep.hasAttribute('href'))keep.removeAttribute('href');
+    if(keep.style.display!=='flex')keep.style.display='flex';
     document.getElementById('pageMap')?.remove();
   }
   function ensureButton(){
@@ -173,7 +173,8 @@
     const svg=document.getElementById('dspBoard');svg.addEventListener('pointerdown',onBoardDown);svg.addEventListener('pointermove',onMove);window.addEventListener('pointerup',onUp);
     document.getElementById('dspList').onclick=e=>{const x=e.target.closest('[data-id]');if(x){selected=x.dataset.id;tool='select';setTool('select');render()}};
     replaceMapButton();ensureButton();render();
-    const obs=new MutationObserver(()=>{replaceMapButton();ensureButton()});obs.observe(document.body,{childList:true,subtree:true});
+    const obs=new MutationObserver(()=>{replaceMapButton();ensureButton()});
+    obs.observe(document.body,{childList:true,subtree:true});
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',init,{once:true});else init();
 })();
