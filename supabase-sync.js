@@ -1,38 +1,216 @@
-/* Supabase cloud synchronization for railphoto */
+/* Shared cloud synchronization for railphoto - one common site state, no accounts/login. */
 (function () {
   const URL = 'https://ubhfigqpsepnpokrbdyo.supabase.co';
   const KEY = 'sb_publishable_yN8W8pvQq8hWsYMO8z1Rzw_6zKQ-8D1';
-  let sb, user, timer, channel, originalSave;
-  function installHeaderLayoutFix(){if(document.getElementById('railphotoHeaderLayoutStyle'))return;const s=document.createElement('style');s.id='railphotoHeaderLayoutStyle';s.textContent=`
-    @media (min-width:1101px){header.no-print{flex-wrap:nowrap!important;min-width:0!important}.header-controls{margin-left:auto!important;justify-content:flex-end!important;flex-wrap:nowrap!important;min-width:0;max-width:calc(100vw - 20px)!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.header-controls::-webkit-scrollbar{display:none}.header-controls>*{flex:0 0 auto!important;white-space:nowrap!important}#btnViewProfile{order:-999!important;display:flex!important;visibility:visible!important;opacity:1!important}}
-    @media (max-width:1100px){header.no-print{flex-direction:column!important;align-items:stretch!important}.header-controls{width:100%!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:nowrap!important;justify-content:flex-start!important}}
-    #cloudSyncStatus{white-space:nowrap!important;flex:0 0 auto!important;min-width:112px;text-align:left}
-  `;document.head.appendChild(s);const controls=document.querySelector('.header-controls');if(controls&&!document.getElementById('cloudSyncStatus')){const el=document.createElement('span');el.id='cloudSyncStatus';el.style.cssText='font-size:10px;color:var(--bp-text-muted);margin-left:8px;white-space:nowrap;';controls.appendChild(el);}}
-  function status(t){let el=document.getElementById('cloudSyncStatus');if(!el){el=document.createElement('span');el.id='cloudSyncStatus';el.style.cssText='font-size:10px;color:var(--bp-text-muted);margin-left:8px;white-space:nowrap;';const theme=document.querySelector('.theme-toggle-btn');if(theme&&theme.parentNode)theme.parentNode.insertBefore(el,theme.nextSibling);}el.textContent=t;}
-  function authBox(message=''){let box=document.getElementById('cloudAuthOverlay');if(!box){box=document.createElement('div');box.id='cloudAuthOverlay';box.style.cssText='position:fixed;inset:0;z-index:99999;display:flex;align-items:center;justify-content:center;background:rgba(8,12,16,.96);';box.innerHTML=`<div style="width:min(420px,calc(100vw - 28px));background:var(--bp-card-bg);border:1px solid var(--bp-border);border-radius:8px;padding:22px;box-shadow:0 18px 60px rgba(0,0,0,.45)"><h2 style="margin:0 0 8px;font-size:18px;color:var(--bp-text)">☁️ Облачная синхронизация</h2><p style="color:var(--bp-text-muted);font-size:12px;line-height:1.5">Войди в один и тот же аккаунт на телефоне и ПК. База ПС, профиль, памятки и расписания будут общими.</p><input id="cloudEmail" type="email" placeholder="Email" autocomplete="email" style="width:100%;box-sizing:border-box;padding:10px;margin:0 0 9px;background:var(--bp-input-bg);color:var(--bp-text);border:1px solid var(--bp-border);border-radius:4px"><input id="cloudPassword" type="password" placeholder="Пароль" autocomplete="current-password" style="width:100%;box-sizing:border-box;padding:10px;margin:0 0 9px;background:var(--bp-input-bg);color:var(--bp-text);border:1px solid var(--bp-border);border-radius:4px"><div style="display:flex;gap:8px"><button class="btn-primary" id="cloudLogin" style="flex:1">Войти</button><button class="btn-secondary" id="cloudSignup" style="flex:1">Создать аккаунт</button></div><div id="cloudAuthMessage" style="min-height:18px;margin-top:10px;font-size:11px;color:var(--bp-text-muted)"></div></div>`;document.body.appendChild(box);document.getElementById('cloudLogin').onclick=login;document.getElementById('cloudSignup').onclick=signup;}box.style.display='flex';if(message)document.getElementById('cloudAuthMessage').textContent=message;}
-  function hideAuth(){const x=document.getElementById('cloudAuthOverlay');if(x)x.style.display='none';}
-  function msg(t){const x=document.getElementById('cloudAuthMessage');if(x)x.textContent=t;}
-  async function login(){const email=cloudEmail.value.trim(),password=cloudPassword.value;if(!email||!password)return msg('Введите email и пароль.');const r=await sb.auth.signInWithPassword({email,password});if(r.error)msg('Ошибка входа: '+r.error.message);}
-  async function signup(){const email=cloudEmail.value.trim(),password=cloudPassword.value;if(!email||!password)return msg('Введите email и пароль.');if(password.length<6)return msg('Пароль должен содержать минимум 6 символов.');const r=await sb.auth.signUp({email,password});if(r.error)return msg('Ошибка регистрации: '+r.error.message);msg(r.data.session?'Аккаунт создан.':'Аккаунт создан. Подтвердите email, затем войдите.');}
-  async function rows(table){const r=await sb.from(table).select('id,data').eq('user_id',user.id);if(r.error)throw r.error;return r.data||[];}
-  function routePanelHtml(idPrefix){const inputId=`routeStationInput_${idPrefix}`,listId=`routeStationList_${idPrefix}`;return `<div class="schedule-box no-print" id="routePanel_${idPrefix}" style="margin:0 0 12px 0;"><div class="page-header" style="margin-bottom:10px;"><span>🚉 Станции маршрута и последовательность</span><div class="action-buttons"><input id="${inputId}" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;"><button class="btn-secondary" type="button" onclick="window.railphotoAddStation('${inputId}')">➕ Добавить станцию</button></div></div><div id="${listId}" class="railphoto-route-list" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;"></div><small style="color:var(--bp-text-muted);">↑ ↓ меняют последовательность. Этот порядок используется при авторасчёте маршрута, в расписании и в ВУ-45.</small></div>`;}
-  function renderRoutePanel(idPrefix){const list=document.getElementById(`routeStationList_${idPrefix}`);if(!list||typeof LINE_STATIONS==='undefined')return;list.innerHTML=LINE_STATIONS.map((st,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 6px;border:1px solid var(--bp-border);border-radius:4px;background:var(--bp-input-bg);"><b style="color:var(--bp-text-muted);font-size:10px;">${i+1}</b><span class="type-badge">${st}</span><button type="button" title="Поднять" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-secondary);color:var(--bp-text);" onclick="window.railphotoMoveStation(${i},-1)">↑</button><button type="button" title="Опустить" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-secondary);color:var(--bp-text);" onclick="window.railphotoMoveStation(${i},1)">↓</button><button type="button" title="Удалить" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-danger);color:#fff;" onclick="window.railphotoRemoveStation(${i})">×</button></span>`).join('');}
+  const STATE_ID = 'main';
+  let sb, timer, channel, originalSave, syncing = false;
+
+  function installHeaderLayoutFix() {
+    if (document.getElementById('railphotoHeaderLayoutStyle')) return;
+    const s = document.createElement('style');
+    s.id = 'railphotoHeaderLayoutStyle';
+    s.textContent = `
+      @media (min-width:1101px){header.no-print{flex-wrap:nowrap!important;min-width:0!important}.header-controls{margin-left:auto!important;justify-content:flex-end!important;flex-wrap:nowrap!important;min-width:0;max-width:calc(100vw - 20px)!important;overflow-x:auto;overflow-y:hidden;scrollbar-width:none}.header-controls::-webkit-scrollbar{display:none}.header-controls>*{flex:0 0 auto!important;white-space:nowrap!important}#btnViewProfile{order:-999!important;display:flex!important;visibility:visible!important;opacity:1!important}}
+      @media (max-width:1100px){header.no-print{flex-direction:column!important;align-items:stretch!important}.header-controls{width:100%!important;max-width:100%!important;overflow-x:auto!important;flex-wrap:nowrap!important;justify-content:flex-start!important}}
+      #cloudSyncStatus{white-space:nowrap!important;flex:0 0 auto!important;min-width:112px;text-align:left}
+    `;
+    document.head.appendChild(s);
+    const controls = document.querySelector('.header-controls');
+    if (controls && !document.getElementById('cloudSyncStatus')) {
+      const el = document.createElement('span');
+      el.id = 'cloudSyncStatus';
+      el.style.cssText = 'font-size:10px;color:var(--bp-text-muted);margin-left:8px;white-space:nowrap;';
+      controls.appendChild(el);
+    }
+  }
+
+  function status(t) {
+    let el = document.getElementById('cloudSyncStatus');
+    if (!el) {
+      el = document.createElement('span');
+      el.id = 'cloudSyncStatus';
+      el.style.cssText = 'font-size:10px;color:var(--bp-text-muted);margin-left:8px;white-space:nowrap;';
+      const theme = document.querySelector('.theme-toggle-btn');
+      if (theme && theme.parentNode) theme.parentNode.insertBefore(el, theme.nextSibling);
+    }
+    el.textContent = t;
+  }
+
+  function routePanelHtml(idPrefix) {
+    const inputId = `routeStationInput_${idPrefix}`;
+    const listId = `routeStationList_${idPrefix}`;
+    return `<div class="schedule-box no-print" id="routePanel_${idPrefix}" style="margin:0 0 12px 0;">
+      <div class="page-header" style="margin-bottom:10px;"><span>🚉 Станции маршрута и последовательность</span><div class="action-buttons">
+      <input id="${inputId}" type="text" placeholder="Название станции" style="padding:7px;border:1px solid var(--bp-border);background:var(--bp-input-bg);color:var(--bp-text);border-radius:3px;">
+      <button class="btn-secondary" type="button" onclick="window.railphotoAddStation('${inputId}')">➕ Добавить станцию</button></div></div>
+      <div id="${listId}" class="railphoto-route-list" style="display:flex;flex-wrap:wrap;gap:8px;align-items:center;margin-bottom:8px;"></div>
+      <small style="color:var(--bp-text-muted);">↑ ↓ меняют последовательность. Этот порядок используется при авторасчёте маршрута, в расписании и в ВУ-45.</small>
+    </div>`;
+  }
+
+  function renderRoutePanel(idPrefix) {
+    const list = document.getElementById(`routeStationList_${idPrefix}`);
+    if (!list || typeof LINE_STATIONS === 'undefined') return;
+    list.innerHTML = LINE_STATIONS.map((st,i)=>`<span style="display:inline-flex;align-items:center;gap:5px;padding:4px 6px;border:1px solid var(--bp-border);border-radius:4px;background:var(--bp-input-bg);"><b style="color:var(--bp-text-muted);font-size:10px;">${i+1}</b><span class="type-badge">${st}</span><button type="button" title="Поднять" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-secondary);color:var(--bp-text);" onclick="window.railphotoMoveStation(${i},-1)">↑</button><button type="button" title="Опустить" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-secondary);color:var(--bp-text);" onclick="window.railphotoMoveStation(${i},1)">↓</button><button type="button" title="Удалить" style="border:0;border-radius:3px;padding:2px 6px;cursor:pointer;background:var(--bp-btn-danger);color:#fff;" onclick="window.railphotoRemoveStation(${i})">×</button></span>`).join('');
+  }
+
   function renderAllRoutePanels(){renderRoutePanel('schedule');renderRoutePanel('vu45');}
-  function refreshRouteSelectors(){if(typeof LINE_STATIONS==='undefined')return;['tripFromStation','tripToStation','schFrom','schTo','calcFromStation','calcToStation'].forEach(id=>{const el=document.getElementById(id);if(!el)return;const old=el.value;el.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');if(LINE_STATIONS.includes(old))el.value=old;});renderAllRoutePanels();}
-  function persistRouteStations(){if(typeof profile!=='undefined')profile.lineStations=[...LINE_STATIONS];localStorage.setItem('rp_stations',JSON.stringify(LINE_STATIONS));if(typeof saveData==='function')saveData();refreshRouteSelectors();if(typeof renderScheduleBoard==='function')renderScheduleBoard();}
-  window.railphotoAddStation=function(inputId){const el=document.getElementById(inputId),name=(el?.value||'').trim();if(!name)return;if(LINE_STATIONS.includes(name)){alert('Такая станция уже есть в маршруте.');return;}LINE_STATIONS.push(name);if(el)el.value='';persistRouteStations();};
-  window.railphotoMoveStation=function(index,direction){const target=index+direction;if(target<0||target>=LINE_STATIONS.length)return;[LINE_STATIONS[index],LINE_STATIONS[target]]=[LINE_STATIONS[target],LINE_STATIONS[index]];persistRouteStations();};
-  window.railphotoRemoveStation=function(index){if(LINE_STATIONS.length<=2){alert('Должно остаться минимум две станции маршрута.');return;}if(!confirm(`Удалить станцию «${LINE_STATIONS[index]}»?`))return;LINE_STATIONS.splice(index,1);persistRouteStations();};
-  function installRoutePanels(){if(typeof LINE_STATIONS==='undefined')return;if(!document.getElementById('routePanel_schedule')){const p=document.getElementById('pageSchedule'),m=document.getElementById('stationManagementPanel');if(p&&m)m.insertAdjacentHTML('beforebegin',routePanelHtml('schedule'));}if(!document.getElementById('routePanel_vu45')){const p=document.getElementById('pageBuilder'),t=p?.querySelector('.trip-form-panel.no-print');if(p&&t)t.insertAdjacentHTML('beforebegin',routePanelHtml('vu45'));}refreshRouteSelectors();}
-  async function saveCloud(){if(!user)return;status('☁️ сохраняю...');try{const vr=db.map(data=>({user_id:user.id,id:data.id,data})),nr=pinnedNotes.map(data=>({user_id:user.id,id:data.id,data})),sr=schedules.map(data=>({user_id:user.id,id:data.id,data}));const rr=await Promise.all([sb.from('uzd_vehicles').upsert(vr,{onConflict:'user_id,id'}),sb.from('uzd_profiles').upsert({user_id:user.id,id:'main',data:profile},{onConflict:'user_id,id'}),sb.from('uzd_notes').upsert(nr,{onConflict:'user_id,id'}),sb.from('uzd_schedules').upsert(sr,{onConflict:'user_id,id'})]);const bad=rr.find(x=>x.error);if(bad)throw bad.error;for(const [table,ids] of [['uzd_vehicles',db.map(x=>x.id)],['uzd_notes',pinnedNotes.map(x=>x.id)],['uzd_schedules',schedules.map(x=>x.id)]]){const r=await sb.from(table).select('id').eq('user_id',user.id);if(r.error)throw r.error;const stale=(r.data||[]).map(x=>x.id).filter(id=>!ids.includes(id));if(stale.length){const d=await sb.from(table).delete().eq('user_id',user.id).in('id',stale);if(d.error)throw d.error;}}status('☁️ сохранено');}catch(e){console.error(e);status('⚠️ ошибка синхронизации');}}
-  function queueSave(){clearTimeout(timer);timer=setTimeout(saveCloud,250);}
-  async function loadCloud(){const [v,p,n,s]=await Promise.all([rows('uzd_vehicles'),sb.from('uzd_profiles').select('data').eq('user_id',user.id).eq('id','main').maybeSingle(),rows('uzd_notes'),rows('uzd_schedules')]);if(p.error)throw p.error;if(!v.length&&!n.length&&!s.length&&!p.data){await saveCloud();installRoutePanels();return;}db=v.map(x=>x.data);if(p.data)profile=p.data.data;pinnedNotes=n.map(x=>x.data);schedules=s.map(x=>x.data);if(Array.isArray(profile.lineStations)&&profile.lineStations.length>=2){LINE_STATIONS=[...profile.lineStations];localStorage.setItem('rp_stations',JSON.stringify(LINE_STATIONS));}localStorage.setItem('rp_db',JSON.stringify(db));localStorage.setItem('rp_profile',JSON.stringify(profile));localStorage.setItem('rp_pinned',JSON.stringify(pinnedNotes));localStorage.setItem('rp_schedules',JSON.stringify(schedules));renderTable();renderProfile();renderBuilder();renderScheduleBoard();renderAnalytics();installRoutePanels();status('☁️ синхронизировано');}
-  async function refresh(){try{await loadCloud()}catch(e){console.error(e)}}
-  function realtime(){if(channel)sb.removeChannel(channel);channel=sb.channel('railphoto-sync').on('postgres_changes',{event:'*',schema:'public',table:'uzd_vehicles',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_profiles',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_notes',filter:`user_id=eq.${user.id}`},refresh).on('postgres_changes',{event:'*',schema:'public',table:'uzd_schedules',filter:`user_id=eq.${user.id}`},refresh).subscribe();}
-  function loadFeatures(){if(document.getElementById('railphotoFeatureScript'))return;const s=document.createElement('script');s.id='railphotoFeatureScript';s.src='railphoto-features.js?v=6';s.onload=()=>loadBoardAttestation();s.onerror=()=>loadBoardAttestation();document.head.appendChild(s);}
-  function loadBoardAttestation(){if(document.getElementById('railphotoBoardAttestationScript'))return;const s=document.createElement('script');s.id='railphotoBoardAttestationScript';s.src='railphoto-board-attestation.js?v=2';s.onload=loadAttestationFix;s.onerror=loadAttestationFix;document.head.appendChild(s);}
-  function loadAttestationFix(){if(document.getElementById('railphotoAttestationFixScript'))return;const s=document.createElement('script');s.id='railphotoAttestationFixScript';s.src='railphoto-attestation-fix.js?v=1';document.head.appendChild(s);}
-  async function start(session){user=session&&session.user;if(!user){status('🔐 требуется вход');authBox();loadFeatures();return;}hideAuth();status('☁️ загрузка...');try{await loadCloud();if(!originalSave){originalSave=window.saveData;window.saveData=function(){originalSave();queueSave();}}realtime();loadFeatures();}catch(e){console.error(e);authBox('Ошибка Supabase: '+e.message);status('⚠️ ошибка Supabase');loadFeatures();}}
-  function boot(){installHeaderLayoutFix();const script=document.createElement('script');script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';script.onload=async()=>{sb=window.supabase.createClient(URL,KEY);const r=await sb.auth.getSession();await start(r.data.session);sb.auth.onAuthStateChange((_e,s)=>start(s));};script.onerror=()=>status('⚠️ не удалось загрузить Supabase');document.head.appendChild(script);}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installHeaderLayoutFix();installRoutePanels();boot();});else{installHeaderLayoutFix();installRoutePanels();boot();}
+
+  function refreshRouteSelectors(){
+    if(typeof LINE_STATIONS==='undefined')return;
+    ['tripFromStation','tripToStation','schFrom','schTo','calcFromStation','calcToStation'].forEach(id=>{
+      const el=document.getElementById(id);if(!el)return;const old=el.value;
+      el.innerHTML=LINE_STATIONS.map(st=>`<option value="${st}">${st}</option>`).join('');
+      if(LINE_STATIONS.includes(old))el.value=old;
+    });
+    renderAllRoutePanels();
+  }
+
+  function persistRouteStations(){
+    if(typeof profile!=='undefined') profile.lineStations=[...LINE_STATIONS];
+    localStorage.setItem('rp_stations',JSON.stringify(LINE_STATIONS));
+    if(typeof saveData==='function') saveData();
+    refreshRouteSelectors();
+    if(typeof renderScheduleBoard==='function') renderScheduleBoard();
+  }
+
+  window.railphotoAddStation=function(inputId){
+    const el=document.getElementById(inputId),name=(el?.value||'').trim();
+    if(!name)return;
+    if(LINE_STATIONS.includes(name)){alert('Такая станция уже есть в маршруте.');return;}
+    LINE_STATIONS.push(name);if(el)el.value='';persistRouteStations();
+  };
+  window.railphotoMoveStation=function(index,direction){
+    const target=index+direction;if(target<0||target>=LINE_STATIONS.length)return;
+    [LINE_STATIONS[index],LINE_STATIONS[target]]=[LINE_STATIONS[target],LINE_STATIONS[index]];persistRouteStations();
+  };
+  window.railphotoRemoveStation=function(index){
+    if(LINE_STATIONS.length<=2){alert('Должно остаться минимум две станции маршрута.');return;}
+    if(!confirm(`Удалить станцию «${LINE_STATIONS[index]}»?`))return;
+    LINE_STATIONS.splice(index,1);persistRouteStations();
+  };
+
+  function installRoutePanels(){
+    if(typeof LINE_STATIONS==='undefined')return;
+    if(!document.getElementById('routePanel_schedule')){
+      const p=document.getElementById('pageSchedule'),m=document.getElementById('stationManagementPanel');
+      if(p&&m)m.insertAdjacentHTML('beforebegin',routePanelHtml('schedule'));
+    }
+    if(!document.getElementById('routePanel_vu45')){
+      const p=document.getElementById('pageBuilder'),t=p?.querySelector('.trip-form-panel.no-print');
+      if(p&&t)t.insertAdjacentHTML('beforebegin',routePanelHtml('vu45'));
+    }
+    refreshRouteSelectors();
+  }
+
+  function getLocalState(){
+    return {
+      db: typeof db!=='undefined' && Array.isArray(db) ? db : JSON.parse(localStorage.getItem('rp_db')||'[]'),
+      profile: typeof profile!=='undefined' && profile ? profile : JSON.parse(localStorage.getItem('rp_profile')||'{}'),
+      pinnedNotes: typeof pinnedNotes!=='undefined' && Array.isArray(pinnedNotes) ? pinnedNotes : JSON.parse(localStorage.getItem('rp_pinned')||'[]'),
+      schedules: typeof schedules!=='undefined' && Array.isArray(schedules) ? schedules : JSON.parse(localStorage.getItem('rp_schedules')||'[]')
+    };
+  }
+
+  function applyState(state){
+    state=state||{};
+    if(Array.isArray(state.db) && typeof db!=='undefined') db=state.db;
+    if(state.profile && typeof profile!=='undefined') profile=state.profile;
+    if(Array.isArray(state.pinnedNotes) && typeof pinnedNotes!=='undefined') pinnedNotes=state.pinnedNotes;
+    if(Array.isArray(state.schedules) && typeof schedules!=='undefined') schedules=state.schedules;
+    if(Array.isArray(state.profile?.lineStations) && state.profile.lineStations.length>=2 && typeof LINE_STATIONS!=='undefined'){
+      LINE_STATIONS=[...state.profile.lineStations];localStorage.setItem('rp_stations',JSON.stringify(LINE_STATIONS));
+    }
+    localStorage.setItem('rp_db',JSON.stringify(state.db||[]));
+    localStorage.setItem('rp_profile',JSON.stringify(state.profile||{}));
+    localStorage.setItem('rp_pinned',JSON.stringify(state.pinnedNotes||[]));
+    localStorage.setItem('rp_schedules',JSON.stringify(state.schedules||[]));
+    try{if(typeof renderTable==='function')renderTable();}catch(e){console.error(e)}
+    try{if(typeof renderProfile==='function')renderProfile();}catch(e){console.error(e)}
+    try{if(typeof renderBuilder==='function')renderBuilder();}catch(e){console.error(e)}
+    try{if(typeof renderScheduleBoard==='function')renderScheduleBoard();}catch(e){console.error(e)}
+    try{if(typeof renderAnalytics==='function')renderAnalytics();}catch(e){console.error(e)}
+    installRoutePanels();
+  }
+
+  async function loadShared(){
+    const r=await sb.from('railphoto_shared_state').select('data,updated_at').eq('id',STATE_ID).maybeSingle();
+    if(r.error)throw r.error;
+    if(r.data?.data){applyState(r.data.data);status('☁️ общая база');return true;}
+    await saveShared();
+    status('☁️ общая база создана');
+    return true;
+  }
+
+  async function saveShared(){
+    if(syncing)return;
+    syncing=true;status('☁️ сохраняю...');
+    try{
+      const state=getLocalState();
+      const r=await sb.from('railphoto_shared_state').upsert({id:STATE_ID,data:state,updated_at:new Date().toISOString()},{onConflict:'id'});
+      if(r.error)throw r.error;
+      localStorage.setItem('rp_db',JSON.stringify(state.db));
+      localStorage.setItem('rp_profile',JSON.stringify(state.profile));
+      localStorage.setItem('rp_pinned',JSON.stringify(state.pinnedNotes));
+      localStorage.setItem('rp_schedules',JSON.stringify(state.schedules));
+      status('☁️ сохранено для всех');
+    }catch(e){console.error(e);status('⚠️ ошибка общей базы');}
+    finally{syncing=false;}
+  }
+
+  function queueSave(){clearTimeout(timer);timer=setTimeout(saveShared,350);}
+
+  function realtime(){
+    if(channel)sb.removeChannel(channel);
+    channel=sb.channel('railphoto-shared-sync').on('postgres_changes',{event:'*',schema:'public',table:'railphoto_shared_state',filter:'id=eq.main'},async payload=>{
+      if(payload.eventType==='UPDATE'||payload.eventType==='INSERT'){
+        if(payload.new?.data)applyState(payload.new.data);
+      }else if(payload.eventType==='DELETE'){
+        await loadShared();
+      }
+    }).subscribe();
+  }
+
+  function loadFeatures(){
+    if(document.getElementById('railphotoFeatureScript'))return;
+    const s=document.createElement('script');s.id='railphotoFeatureScript';s.src='railphoto-features.js?v=7';
+    s.onload=()=>loadBoardAttestation();s.onerror=()=>loadBoardAttestation();document.head.appendChild(s);
+  }
+  function loadBoardAttestation(){
+    if(document.getElementById('railphotoBoardAttestationScript'))return;
+    const s=document.createElement('script');s.id='railphotoBoardAttestationScript';s.src='railphoto-board-attestation.js?v=3';
+    s.onload=loadAttestationFix;s.onerror=loadAttestationFix;document.head.appendChild(s);
+  }
+  function loadAttestationFix(){
+    if(document.getElementById('railphotoAttestationFixScript'))return;
+    const s=document.createElement('script');s.id='railphotoAttestationFixScript';s.src='railphoto-attestation-fix.js?v=2';document.head.appendChild(s);
+  }
+
+  async function start(){
+    status('☁️ подключение...');
+    try{
+      await loadShared();
+      if(!originalSave && typeof window.saveData==='function'){
+        originalSave=window.saveData;
+        window.saveData=function(){
+          originalSave();
+          if(!syncing)queueSave();
+        };
+      }
+      realtime();
+      loadFeatures();
+    }catch(e){console.error(e);status('⚠️ ошибка облачной базы');loadFeatures();}
+  }
+
+  function boot(){
+    installHeaderLayoutFix();
+    const script=document.createElement('script');
+    script.src='https://cdn.jsdelivr.net/npm/@supabase/supabase-js@2';
+    script.onload=async()=>{sb=window.supabase.createClient(URL,KEY);await start();};
+    script.onerror=()=>status('⚠️ не удалось загрузить облачную базу');
+    document.head.appendChild(script);
+  }
+
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>{installHeaderLayoutFix();installRoutePanels();boot();});
+  else{installHeaderLayoutFix();installRoutePanels();boot();}
 })();
