@@ -37,9 +37,65 @@ function injectStyles(){
     #rpfBatchCard .rpf-help{margin-top:10px;padding:10px;background:rgba(37,99,235,.08);border:1px solid var(--bp-link,#2563eb);border-radius:8px;font-size:11px;line-height:1.5;}
     #rpfBatchCard .rpf-preview{margin-top:10px;padding:10px;background:var(--bp-input-bg,#fff);border:1px dashed var(--bp-border,#ccd);border-radius:8px;font-size:11px;max-height:120px;overflow:auto;}
     #rpfBatchCard .rpf-foot{display:flex;justify-content:flex-end;gap:8px;padding:12px 18px;border-top:1px solid var(--bp-border,#ccd);}
+    .rpm-delete-selected{background:#b91c1c!important;color:#fff!important;border-color:#b91c1c!important;}
+    .rpm-delete-selected:disabled{opacity:.5!important;cursor:not-allowed!important;}
     @media(max-width:700px){#rpfBatchCard .rpf-grid{grid-template-columns:1fr}#rpfBatchCard .rpf-full{grid-column:auto}.rpf-foot{flex-wrap:wrap}}
   `;
   document.head.appendChild(s);
+}
+
+function refreshMetro(){
+  const q=document.getElementById('rpmSearch');
+  if(q)q.dispatchEvent(new Event('input',{bubbles:true}));
+  const sf=document.getElementById('rpmStateFilter');
+  if(sf)sf.dispatchEvent(new Event('change',{bubbles:true}));
+}
+
+function updateDeleteButton(){
+  const btn=document.getElementById('rpmDeleteSelected');
+  if(!btn)return;
+  const count=document.querySelectorAll('#rpmBatchList input[data-batch]:checked').length;
+  btn.disabled=count===0;
+  btn.textContent=count?`🗑 Удалить выбранные (${count})`:'🗑 Удалить выбранные';
+}
+
+function deleteSelectedMetro(){
+  const d=metro();if(!d)return;
+  const boxes=[...document.querySelectorAll('#rpmBatchList input[data-batch]:checked')];
+  const ids=boxes.map(x=>x.dataset.batch).filter(Boolean);
+  if(!ids.length){alert('Сначала выберите поезда для удаления.');return;}
+  const selected=d.trains.filter(t=>ids.includes(t.id));
+  const names=selected.map(t=>t.number).slice(0,12).join(', ')+(selected.length>12?' …':'');
+  if(!confirm(`Удалить выбранные составы из БД метро?\n\n${names}\n\nБудет удалено: ${selected.length}`))return;
+  const idSet=new Set(ids);
+  d.trains=d.trains.filter(t=>!idSet.has(t.id));
+  save();
+  refreshMetro();
+  updateDeleteButton();
+  alert(`Удалено составов: ${selected.length}.`);
+}
+
+function installDeleteControl(){
+  const list=document.getElementById('rpmBatchList');
+  const toolbar=list?.closest('.rpm-batch')?.querySelector('.rpm-toolbar');
+  if(!list||!toolbar)return;
+  if(!document.getElementById('rpmDeleteSelected')){
+    const btn=document.createElement('button');
+    btn.id='rpmDeleteSelected';
+    btn.type='button';
+    btn.className='btn-danger rpm-delete-selected';
+    btn.textContent='🗑 Удалить выбранные';
+    btn.disabled=true;
+    btn.onclick=deleteSelectedMetro;
+    const none=document.getElementById('rpmBatchNone');
+    if(none)none.insertAdjacentElement('afterend',btn);else toolbar.appendChild(btn);
+  }
+  list.onchange=updateDeleteButton;
+  const all=document.getElementById('rpmBatchAll');
+  const none=document.getElementById('rpmBatchNone');
+  if(all)all.addEventListener('click',()=>setTimeout(updateDeleteButton,0));
+  if(none)none.addEventListener('click',()=>setTimeout(updateDeleteButton,0));
+  updateDeleteButton();
 }
 
 function openBatchModal(){
@@ -86,8 +142,7 @@ function openBatchModal(){
       d.trains.push({id:'metro-train-'+Date.now()+'-'+created+'-'+Math.random().toString(36).slice(2,7),number,model,wagons,buildYear,factory,homeDepot:depot,currentDepot:depot,lineId,state,notes:'',commissionDate});
       used.add(number);created++;
     }
-    save();if(typeof window.__railphotoMetroRender==='function')window.__railphotoMetroRender();else document.getElementById('rpmSearch')?.dispatchEvent(new Event('input',{bubbles:true}));
-    close();alert(`Создано: ${created}. Пропущено занятых номеров: ${skipped}.`);
+    save();refreshMetro();close();alert(`Создано: ${created}. Пропущено занятых номеров: ${skipped}.`);
   };
 }
 
@@ -95,6 +150,7 @@ function install(){
   injectStyles();
   const b=document.getElementById('rpmBatchAdd');
   if(b)b.onclick=openBatchModal;
+  installDeleteControl();
 }
 
 function boot(){
