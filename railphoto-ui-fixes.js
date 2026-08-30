@@ -12,6 +12,9 @@ function metro(){
 }
 function save(){try{if(typeof saveData==='function')saveData();else localStorage.setItem('rp_profile',JSON.stringify(profile));}catch(e){console.error(e);}}
 
+function ordinalOf(v){const m=String(v??'').trim().match(/(?:^|-)\s*(\d+)$/);return m?String(parseInt(m[1],10)):null;}
+function usedOrdinals(d){const s=new Set();(d?.trains||[]).forEach(t=>{const n=ordinalOf(t.number);if(n)s.add(n);});return s;}
+
 function injectStyles(){
   if(document.getElementById('rpf-ui-style'))return;
   const s=document.createElement('style');s.id='rpf-ui-style';
@@ -93,8 +96,8 @@ function installDeleteControl(){
   list.onchange=updateDeleteButton;
   const all=document.getElementById('rpmBatchAll');
   const none=document.getElementById('rpmBatchNone');
-  if(all)all.addEventListener('click',()=>setTimeout(updateDeleteButton,0));
-  if(none)none.addEventListener('click',()=>setTimeout(updateDeleteButton,0));
+  if(all)all.onclick=()=>{document.querySelectorAll('#rpmBatchList input[data-batch]').forEach(x=>x.checked=true);updateDeleteButton();};
+  if(none)none.onclick=()=>{document.querySelectorAll('#rpmBatchList input[data-batch]').forEach(x=>x.checked=false);updateDeleteButton();};
   updateDeleteButton();
 }
 
@@ -120,7 +123,7 @@ function openBatchModal(){
       <label>Состояние<select id="rpfState">${states.map(x=>`<option>${x}</option>`).join('')}</select></label>
       <label class="rpf-full">Шаблон номера<input value="{модель}-{номер}" readonly></label>
     </div>
-    <div class="rpf-help"><b>Как работает:</b> задайте начало и конец. Например, <b>1–20</b> создаст только свободные номера 1...20. Если <b>81-740-19</b> или <b>81-740-20</b> уже есть, они будут <b>пропущены</b> — система не создаст вместо них 21, 22 и т. д.</div>
+    <div class="rpf-help"><b>Важно:</b> порядковый номер после последнего тире считается <b>общим для всего метро</b>, независимо от модели. Например, если уже есть <b>81-717-1</b>, номер <b>1</b> занят и для <b>81-740</b> будет пропущен.</div>
     <div id="rpfPreview" class="rpf-preview"></div></div>
     <div class="rpf-foot"><button type="button" id="rpfBatchCancel" class="btn-secondary">Отмена</button><button type="button" id="rpfBatchCreate" class="btn-success">✓ Создать свободные номера</button></div>
   </div>`;
@@ -128,28 +131,28 @@ function openBatchModal(){
   const close=()=>o.remove();o.querySelector('#rpfBatchClose').onclick=close;o.querySelector('#rpfBatchCancel').onclick=close;o.addEventListener('click',e=>{if(e.target===o)close()});
   function preview(){
     const model=document.getElementById('rpfModel').value.trim()||'81-740';let a=parseInt(document.getElementById('rpfStart').value)||1,b=parseInt(document.getElementById('rpfEnd').value)||1;if(a>b)[a,b]=[b,a];
-    const used=new Set(d.trains.map(t=>String(t.number).trim()));const total=Math.min(500,b-a+1),list=[];for(let n=a,i=0;i<total;n++,i++){const num=model+'-'+n;if(!used.has(num))list.push(num)}
-    document.getElementById('rpfPreview').innerHTML=`Будет создано: <b>${list.length}</b> из ${total} номеров диапазона.<br>${list.length?esc(list.slice(0,60).join(', '))+(list.length>60?' …':''):'Свободных номеров в диапазоне нет.'}`;
+    const used=usedOrdinals(d),total=Math.min(500,b-a+1),list=[];for(let n=a,i=0;i<total;n++,i++){const ord=String(n);if(!used.has(ord))list.push(model+'-'+n)}
+    document.getElementById('rpfPreview').innerHTML=`Будет создано: <b>${list.length}</b> из ${total} номеров диапазона.<br>${list.length?esc(list.slice(0,60).join(', '))+(list.length>60?' …':''):'Свободных порядковых номеров в диапазоне нет.'}`;
   }
   ['rpfModel','rpfStart','rpfEnd'].forEach(id=>document.getElementById(id).addEventListener('input',preview));preview();
   document.getElementById('rpfBatchCreate').onclick=()=>{
     const model=document.getElementById('rpfModel').value.trim()||'81-740';let a=parseInt(document.getElementById('rpfStart').value)||1,b=parseInt(document.getElementById('rpfEnd').value)||1;if(a>b)[a,b]=[b,a];
     if(b-a>499){alert('Максимум 500 номеров за одно добавление.');return;}
-    const used=new Set(d.trains.map(t=>String(t.number).trim()));const lineId=document.getElementById('rpfLine').value,depot=document.getElementById('rpfDepot').value,state=document.getElementById('rpfState').value,wagons=Math.max(1,parseInt(document.getElementById('rpfWagons').value)||1),factory=document.getElementById('rpfFactory').value.trim(),buildYear=document.getElementById('rpfYear').value.trim(),commissionDate=document.getElementById('rpfCommission').value;let created=0,skipped=0;
+    const used=usedOrdinals(d);const lineId=document.getElementById('rpfLine').value,depot=document.getElementById('rpfDepot').value,state=document.getElementById('rpfState').value,wagons=Math.max(1,parseInt(document.getElementById('rpfWagons').value)||1),factory=document.getElementById('rpfFactory').value.trim(),buildYear=document.getElementById('rpfYear').value.trim(),commissionDate=document.getElementById('rpfCommission').value;let created=0,skipped=0;
     for(let n=a;n<=b;n++){
-      const number=model+'-'+n;
-      if(used.has(number)){skipped++;continue;}
+      const ord=String(n),number=model+'-'+n;
+      if(used.has(ord)){skipped++;continue;}
       d.trains.push({id:'metro-train-'+Date.now()+'-'+created+'-'+Math.random().toString(36).slice(2,7),number,model,wagons,buildYear,factory,homeDepot:depot,currentDepot:depot,lineId,state,notes:'',commissionDate});
-      used.add(number);created++;
+      used.add(ord);created++;
     }
-    save();refreshMetro();close();alert(`Создано: ${created}. Пропущено занятых номеров: ${skipped}.`);
+    save();refreshMetro();close();alert(`Создано: ${created}. Пропущено уже занятых порядковых номеров: ${skipped}.`);
   };
 }
 
 function install(){
   injectStyles();
   const b=document.getElementById('rpmBatchAdd');
-  if(b)b.onclick=openBatchModal;
+  if(b){b.onclick=openBatchModal;}
   installDeleteControl();
 }
 
