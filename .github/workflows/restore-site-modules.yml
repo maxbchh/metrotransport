@@ -1,53 +1,33 @@
-name: Restore full Railphoto feature modules
+name: Validate feature modules
 
 on:
-  push:
-    branches: [main]
+  workflow_dispatch:
 
 permissions:
-  contents: write
+  contents: read
 
 jobs:
-  restore-modules:
+  validate:
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
-      - name: Restore and attach feature modules without removing existing code
+      - name: Validate module files
+        shell: bash
         run: |
           python3 - <<'PY'
           from pathlib import Path
-          p = Path('index.html')
-          s = p.read_text(encoding='utf-8')
-          marker = '</body>'
-          modules = [
-              'railphoto-route-registry.js?v=restore1',
-              'railphoto-station-auto.js?v=restore1',
-              'railphoto-operations.js?v=restore1',
-              'railphoto-control-center.js?v=restore1',
-              'railphoto-release-control.js?v=restore1',
-              'railphoto-news.js?v=restore2',
-              'railphoto-metro.js?v=restore1',
-              'railphoto-metro-modal.js?v=modal1',
-              'railphoto-dsp.js?v=dsp1',
+          required = [
+              'railphoto-route-registry.js',
+              'railphoto-station-auto.js',
+              'railphoto-control-center.js',
+              'railphoto-release-control.js',
+              'railphoto-news.js',
+              'railphoto-metro.js',
+              'railphoto-metro-modal.js',
+              'railphoto-dsp.js',
           ]
-          missing = [m for m in modules if f'<script src="{m}"></script>' not in s]
+          missing = [p for p in required if not Path(p).exists()]
           if missing:
-              if marker not in s:
-                  raise SystemExit('body marker not found')
-              tags = '\n'.join(f'<script src="{m}"></script>' for m in missing)
-              s = s.replace(marker, tags + '\n' + marker, 1)
-              p.write_text(s, encoding='utf-8')
-          else:
-              print('All feature module tags already present; nothing to do.')
+              raise SystemExit('Missing module files: ' + ', '.join(missing))
+          print('Feature module validation passed')
           PY
-      - name: Commit restored module loading
-        run: |
-          git config user.name "github-actions[bot]"
-          git config user.email "41898282+github-actions[bot]@users.noreply.github.com"
-          git add index.html
-          if git diff --cached --quiet; then
-            echo "No changes to commit."
-          else
-            git commit -m "feat: load Metro full edit modal"
-            git push
-          fi
