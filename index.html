@@ -1,2 +1,32 @@
-<!doctype html><html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Максиградская железная дорога</title><style>html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#172033}.loader{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center}.loader b{display:block;font-size:20px;margin-bottom:8px}.loader span{font-size:13px;color:#6b7280}</style></head><body><div class="loader"><div><b>Загрузка Максиградской железной дороги…</b><span>Пожалуйста, подождите</span></div></div><script>(async()=>{try{const r=await fetch('index-base.html?rev='+Date.now(),{cache:'no-store'});if(!r.ok)throw new Error('HTTP '+r.status);let h=await r.text();h=h.replace(/<script\b[^>]*\bsrc\s*=\s*["'][^"']+["'][^>]*>\s*<\/script>/gi,'');const close='</script>';const scripts=[
-'railphoto-route-registry.js','railphoto-station-auto.js','railphoto-control-center.js','railphoto-release-control.js','supabase-sync.js','railphoto-news.js','railphoto-attestation-fix.js','railphoto-board-attestation.js','railphoto-map.js','railphoto-metro.js','railphoto-metro-modal.js','railphoto-metro-summary.js','railphoto-ui-fixes.js','railphoto-metro-minsk-line.js','modern-ui.js'];const extra=scripts.map(x=>`<script src="${x}?v=20260831">${close}`).join('');h=h.replace(/<\/body>/i,extra+'</body>');document.open();document.write(h);document.close()}catch(e){document.body.innerHTML='<div style="font:14px Arial;padding:30px;color:#b91c1c"><b>Не удалось загрузить сайт.</b><div style="margin-top:8px">'+String(e).replace(/[&<>]/g,m=>({'&':'&amp;','<':'&lt;','>':'&gt;'}[m]))+'</div></div>';console.error(e)}})();</script></body></html>
+<!doctype html>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Максиградская железная дорога</title>
+<style>
+html,body{margin:0;min-height:100%;font-family:Inter,Segoe UI,Arial,sans-serif;background:#f4f7fb;color:#172033}
+.loader{min-height:100vh;display:flex;align-items:center;justify-content:center;text-align:center}.loader b{display:block;font-size:20px;margin-bottom:8px}.loader span{font-size:13px;color:#6b7280}
+</style>
+</head>
+<body>
+<div class="loader" id="loader"><div><b>Загрузка Максиградской железной дороги…</b><span>Пожалуйста, подождите</span></div></div>
+<script>
+(async()=>{
+  try{
+    const r=await fetch('index-base.html?v=20260831',{cache:'no-store'});
+    if(!r.ok) throw new Error('HTTP '+r.status);
+    let h=await r.text();
+    const marker='</body>';
+    const scripts=['modern-ui.js','metro-stable-enhancements.js'];
+    const extra=scripts.map(s=>`<script src="${s}?v=20260831"><\/script>`).join('');
+    h=h.replace(new RegExp(marker,'i'),extra+marker);
+    document.open();document.write(h);document.close();
+  }catch(e){
+    document.getElementById('loader').innerHTML='<div><b style="color:#b91c1c">Ошибка загрузки сайта</b><span>'+String(e.message||e)+'</span></div>';
+    console.error(e);
+  }
+})();
+</script>
+</body>
+</html>
