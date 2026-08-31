@@ -27,7 +27,7 @@ header{background:rgba(255,255,255,.66)!important;color:var(--lg-text)!important
 body:not(.light-theme){background:radial-gradient(circle at 15% 12%,rgba(59,130,246,.18),transparent 28%),radial-gradient(circle at 85% 18%,rgba(99,102,241,.15),transparent 30%),linear-gradient(135deg,#0a1220,#111827)!important;color:#e5e7eb!important}body:not(.light-theme) header,body:not(.light-theme) .page-header,body:not(.light-theme) .profile-card,body:not(.light-theme) .pinned-section,body:not(.light-theme) .schedule-box,body:not(.light-theme) .analytics-card,body:not(.light-theme) .table-container,body:not(.light-theme) .trip-form-panel,body:not(.light-theme) .builder-source,body:not(.light-theme) .consist-area,body:not(.light-theme) .test-card,body:not(.light-theme) .metro-card,body:not(.light-theme) .stat-card{background:rgba(17,24,39,.68)!important;color:#e5e7eb!important}body:not(.light-theme) input,body:not(.light-theme) select,body:not(.light-theme) textarea{background:rgba(15,23,42,.54)!important;color:#e5e7eb!important;border-color:rgba(255,255,255,.14)!important}
 @media(max-width:900px){header{border-radius:0 0 18px 18px!important}.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important}}
 </style>`;
-    h=h.replace(/<\/head>/i,css+'</head>');
+    h=h.replace(/<\/head>/i,css+'<script src="metro-single-add.js?v=20260831a"></script></head>');
     document.open();document.write(h);document.close();
   }catch(e){document.body.innerHTML='<div style="font:16px Arial;padding:40px">Не удалось загрузить сайт.</div>';console.error(e)}
 })();
