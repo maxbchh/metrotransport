@@ -10,48 +10,67 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eef4fb}
 </style>
 </head>
 <body>
-<iframe id="app" title="Городской транспорт Максиграда" src="./index-base.html?v=20260831stable"></iframe>
+<iframe id="app" title="Городской транспорт Максиграда" src="./index-base.html?v=20260831fix32"></iframe>
 <script>
 (function(){
-  'use strict';
-  const frame=document.getElementById('app');
-  const LIQUID_CSS=`
+'use strict';
+const frame=document.getElementById('app');
+const LIQUID_CSS=`
 :root{--lg-card:rgba(255,255,255,.58);--lg-border:rgba(255,255,255,.78);--lg-text:#172033;--lg-muted:#667085;--lg-shadow:0 16px 50px rgba(15,23,42,.10);--lg-radius:24px;--lg-blur:22px}
 html,body{min-height:100%!important}body{font-family:Inter,Segoe UI,Arial,sans-serif!important;background:radial-gradient(circle at 10% 10%,rgba(96,165,250,.16),transparent 28%),radial-gradient(circle at 90% 18%,rgba(129,140,248,.14),transparent 30%),linear-gradient(135deg,#edf3fa,#f8fafc 50%,#eaf1f8)!important;color:var(--lg-text)!important}
 header{background:rgba(255,255,255,.66)!important;color:var(--lg-text)!important;border:1px solid var(--lg-border)!important;border-bottom:1px solid var(--lg-border)!important;box-shadow:0 8px 30px rgba(15,23,42,.08)!important;backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;border-radius:0 0 26px 26px!important;position:sticky!important;top:0;z-index:900}
 .logo-box{background:linear-gradient(135deg,#2563eb,#4f7df2)!important;border-radius:18px!important;box-shadow:0 8px 20px rgba(37,99,235,.20)!important}
-.nav-tab-btn,.theme-toggle-btn{background:rgba(255,255,255,.46)!important;color:#526071!important;border:1px solid rgba(255,255,255,.70)!important;border-radius:999px!important;box-shadow:0 4px 14px rgba(15,23,42,.05)!important;padding:9px 13px!important}
+.nav-tab-btn,.theme-toggle-btn{background:rgba(255,255,255,.46)!important;color:#526071!important;border:1px solid rgba(255,255,255,.70)!important;border-radius:999px!important;box-shadow:0 4px 14px rgba(15,23,42,.05)!important;padding:9px 13px!important;cursor:pointer!important;pointer-events:auto!important}
 .nav-tab-btn.active{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 8px 22px rgba(37,99,235,.22)!important}
 .main-wrapper{max-width:1500px!important;padding:20px 24px 34px!important}
 .page-header,.profile-card,.pinned-section,.schedule-box,.analytics-card,.table-container,.calc-panel,.trip-form-panel,.builder-source,.consist-area,.test-card,.metro-card,.stat-card,.filter-panel,.batch-toolbar{background:var(--lg-card)!important;border:1px solid var(--lg-border)!important;border-radius:var(--lg-radius)!important;box-shadow:var(--lg-shadow)!important;backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important}
-input,select,textarea{background:rgba(255,255,255,.68)!important;color:var(--lg-text)!important;border:1px solid rgba(255,255,255,.84)!important;border-radius:999px!important;min-height:40px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 4px 12px rgba(15,23,42,.04)!important}textarea{border-radius:18px!important}button{border-radius:999px!important}.btn-primary,.btn-success,.btn-danger,.btn-gold{border:none!important;color:#fff!important;padding:9px 15px!important;box-shadow:0 7px 18px rgba(15,23,42,.11)!important}.btn-primary{background:linear-gradient(135deg,#2563eb,#3b82f6)!important}.btn-success{background:linear-gradient(135deg,#159957,#22a06b)!important}.btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444)!important}.btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b)!important}.btn-secondary{background:rgba(255,255,255,.58)!important;color:#334155!important;border:1px solid rgba(255,255,255,.82)!important;box-shadow:0 4px 13px rgba(15,23,42,.05)!important;padding:9px 14px!important}
+input,select,textarea{background:rgba(255,255,255,.68)!important;color:var(--lg-text)!important;border:1px solid rgba(255,255,255,.84)!important;border-radius:999px!important;min-height:40px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 4px 12px rgba(15,23,42,.04)!important}textarea{border-radius:18px!important}button{border-radius:999px!important}
+.btn-primary,.btn-success,.btn-danger,.btn-gold{border:none!important;color:#fff!important;padding:9px 15px!important;box-shadow:0 7px 18px rgba(15,23,42,.11)!important}.btn-primary{background:linear-gradient(135deg,#2563eb,#3b82f6)!important}.btn-success{background:linear-gradient(135deg,#159957,#22a06b)!important}.btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444)!important}.btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b)!important}.btn-secondary{background:rgba(255,255,255,.58)!important;color:#334155!important;border:1px solid rgba(255,255,255,.82)!important;box-shadow:0 4px 13px rgba(15,23,42,.05)!important;padding:9px 14px!important}
 .cat-tab,.station-tab-btn{background:rgba(255,255,255,.50)!important;border:1px solid rgba(255,255,255,.78)!important;border-radius:999px!important;box-shadow:0 4px 12px rgba(15,23,42,.04)!important}.cat-tab.active,.station-tab-btn.active{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-color:transparent!important}
 table.bp-table{border-collapse:separate!important;border-spacing:0!important;border-radius:18px!important;overflow:hidden!important}table.bp-table th{background:rgba(248,250,252,.82)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.68)!important}table.bp-table td{background:rgba(255,255,255,.48)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.58)!important}
 .metro-line-item,.metro-line,.rpm-line{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.80)!important;border-radius:18px!important}.metro-line-item.active,.metro-line.active{background:rgba(239,246,255,.82)!important;border-color:rgba(37,99,235,.35)!important}.metro-kpi,.rpm-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.76)!important;border-radius:18px!important}
 .modal-overlay,.metro-modal{background:rgba(15,23,42,.30)!important;backdrop-filter:blur(7px)!important}.modal-card,.metro-modal-box,.rpm-modal-card{background:rgba(255,255,255,.86)!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:28px!important;box-shadow:0 28px 80px rgba(15,23,42,.20)!important;backdrop-filter:blur(24px) saturate(155%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%)!important}
 .profile-avatar{border-radius:50%!important;box-shadow:0 10px 28px rgba(37,99,235,.18)!important}.board-container{border-radius:24px!important}
-html[data-urban-transit="1"] #btnViewDatabase,html[data-urban-transit="1"] #btnViewBuilder,html[data-urban-transit="1"] #btnViewRides,html[data-urban-transit="1"] #btnViewAnalytics{display:none!important}
+#btnViewDatabase,#btnViewBuilder,#btnViewRides,#btnViewAnalytics,#btnViewRoutes{display:none!important}
 @media(max-width:900px){.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important;flex-wrap:nowrap!important}}
 `;
-  function inject(){
-    try{
-      const d=frame.contentDocument;
-      if(!d||!d.head||!d.body)return;
-      if(!d.getElementById('maxigrad-liquid-glass-final')){
-        const s=d.createElement('style');s.id='maxigrad-liquid-glass-final';s.textContent=LIQUID_CSS;d.head.appendChild(s);
-      }
-      d.documentElement.setAttribute('data-ui-locked','modern');
-      d.documentElement.setAttribute('data-urban-transit','1');
-      if(!d.getElementById('urban-transit-runtime')){
-        const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=stable31';d.head.appendChild(s);
-      }
-      if(!d.getElementById('metro-single-runtime')){
-        const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=stable31';d.head.appendChild(s);
-      }
-      if(typeof d.title==='string')d.title='Городской транспорт Максиграда';
-    }catch(e){console.error('metrotransport UI:',e)}
+function cleanup(d){
+  if(!d||!d.body)return;
+  d.documentElement.setAttribute('data-ui-locked','modern');
+  d.documentElement.setAttribute('data-urban-transit','1');
+  if(!d.getElementById('maxigrad-liquid-glass-final')){const s=d.createElement('style');s.id='maxigrad-liquid-glass-final';s.textContent=LIQUID_CSS;d.head.appendChild(s)}
+  const controls=d.querySelector('.header-controls');
+  if(controls){
+    const buttons=[...controls.querySelectorAll('button')];
+    let news=null;
+    buttons.forEach(b=>{
+      const t=(b.textContent||'').replace(/\s+/g,' ').trim();
+      if(/маршрут/i.test(t)){b.remove();return}
+      if(/новости/i.test(t)){if(!news)news=b;else b.remove();return}
+      if(/табло/i.test(t)||/табло станций/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('schedule')};}
+    });
+    if(news){news.id='btnViewNews';news.innerHTML='📰 Новости';news.style.display='';news.style.pointerEvents='auto';news.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('news')}}
   }
-  frame.addEventListener('load',function(){setTimeout(inject,50);});
+  ['pageRoutes','pageRides','pageAnalytics','pageDatabase','pageBuilder'].forEach(id=>{const e=d.getElementById(id);if(e)e.style.display='none'});
+  const routeLike=[...d.querySelectorAll('button,a')].filter(e=>/маршрут/i.test(e.textContent||''));routeLike.forEach(e=>{if(!e.closest('#urbanBoardEditor'))e.style.display='none'});
+  const schedule=d.getElementById('pageSchedule');
+  if(schedule){schedule.style.display='block';const tab=d.getElementById('btnViewSchedule');if(tab){tab.onclick=()=>d.switchPage('schedule');tab.style.pointerEvents='auto';tab.style.zIndex='9999'}}
+  if(!d.getElementById('urban-transit-runtime')){const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=stable32';d.head.appendChild(s)}
+  if(!d.getElementById('metro-single-runtime')){const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=stable32';d.head.appendChild(s)}
+  if(!d.getElementById('metrotransport-repair')){const s=d.createElement('script');s.id='metrotransport-repair';s.textContent=`
+(function(){
+function fix(){
+ const c=document.querySelector('.header-controls');if(c){let seenNews=false;[...c.querySelectorAll('button')].forEach(b=>{const t=(b.textContent||'').trim();if(/маршрут/i.test(t)){b.remove();return}if(/новости/i.test(t)){if(seenNews)b.remove();else{seenNews=true;b.id='btnViewNews'}}if(/табло/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=function(){if(typeof switchPage==='function')switchPage('schedule')}}})}
+ const sb=document.getElementById('btnViewSchedule');if(sb){sb.style.display='';sb.style.pointerEvents='auto';sb.onclick=function(e){e.preventDefault();if(typeof switchPage==='function')switchPage('schedule')}}
+ const ug=document.getElementById('urbanStopsGrid');if(ug){ug.style.pointerEvents='auto';ug.querySelectorAll('.urban-stop').forEach(b=>{b.style.pointerEvents='auto';b.style.cursor='pointer'})}
+}
+fix();new MutationObserver(fix).observe(document.body,{childList:true,subtree:true});setInterval(fix,1000);
+})();`;
+  d.head.appendChild(s)}
+}
+function inject(){try{const d=frame.contentDocument;if(!d||!d.head||!d.body)return;cleanup(d);if(typeof d.title==='string')d.title='Городской транспорт Максиграда'}catch(e){console.error('metrotransport repair',e)}}
+frame.addEventListener('load',()=>setTimeout(inject,80));
+setTimeout(inject,300);
 })();
 </script>
 </body>
