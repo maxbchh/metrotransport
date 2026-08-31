@@ -92,3 +92,31 @@
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
 })();
+
+/* Исправление: разрешаем удалить последнюю линию метро и не восстанавливаем
+   автоматически старую линию №4 «Минская». */
+(function(){
+  'use strict';
+  function install(){
+    try{
+      if(typeof metroLines==='undefined' || !Array.isArray(metroLines)) return false;
+      for(let i=metroLines.length-1;i>=0;i--){
+        if(String(metroLines[i]?.number ?? '')==='4' && String(metroLines[i]?.id ?? '')==='metro-line-4-minsk') metroLines.splice(i,1);
+      }
+      if(!metroLines.__metroLastLinePushPatched){
+        const originalPush=metroLines.push.bind(metroLines);
+        metroLines.push=function(){
+          const args=[...arguments].filter(x=>!(x && String(x.id??'')==='metro-line-4-minsk'));
+          return args.length ? originalPush(...args) : metroLines.length;
+        };
+        Object.defineProperty(metroLines,'__metroLastLinePushPatched',{value:true,enumerable:false});
+      }
+      if(typeof window.saveMetroData==='function')window.saveMetroData();
+      if(typeof window.saveData==='function')window.saveData();
+      if(typeof window.renderMetro==='function')window.renderMetro();
+      return true;
+    }catch(e){console.error('[Metro] last-line delete fix',e);return false}
+  }
+  function boot(){if(install())return;let n=0;const t=setInterval(()=>{if(install()||++n>20)clearInterval(t)},300)}
+  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,200),{once:true});else setTimeout(boot,200);
+})();
