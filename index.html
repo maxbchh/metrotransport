@@ -3,14 +3,14 @@
 <head>
 <meta charset="utf-8">
 <meta name="viewport" content="width=device-width,initial-scale=1">
-<title>Городской транспорт Максиграда</title>
+<title>Максиградская железная дорога</title>
 <style>
 html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eef4fb}
 #app{display:block;width:100%;height:100%;border:0;background:transparent}
 </style>
 </head>
 <body>
-<iframe id="app" title="Городской транспорт Максиграда" src="./index-base.html?v=20260831fix32"></iframe>
+<iframe id="app" title="Максиградская железная дорога" src="./index-base.html?v=20260831db1"></iframe>
 <script>
 (function(){
 'use strict';
@@ -31,44 +31,34 @@ table.bp-table{border-collapse:separate!important;border-spacing:0!important;bor
 .metro-line-item,.metro-line,.rpm-line{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.80)!important;border-radius:18px!important}.metro-line-item.active,.metro-line.active{background:rgba(239,246,255,.82)!important;border-color:rgba(37,99,235,.35)!important}.metro-kpi,.rpm-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.76)!important;border-radius:18px!important}
 .modal-overlay,.metro-modal{background:rgba(15,23,42,.30)!important;backdrop-filter:blur(7px)!important}.modal-card,.metro-modal-box,.rpm-modal-card{background:rgba(255,255,255,.86)!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:28px!important;box-shadow:0 28px 80px rgba(15,23,42,.20)!important;backdrop-filter:blur(24px) saturate(155%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%)!important}
 .profile-avatar{border-radius:50%!important;box-shadow:0 10px 28px rgba(37,99,235,.18)!important}.board-container{border-radius:24px!important}
-#btnViewDatabase,#btnViewBuilder,#btnViewRides,#btnViewAnalytics,#btnViewRoutes{display:none!important}
+#btnViewBuilder,#btnViewRides,#btnViewAnalytics,#btnViewRoutes{display:none!important}
 @media(max-width:900px){.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important;flex-wrap:nowrap!important}}
 `;
 function cleanup(d){
-  if(!d||!d.body)return;
-  d.documentElement.setAttribute('data-ui-locked','modern');
-  d.documentElement.setAttribute('data-urban-transit','1');
-  if(!d.getElementById('maxigrad-liquid-glass-final')){const s=d.createElement('style');s.id='maxigrad-liquid-glass-final';s.textContent=LIQUID_CSS;d.head.appendChild(s)}
-  const controls=d.querySelector('.header-controls');
-  if(controls){
-    const buttons=[...controls.querySelectorAll('button')];
-    let news=null;
-    buttons.forEach(b=>{
-      const t=(b.textContent||'').replace(/\s+/g,' ').trim();
-      if(/маршрут/i.test(t)){b.remove();return}
-      if(/новости/i.test(t)){if(!news)news=b;else b.remove();return}
-      if(/табло/i.test(t)||/табло станций/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('schedule')};}
-    });
-    if(news){news.id='btnViewNews';news.innerHTML='📰 Новости';news.style.display='';news.style.pointerEvents='auto';news.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('news')}}
-  }
-  ['pageRoutes','pageRides','pageAnalytics','pageDatabase','pageBuilder'].forEach(id=>{const e=d.getElementById(id);if(e)e.style.display='none'});
-  const routeLike=[...d.querySelectorAll('button,a')].filter(e=>/маршрут/i.test(e.textContent||''));routeLike.forEach(e=>{if(!e.closest('#urbanBoardEditor'))e.style.display='none'});
-  const schedule=d.getElementById('pageSchedule');
-  if(schedule){schedule.style.display='block';const tab=d.getElementById('btnViewSchedule');if(tab){tab.onclick=()=>d.switchPage('schedule');tab.style.pointerEvents='auto';tab.style.zIndex='9999'}}
-  if(!d.getElementById('urban-transit-runtime')){const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=stable32';d.head.appendChild(s)}
-  if(!d.getElementById('metro-single-runtime')){const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=stable32';d.head.appendChild(s)}
-  if(!d.getElementById('metrotransport-repair')){const s=d.createElement('script');s.id='metrotransport-repair';s.textContent=`
-(function(){
-function fix(){
- const c=document.querySelector('.header-controls');if(c){let seenNews=false;[...c.querySelectorAll('button')].forEach(b=>{const t=(b.textContent||'').trim();if(/маршрут/i.test(t)){b.remove();return}if(/новости/i.test(t)){if(seenNews)b.remove();else{seenNews=true;b.id='btnViewNews'}}if(/табло/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=function(){if(typeof switchPage==='function')switchPage('schedule')}}})}
- const sb=document.getElementById('btnViewSchedule');if(sb){sb.style.display='';sb.style.pointerEvents='auto';sb.onclick=function(e){e.preventDefault();if(typeof switchPage==='function')switchPage('schedule')}}
- const ug=document.getElementById('urbanStopsGrid');if(ug){ug.style.pointerEvents='auto';ug.querySelectorAll('.urban-stop').forEach(b=>{b.style.pointerEvents='auto';b.style.cursor='pointer'})}
+ if(!d||!d.body)return;
+ d.documentElement.setAttribute('data-ui-locked','modern');
+ if(!d.getElementById('maxigrad-liquid-glass-final')){const s=d.createElement('style');s.id='maxigrad-liquid-glass-final';s.textContent=LIQUID_CSS;d.head.appendChild(s)}
+ const controls=d.querySelector('.header-controls');
+ if(controls){
+  [...controls.querySelectorAll('button')].forEach(b=>{
+   const t=(b.textContent||'').replace(/\s+/g,' ').trim();
+   if(/маршрут/i.test(t)){b.remove();return}
+   if(/табло/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('schedule')}}
+  });
+ }
+ ['pageBuilder','pageRides','pageAnalytics','pageRoutes'].forEach(id=>{const e=d.getElementById(id);if(e)e.style.display='none'});
+ const routeLike=[...d.querySelectorAll('button,a')].filter(e=>/маршрут/i.test(e.textContent||''));routeLike.forEach(e=>{if(!e.closest('#urbanBoardEditor'))e.style.display='none'});
+ const db=d.getElementById('pageDatabase');
+ const dbBtn=d.getElementById('btnViewDatabase');
+ if(db){db.style.display='block'}
+ if(dbBtn){dbBtn.style.display='';dbBtn.style.pointerEvents='auto';dbBtn.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('database')}}
+ const schedule=d.getElementById('pageSchedule');
+ if(schedule){schedule.style.display='block';const tab=d.getElementById('btnViewSchedule');if(tab){tab.onclick=()=>d.switchPage('schedule');tab.style.pointerEvents='auto';tab.style.zIndex='9999'}}
+ if(!d.getElementById('urban-transit-runtime')){const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=db1';d.head.appendChild(s)}
+ if(!d.getElementById('metro-single-runtime')){const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=db1';d.head.appendChild(s)}
+ if(!d.getElementById('metrotransport-repair')){const s=d.createElement('script');s.id='metrotransport-repair';s.textContent=`(function(){function fix(){const b=document.getElementById('btnViewDatabase');if(b){b.style.display='';b.style.pointerEvents='auto';b.onclick=function(e){e.preventDefault();if(typeof switchPage==='function')switchPage('database')}}const d=document.getElementById('pageDatabase');if(d&&(!document.getElementById('pageSchedule')||document.getElementById('pageSchedule').style.display!=='block'))d.style.display=d.style.display==='none'?'none':d.style.display}fix();new MutationObserver(fix).observe(document.body,{childList:true,subtree:true})})();`;d.head.appendChild(s)}
 }
-fix();new MutationObserver(fix).observe(document.body,{childList:true,subtree:true});setInterval(fix,1000);
-})();`;
-  d.head.appendChild(s)}
-}
-function inject(){try{const d=frame.contentDocument;if(!d||!d.head||!d.body)return;cleanup(d);if(typeof d.title==='string')d.title='Городской транспорт Максиграда'}catch(e){console.error('metrotransport repair',e)}}
+function inject(){try{const d=frame.contentDocument;if(!d||!d.head||!d.body)return;cleanup(d);d.title='Максиградская железная дорога'}catch(e){console.error(e)}}
 frame.addEventListener('load',()=>setTimeout(inject,80));
 setTimeout(inject,300);
 })();
