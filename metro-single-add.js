@@ -64,59 +64,51 @@
     const raw=parseInt(document.getElementById('msNumber').value,10);
     const used=new Set(window.metroStock.map(x=>{const m=String(x.number||'').match(/(?:^|-)\s*(\d+)$/);return m?String(+m[1]):null}).filter(Boolean));
     let n=Number.isFinite(raw)&&raw>0?raw:1;
-    if(used.has(String(n))){
-      while(used.has(String(n)))n++;
-    }
+    if(used.has(String(n))){while(used.has(String(n)))n++;}
     const id='metro-ps-'+Date.now();
-    window.metroStock.push({
-      id,
-      type:model,
-      number:model+'-'+n,
-      lineId:document.getElementById('msLine').value,
-      status:document.getElementById('msState').value,
-      wagons:parseInt(document.getElementById('msWagons').value,10)||5,
-      factory:(document.getElementById('msFactory').value||'').trim(),
-      buildYear:(document.getElementById('msYear').value||'').trim(),
-      commissionDate:document.getElementById('msCommission').value||''
-    });
+    window.metroStock.push({id,type:model,number:model+'-'+n,lineId:document.getElementById('msLine').value,status:document.getElementById('msState').value,wagons:parseInt(document.getElementById('msWagons').value,10)||5,factory:(document.getElementById('msFactory').value||'').trim(),buildYear:(document.getElementById('msYear').value||'').trim(),commissionDate:document.getElementById('msCommission').value||''});
     if(typeof window.saveData==='function')window.saveData();
     if(typeof window.renderMetro==='function')window.renderMetro();
     document.getElementById('metroSingleModal')?.remove();
     alert(`Добавлен ПС: ${model}-${n}`);
   }
 
+  /* Разрешаем удалить любую линию, включая последнюю. Старое ограничение
+     «нельзя удалить последнюю линию» полностью обходится на уровне клика. */
+  function installDeleteFix(){
+    if(window.__metroDeleteLastLineFix)return;
+    window.__metroDeleteLastLineFix=true;
+    document.addEventListener('click',function(e){
+      const page=document.getElementById('pageMetro');
+      if(!page || page.style.display==='none')return;
+      const b=e.target.closest?.('button');
+      if(!b)return;
+      const text=(b.textContent||'').replace(/\s+/g,' ').trim();
+      if(text!=='Удалить')return;
+      if(!Array.isArray(window.metroLines))return;
+      const selectedId=window.selectedMetroLineId || window.currentMetroLineId || '';
+      const index=window.metroLines.findIndex(l=>String(l.id)===String(selectedId));
+      if(index<0)return;
+      e.preventDefault();
+      e.stopImmediatePropagation();
+      if(!confirm(`Удалить линию «${window.metroLines[index].number} — ${window.metroLines[index].name}»?`))return;
+      const id=window.metroLines[index].id;
+      // ПС не удаляем — просто снимаем привязку к удалённой линии.
+      if(Array.isArray(window.metroStock))window.metroStock.forEach(t=>{if(String(t.lineId)===String(id))t.lineId=''});
+      window.metroLines.splice(index,1);
+      window.selectedMetroLineId=window.metroLines[0]?.id || '';
+      if(typeof window.saveMetroData==='function')window.saveMetroData();
+      if(typeof window.saveData==='function')window.saveData();
+      if(typeof window.renderMetro==='function')window.renderMetro();
+      if(typeof window.renderMetroSummary==='function')window.renderMetroSummary();
+    },true);
+  }
+
   function boot(){
+    installDeleteFix();
     if(installButton())return;
     let tries=0;
     const t=setInterval(()=>{tries++;if(installButton()||tries>30)clearInterval(t)},500);
   }
   if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',boot,{once:true});else boot();
-})();
-
-/* Исправление: разрешаем удалить последнюю линию метро и не восстанавливаем
-   автоматически старую линию №4 «Минская». */
-(function(){
-  'use strict';
-  function install(){
-    try{
-      if(typeof metroLines==='undefined' || !Array.isArray(metroLines)) return false;
-      for(let i=metroLines.length-1;i>=0;i--){
-        if(String(metroLines[i]?.number ?? '')==='4' && String(metroLines[i]?.id ?? '')==='metro-line-4-minsk') metroLines.splice(i,1);
-      }
-      if(!metroLines.__metroLastLinePushPatched){
-        const originalPush=metroLines.push.bind(metroLines);
-        metroLines.push=function(){
-          const args=[...arguments].filter(x=>!(x && String(x.id??'')==='metro-line-4-minsk'));
-          return args.length ? originalPush(...args) : metroLines.length;
-        };
-        Object.defineProperty(metroLines,'__metroLastLinePushPatched',{value:true,enumerable:false});
-      }
-      if(typeof window.saveMetroData==='function')window.saveMetroData();
-      if(typeof window.saveData==='function')window.saveData();
-      if(typeof window.renderMetro==='function')window.renderMetro();
-      return true;
-    }catch(e){console.error('[Metro] last-line delete fix',e);return false}
-  }
-  function boot(){if(install())return;let n=0;const t=setInterval(()=>{if(install()||++n>20)clearInterval(t)},300)}
-  if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',()=>setTimeout(boot,200),{once:true});else setTimeout(boot,200);
 })();
