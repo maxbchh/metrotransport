@@ -20,6 +20,8 @@ function install(){
    const h=p.querySelector('.page-header span');if(h)h.textContent='🚉 Остановки и табло городского транспорта';
    const add=p.querySelector('.page-header .action-buttons button');if(add)add.style.display='none';
    const boxes=p.querySelectorAll('.schedule-box');if(boxes.length>1)boxes[1].style.display='none';
+   /* Убираем старую железнодорожную панель «Станции маршрута и последовательность» целиком. */
+   hide('stationManagementPanel');
    const oldStationBar=p.querySelector('.station-selector-bar');if(oldStationBar)oldStationBar.style.display='none';
    const oldBoard=p.querySelector('.board-container');if(oldBoard)oldBoard.style.display='none';
    if(!document.getElementById('urbanBoardsPanel')){
@@ -33,7 +35,6 @@ function install(){
 }
 function addNews(){
  const controls=document.querySelector('.header-controls');if(!controls)return;
- // Удаляем дубликаты кнопки «Новости», оставляя одну.
  const existingNews=[...controls.querySelectorAll('.nav-tab-btn')].filter(b=>/новости/i.test((b.textContent||'')));
  let btn=existingNews.shift();
  existingNews.forEach(b=>b.remove());
