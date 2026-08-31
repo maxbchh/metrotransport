@@ -1,31 +1,58 @@
 <!doctype html>
-<html lang="ru"><head><meta charset="utf-8"><meta name="viewport" content="width=device-width,initial-scale=1"><title>Городской транспорт Максиграда</title></head><body>
+<html lang="ru">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width,initial-scale=1">
+<title>Городской транспорт Максиграда</title>
+<style>
+html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eef4fb}
+#app{display:block;width:100%;height:100%;border:0;background:transparent}
+</style>
+</head>
+<body>
+<iframe id="app" title="Городской транспорт Максиграда" src="./index-base.html?v=20260831stable"></iframe>
 <script>
-(async function(){
-  try{
-    const r=await fetch('./index-base.html?ui='+Date.now(),{cache:'no-store'});
-    if(!r.ok) throw new Error('HTTP '+r.status);
-    let h=await r.text();
-    const css=`
-<style id="maxigrad-liquid-glass">
-:root{--lg-card:rgba(255,255,255,.62);--lg-border:rgba(255,255,255,.78);--lg-text:#182235;--lg-shadow:0 16px 50px rgba(15,23,42,.10);--lg-radius:24px;--lg-blur:22px}
-html,body{min-height:100%}body{font-family:Inter,Segoe UI,Arial,sans-serif!important;background:radial-gradient(circle at 10% 10%,rgba(96,165,250,.16),transparent 28%),radial-gradient(circle at 90% 18%,rgba(129,140,248,.14),transparent 30%),linear-gradient(135deg,#edf3fa,#f8fafc 50%,#eaf1f8)!important;color:var(--lg-text)!important}
-header{background:rgba(255,255,255,.66)!important;color:var(--lg-text)!important;border:1px solid var(--lg-border)!important;box-shadow:0 8px 30px rgba(15,23,42,.08)!important;backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;border-radius:0 0 26px 26px!important;position:sticky!important;top:0;z-index:900}
+(function(){
+  'use strict';
+  const frame=document.getElementById('app');
+  const LIQUID_CSS=`
+:root{--lg-card:rgba(255,255,255,.58);--lg-border:rgba(255,255,255,.78);--lg-text:#172033;--lg-muted:#667085;--lg-shadow:0 16px 50px rgba(15,23,42,.10);--lg-radius:24px;--lg-blur:22px}
+html,body{min-height:100%!important}body{font-family:Inter,Segoe UI,Arial,sans-serif!important;background:radial-gradient(circle at 10% 10%,rgba(96,165,250,.16),transparent 28%),radial-gradient(circle at 90% 18%,rgba(129,140,248,.14),transparent 30%),linear-gradient(135deg,#edf3fa,#f8fafc 50%,#eaf1f8)!important;color:var(--lg-text)!important}
+header{background:rgba(255,255,255,.66)!important;color:var(--lg-text)!important;border:1px solid var(--lg-border)!important;border-bottom:1px solid var(--lg-border)!important;box-shadow:0 8px 30px rgba(15,23,42,.08)!important;backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(155%)!important;border-radius:0 0 26px 26px!important;position:sticky!important;top:0;z-index:900}
 .logo-box{background:linear-gradient(135deg,#2563eb,#4f7df2)!important;border-radius:18px!important;box-shadow:0 8px 20px rgba(37,99,235,.20)!important}
-.nav-tab-btn,.theme-toggle-btn{background:rgba(255,255,255,.46)!important;color:#526071!important;border:1px solid rgba(255,255,255,.70)!important;border-radius:999px!important;box-shadow:0 4px 14px rgba(15,23,42,.05)!important;padding:9px 13px!important}.nav-tab-btn:hover,.theme-toggle-btn:hover{background:rgba(255,255,255,.82)!important;color:#172033!important;transform:translateY(-1px)}.nav-tab-btn.active{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 8px 22px rgba(37,99,235,.22)!important}
-.main-wrapper{max-width:1500px!important;padding:20px 24px 34px!important}.page-header,.profile-card,.pinned-section,.schedule-box,.analytics-card,.table-container,.calc-panel,.trip-form-panel,.builder-source,.consist-area,.test-card,.metro-card,.stat-card,.filter-panel,.batch-toolbar{background:var(--lg-card)!important;border:1px solid var(--lg-border)!important;border-radius:var(--lg-radius)!important;box-shadow:var(--lg-shadow)!important;backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important}.page-header{padding:17px 20px!important}
+.nav-tab-btn,.theme-toggle-btn{background:rgba(255,255,255,.46)!important;color:#526071!important;border:1px solid rgba(255,255,255,.70)!important;border-radius:999px!important;box-shadow:0 4px 14px rgba(15,23,42,.05)!important;padding:9px 13px!important}
+.nav-tab-btn.active{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-color:transparent!important;box-shadow:0 8px 22px rgba(37,99,235,.22)!important}
+.main-wrapper{max-width:1500px!important;padding:20px 24px 34px!important}
+.page-header,.profile-card,.pinned-section,.schedule-box,.analytics-card,.table-container,.calc-panel,.trip-form-panel,.builder-source,.consist-area,.test-card,.metro-card,.stat-card,.filter-panel,.batch-toolbar{background:var(--lg-card)!important;border:1px solid var(--lg-border)!important;border-radius:var(--lg-radius)!important;box-shadow:var(--lg-shadow)!important;backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important;-webkit-backdrop-filter:blur(var(--lg-blur)) saturate(145%)!important}
 input,select,textarea{background:rgba(255,255,255,.68)!important;color:var(--lg-text)!important;border:1px solid rgba(255,255,255,.84)!important;border-radius:999px!important;min-height:40px!important;box-shadow:inset 0 1px 0 rgba(255,255,255,.74),0 4px 12px rgba(15,23,42,.04)!important}textarea{border-radius:18px!important}button{border-radius:999px!important}.btn-primary,.btn-success,.btn-danger,.btn-gold{border:none!important;color:#fff!important;padding:9px 15px!important;box-shadow:0 7px 18px rgba(15,23,42,.11)!important}.btn-primary{background:linear-gradient(135deg,#2563eb,#3b82f6)!important}.btn-success{background:linear-gradient(135deg,#159957,#22a06b)!important}.btn-danger{background:linear-gradient(135deg,#dc2626,#ef4444)!important}.btn-gold{background:linear-gradient(135deg,#d97706,#f59e0b)!important}.btn-secondary{background:rgba(255,255,255,.58)!important;color:#334155!important;border:1px solid rgba(255,255,255,.82)!important;box-shadow:0 4px 13px rgba(15,23,42,.05)!important;padding:9px 14px!important}
 .cat-tab,.station-tab-btn{background:rgba(255,255,255,.50)!important;border:1px solid rgba(255,255,255,.78)!important;border-radius:999px!important;box-shadow:0 4px 12px rgba(15,23,42,.04)!important}.cat-tab.active,.station-tab-btn.active{background:linear-gradient(135deg,#2563eb,#3b82f6)!important;color:#fff!important;border-color:transparent!important}
-table.bp-table{border-collapse:separate!important;border-spacing:0!important;border-radius:18px!important;overflow:hidden!important}table.bp-table th{background:rgba(248,250,252,.80)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.68)!important}table.bp-table td{background:rgba(255,255,255,.48)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.58)!important}
-.metro-line-item,.metro-line,.rpm-line{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.80)!important;border-radius:18px!important}.metro-line-item.active,.metro-line.active{background:rgba(239,246,255,.80)!important;border-color:rgba(37,99,235,.35)!important}.metro-kpi,.rpm-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.76)!important;border-radius:18px!important}.metro-table,.rpm-table{border-collapse:separate!important;border-spacing:0!important;border-radius:18px!important;overflow:hidden!important}.metro-table th,.rpm-table th{background:rgba(248,250,252,.84)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.64)!important}.metro-table td,.rpm-table td{background:rgba(255,255,255,.50)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.58)!important}.metro-empty,.rpm-empty{border-radius:18px!important;background:rgba(255,255,255,.32)!important}.modal-overlay,.metro-modal{background:rgba(15,23,42,.30)!important;backdrop-filter:blur(7px)!important}.modal-card,.metro-modal-box,.rpm-modal-card{background:rgba(255,255,255,.86)!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:28px!important;box-shadow:0 28px 80px rgba(15,23,42,.20)!important;backdrop-filter:blur(24px) saturate(155%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%)!important}.profile-avatar{border-radius:50%!important;box-shadow:0 10px 28px rgba(37,99,235,.18)!important}.board-container{border-radius:24px!important;box-shadow:0 18px 50px rgba(0,0,0,.16)!important}
-.urban-glass-card{background:rgba(255,255,255,.58);border:1px solid rgba(255,255,255,.80);border-radius:24px;box-shadow:0 16px 50px rgba(15,23,42,.10);backdrop-filter:blur(22px) saturate(145%);-webkit-backdrop-filter:blur(22px) saturate(145%);padding:18px;margin-top:16px}.urban-board-head{display:flex;justify-content:space-between;gap:16px;align-items:center;flex-wrap:wrap}.urban-title{font-size:18px;font-weight:800}.urban-sub{margin-top:4px;color:#667085;font-size:12px}.urban-actions{display:flex;gap:8px}.urban-primary,.urban-secondary,.urban-danger{border-radius:999px;padding:10px 15px;border:1px solid rgba(255,255,255,.78);cursor:pointer;font-weight:700}.urban-primary{background:linear-gradient(135deg,#2563eb,#3b82f6);color:#fff;border-color:transparent}.urban-secondary{background:rgba(255,255,255,.60);color:#334155}.urban-danger{background:linear-gradient(135deg,#dc2626,#ef4444);color:#fff;border-color:transparent}.urban-stops-grid{display:grid;grid-template-columns:repeat(auto-fill,minmax(250px,1fr));gap:12px}.urban-stop{width:100%;display:grid;grid-template-columns:38px 1fr 18px;gap:10px;align-items:center;text-align:left;background:rgba(255,255,255,.50);border:1px solid rgba(255,255,255,.76);border-radius:18px;padding:12px;cursor:pointer;box-shadow:0 6px 18px rgba(15,23,42,.06);color:#172033}.urban-stop:hover{background:rgba(255,255,255,.76);transform:translateY(-1px)}.urban-stop-icon{width:38px;height:38px;border-radius:50%;display:grid;place-items:center;background:rgba(37,99,235,.10)}.urban-stop b{display:block}.urban-stop small{display:block;color:#667085;margin-top:2px}.urban-arrow{font-size:24px;color:#98a2b3}.urban-board-editor{scroll-margin-top:90px}.urban-editor-top{display:flex;justify-content:space-between;gap:12px;align-items:flex-start;flex-wrap:wrap}.urban-form-grid{display:grid;grid-template-columns:1fr 1fr;gap:12px;margin-top:14px}.urban-form-grid label{font-size:11px;font-weight:700}.urban-full{grid-column:1/-1}.urban-route-list{margin-top:18px}.urban-section-title{font-size:13px;font-weight:800;margin-bottom:10px}.urban-route-row{display:grid;grid-template-columns:1fr 1.3fr .8fr 1.2fr 1.8fr 34px;gap:8px;align-items:center;margin-bottom:8px}.urban-mini{width:34px;height:34px;padding:0!important}.urban-empty{padding:28px;text-align:center;color:#667085;border:1px dashed rgba(148,163,184,.45);border-radius:18px;background:rgba(255,255,255,.30)}
+table.bp-table{border-collapse:separate!important;border-spacing:0!important;border-radius:18px!important;overflow:hidden!important}table.bp-table th{background:rgba(248,250,252,.82)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.68)!important}table.bp-table td{background:rgba(255,255,255,.48)!important;color:var(--lg-text)!important;border-color:rgba(226,232,240,.58)!important}
+.metro-line-item,.metro-line,.rpm-line{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.80)!important;border-radius:18px!important}.metro-line-item.active,.metro-line.active{background:rgba(239,246,255,.82)!important;border-color:rgba(37,99,235,.35)!important}.metro-kpi,.rpm-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.76)!important;border-radius:18px!important}
+.modal-overlay,.metro-modal{background:rgba(15,23,42,.30)!important;backdrop-filter:blur(7px)!important}.modal-card,.metro-modal-box,.rpm-modal-card{background:rgba(255,255,255,.86)!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:28px!important;box-shadow:0 28px 80px rgba(15,23,42,.20)!important;backdrop-filter:blur(24px) saturate(155%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%)!important}
+.profile-avatar{border-radius:50%!important;box-shadow:0 10px 28px rgba(37,99,235,.18)!important}.board-container{border-radius:24px!important}
 html[data-urban-transit="1"] #btnViewDatabase,html[data-urban-transit="1"] #btnViewBuilder,html[data-urban-transit="1"] #btnViewRides,html[data-urban-transit="1"] #btnViewAnalytics{display:none!important}
-body:not(.light-theme){background:radial-gradient(circle at 15% 12%,rgba(59,130,246,.18),transparent 28%),radial-gradient(circle at 85% 18%,rgba(99,102,241,.15),transparent 30%),linear-gradient(135deg,#0a1220,#111827)!important;color:#e5e7eb!important}body:not(.light-theme) header,body:not(.light-theme) .page-header,body:not(.light-theme) .profile-card,body:not(.light-theme) .pinned-section,body:not(.light-theme) .schedule-box,body:not(.light-theme) .analytics-card,body:not(.light-theme) .table-container,body:not(.light-theme) .trip-form-panel,body:not(.light-theme) .builder-source,body:not(.light-theme) .consist-area,body:not(.light-theme) .test-card,body:not(.light-theme) .metro-card,body:not(.light-theme) .stat-card,body:not(.light-theme) .urban-glass-card{background:rgba(17,24,39,.68)!important;color:#e5e7eb!important}body:not(.light-theme) input,body:not(.light-theme) select,body:not(.light-theme) textarea{background:rgba(15,23,42,.54)!important;color:#e5e7eb!important;border-color:rgba(255,255,255,.14)!important}
-@media(max-width:900px){header{border-radius:0 0 18px 18px!important}.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important;flex-wrap:nowrap!important}.urban-form-grid{grid-template-columns:1fr}.urban-full{grid-column:auto}.urban-route-row{grid-template-columns:1fr 1fr 1fr}.urban-route-row select{grid-column:1/-1}.urban-route-row input[data-k="note"]{grid-column:1/-1}}
-</style>`;
-    h=h.replace(/<title>[^<]*<\/title>/i,'<title>Городской транспорт Максиграда</title>');
-    h=h.replace(/<\/head>/i,css+'<script src="urban-transit-mode.js?v=20260831d"></script><script src="metro-single-add.js?v=20260831d"></script></head>');
-    document.open();document.write(h);document.close();
-  }catch(e){document.body.innerHTML='<div style="font:16px Arial;padding:40px">Не удалось загрузить сайт.</div>';console.error(e)}
+@media(max-width:900px){.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important;flex-wrap:nowrap!important}}
+`;
+  function inject(){
+    try{
+      const d=frame.contentDocument;
+      if(!d||!d.head||!d.body)return;
+      if(!d.getElementById('maxigrad-liquid-glass-final')){
+        const s=d.createElement('style');s.id='maxigrad-liquid-glass-final';s.textContent=LIQUID_CSS;d.head.appendChild(s);
+      }
+      d.documentElement.setAttribute('data-ui-locked','modern');
+      d.documentElement.setAttribute('data-urban-transit','1');
+      if(!d.getElementById('urban-transit-runtime')){
+        const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=stable31';d.head.appendChild(s);
+      }
+      if(!d.getElementById('metro-single-runtime')){
+        const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=stable31';d.head.appendChild(s);
+      }
+      if(typeof d.title==='string')d.title='Городской транспорт Максиграда';
+    }catch(e){console.error('metrotransport UI:',e)}
+  }
+  frame.addEventListener('load',function(){setTimeout(inject,50);});
 })();
-</script></body></html>
+</script>
+</body>
+</html>
