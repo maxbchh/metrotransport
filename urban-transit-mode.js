@@ -2,6 +2,41 @@
 (function(){'use strict';
 if(window.__maxigradUrbanMode)return;window.__maxigradUrbanMode=true;
 function hide(id){const e=document.getElementById(id);if(e)e.style.display='none';}
+function addBoardStyles(){if(document.getElementById('urban-board-matrix-style'))return;const s=document.createElement('style');s.id='urban-board-matrix-style';s.textContent=`
+#urbanBoardsPanel{display:flex!important;flex-direction:column!important;gap:16px!important}
+#urbanBoardsPanel .urban-glass-card{position:relative!important;overflow:hidden!important;background:linear-gradient(180deg,#15120e,#050505)!important;color:#ff9a1f!important;border:1px solid #5b320b!important;border-radius:22px!important;box-shadow:0 14px 40px rgba(0,0,0,.35),inset 0 1px rgba(255,150,40,.08)!important;font-family:"Courier New",Consolas,monospace!important;letter-spacing:.5px!important}
+#urbanBoardsPanel .urban-glass-card:before{content:"";position:absolute;inset:0;pointer-events:none;opacity:.34;background-image:radial-gradient(rgba(255,145,20,.34) .7px,transparent .8px);background-size:5px 5px}
+#urbanBoardsPanel .urban-glass-card>*{position:relative;z-index:1}
+#urbanBoardsPanel .urban-board-head{padding:18px 20px!important;display:flex!important;align-items:center!important;justify-content:space-between!important;gap:18px!important}
+#urbanBoardsPanel .urban-title{font-family:"Courier New",Consolas,monospace!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:1px!important;color:#ff9d22!important;text-shadow:0 0 4px #ff7b00,0 0 12px rgba(255,100,0,.4)!important}
+#urbanBoardsPanel .urban-sub{margin-top:6px!important;color:#a85f17!important;font-family:"Courier New",Consolas,monospace!important;font-size:12px!important}
+#urbanBoardsPanel .urban-actions{display:flex!important;gap:8px!important}
+#urbanBoardsPanel .urban-primary,#urbanBoardsPanel .urban-secondary,#urbanBoardsPanel .urban-danger{font-family:"Courier New",Consolas,monospace!important;border-radius:12px!important;letter-spacing:.3px!important;cursor:pointer!important}
+#urbanBoardsPanel .urban-primary{background:#ff8c00!important;color:#0a0805!important;border:1px solid #ffb04a!important;box-shadow:0 0 18px rgba(255,125,0,.3)!important;font-weight:800!important}
+#urbanBoardsPanel .urban-secondary{background:#18120c!important;color:#ff9d22!important;border:1px solid #6a3a0c!important}
+#urbanBoardsPanel .urban-danger{background:#211009!important;color:#ff6338!important;border:1px solid #72250e!important}
+#urbanBoardsPanel .urban-stops-grid{padding:16px!important;display:grid!important;grid-template-columns:repeat(auto-fit,minmax(240px,1fr))!important;gap:10px!important}
+#urbanBoardsPanel .urban-stop{width:100%!important;display:flex!important;align-items:center!important;gap:12px!important;text-align:left!important;padding:14px 16px!important;background:linear-gradient(180deg,#181511,#0b0a08)!important;color:#ff9d22!important;border:1px solid #4d2a0c!important;border-radius:15px!important;font-family:"Courier New",Consolas,monospace!important;cursor:pointer!important}
+#urbanBoardsPanel .urban-stop:hover{border-color:#b36412!important;box-shadow:0 0 18px rgba(255,125,0,.16)!important}
+#urbanBoardsPanel .urban-stop-icon{font-size:20px!important;filter:saturate(.2) sepia(1)!important}
+#urbanBoardsPanel .urban-stop b{display:block!important;color:#ffad45!important;text-shadow:0 0 5px rgba(255,130,0,.6)!important}
+#urbanBoardsPanel .urban-stop small{display:block!important;margin-top:4px!important;color:#995719!important}
+#urbanBoardsPanel .urban-arrow{margin-left:auto!important;color:#ff8c00!important;font-size:24px!important}
+#urbanBoardsPanel .urban-empty{padding:22px!important;color:#754313!important;font-family:"Courier New",Consolas,monospace!important}
+#urbanBoardsPanel .urban-board-editor{padding:20px!important}
+#urbanBoardsPanel .urban-editor-top{display:flex!important;justify-content:space-between!important;align-items:center!important;gap:14px!important;border-bottom:1px solid #4b290b!important;padding-bottom:14px!important;margin-bottom:16px!important}
+#urbanBoardsPanel .urban-editor-top button{margin-left:7px!important}
+#urbanBoardsPanel .urban-form-grid{display:grid!important;grid-template-columns:1fr 1fr 1.3fr!important;gap:12px!important}
+#urbanBoardsPanel label{color:#b96817!important;font-size:12px!important;font-family:"Courier New",Consolas,monospace!important;text-transform:uppercase!important}
+#urbanBoardsPanel input,#urbanBoardsPanel select,#urbanBoardsPanel textarea{box-sizing:border-box!important;width:100%!important;margin-top:6px!important;background:#080807!important;color:#ff9d22!important;border:1px solid #60360e!important;border-radius:9px!important;min-height:38px!important;padding:8px 10px!important;font-family:"Courier New",Consolas,monospace!important;box-shadow:inset 0 0 12px rgba(255,125,0,.06)!important}
+#urbanBoardsPanel input::placeholder,#urbanBoardsPanel textarea::placeholder{color:#704313!important}
+#urbanBoardsPanel .urban-full{grid-column:1/-1!important}
+#urbanBoardsPanel .urban-route-list{margin-top:18px!important;border-top:1px solid #4b290b!important;padding-top:16px!important}
+#urbanBoardsPanel .urban-section-title{margin-bottom:10px!important;color:#ff9d22!important;font-weight:800!important;text-transform:uppercase!important;letter-spacing:1px!important;text-shadow:0 0 5px rgba(255,130,0,.6)!important}
+#urbanBoardsPanel .urban-route-row{display:grid!important;grid-template-columns:1fr 1.2fr .8fr 1.1fr 1.3fr 38px!important;gap:7px!important;align-items:center!important;margin-bottom:8px!important}
+#urbanBoardsPanel .urban-mini{width:38px!important;height:38px!important;padding:0!important}
+@media(max-width:900px){#urbanBoardsPanel .urban-form-grid{grid-template-columns:1fr!important}#urbanBoardsPanel .urban-full{grid-column:auto!important}#urbanBoardsPanel .urban-route-row{grid-template-columns:1fr 1fr!important}}
+`;document.head.appendChild(s)}
 function install(){
  document.documentElement.setAttribute('data-urban-transit','1');
  document.title='Городской транспорт Максиграда';
@@ -14,13 +49,12 @@ function install(){
  const tests=document.getElementById('btnViewTests');if(tests)tests.innerHTML='🛡 ДСП';
  const metro=document.getElementById('btnViewMetro');if(metro)metro.innerHTML='🚇 Метро';
  hide('pageDatabase');hide('pageBuilder');hide('pageRides');hide('pageAnalytics');
- addNews();
+ addNews();addBoardStyles();
  const p=document.getElementById('pageSchedule');
  if(p){
    const h=p.querySelector('.page-header span');if(h)h.textContent='🚉 Остановки и табло городского транспорта';
    const add=p.querySelector('.page-header .action-buttons button');if(add)add.style.display='none';
    const boxes=p.querySelectorAll('.schedule-box');if(boxes.length>1)boxes[1].style.display='none';
-   /* Убираем старую железнодорожную панель «Станции маршрута и последовательность» целиком. */
    hide('stationManagementPanel');
    const oldStationBar=p.querySelector('.station-selector-bar');if(oldStationBar)oldStationBar.style.display='none';
    const oldBoard=p.querySelector('.board-container');if(oldBoard)oldBoard.style.display='none';
@@ -36,8 +70,7 @@ function install(){
 function addNews(){
  const controls=document.querySelector('.header-controls');if(!controls)return;
  const existingNews=[...controls.querySelectorAll('.nav-tab-btn')].filter(b=>/новости/i.test((b.textContent||'')));
- let btn=existingNews.shift();
- existingNews.forEach(b=>b.remove());
+ let btn=existingNews.shift();existingNews.forEach(b=>b.remove());
  if(!btn){btn=document.createElement('button');btn.className='nav-tab-btn';btn.type='button';controls.insertBefore(btn,document.getElementById('btnViewMetro')||controls.firstChild)}
  btn.id='btnViewNews';btn.innerHTML='📰 Новости';btn.onclick=()=>switchPage('news');
  let page=document.getElementById('pageNews');if(!page){page=document.createElement('div');page.id='pageNews';page.className='main-wrapper';page.style.display='none';page.innerHTML='<div class="page-header"><span>📰 Новости города и транспорта</span></div><div class="urban-glass-card"><div id="urbanNewsList"></div></div>';document.body.appendChild(page)}
