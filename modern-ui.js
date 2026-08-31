@@ -33,4 +33,5 @@ body:not(.light-theme){--ui-bg:#0f172a;--ui-card:#111827;--ui-border:#263244;--u
 `;
 document.head.appendChild(s)}
 if(document.readyState==='loading')document.addEventListener('DOMContentLoaded',install,{once:true});else install();
+(function loadRecovery(){const s=document.createElement('script');s.src='metro-data-recovery.js?v=20260831b';(document.head||document.documentElement).appendChild(s)})();
 })();
