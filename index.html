@@ -10,7 +10,7 @@ html,body{margin:0;width:100%;height:100%;overflow:hidden;background:#eef4fb}
 </style>
 </head>
 <body>
-<iframe id="app" title="УЖДфото" src="./index-base.html?v=20260901uzdphoto"></iframe>
+<iframe id="app" title="УЖДфото" src="./index-base.html?v=20260901uzdphoto2"></iframe>
 <script>
 (function(){
 'use strict';
@@ -31,37 +31,34 @@ table.bp-table{border-collapse:separate!important;border-spacing:0!important;bor
 .metro-line-item,.metro-line,.rpm-line{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.80)!important;border-radius:18px!important}.metro-line-item.active,.metro-line.active{background:rgba(239,246,255,.82)!important;border-color:rgba(37,99,235,.35)!important}.metro-kpi,.rpm-card{background:rgba(255,255,255,.56)!important;border:1px solid rgba(255,255,255,.76)!important;border-radius:18px!important}
 .modal-overlay,.metro-modal{background:rgba(15,23,42,.30)!important;backdrop-filter:blur(7px)!important}.modal-card,.metro-modal-box,.rpm-modal-card{background:rgba(255,255,255,.86)!important;border:1px solid rgba(255,255,255,.88)!important;border-radius:28px!important;box-shadow:0 28px 80px rgba(15,23,42,.20)!important;backdrop-filter:blur(24px) saturate(155%)!important;-webkit-backdrop-filter:blur(24px) saturate(155%)!important}
 .profile-avatar{border-radius:50%!important;box-shadow:0 10px 28px rgba(37,99,235,.18)!important}.board-container{border-radius:24px!important}
-#btnViewBuilder,#btnViewRides,#btnViewAnalytics,#btnViewRoutes{display:none!important}
 @media(max-width:900px){.main-wrapper{padding:14px 12px 28px!important}.header-controls{overflow:auto!important;flex-wrap:nowrap!important}}
 `;
+function textOf(b){return (b.textContent||'').replace(/\s+/g,' ').trim().toLowerCase()}
+function wireNavigation(d){
+ if(!d||!d.body)return;const controls=d.querySelector('.header-controls');if(!controls)return;
+ const byId=(id,fn)=>{const b=d.getElementById(id);if(b){b.style.display='flex';b.style.pointerEvents='auto';b.style.zIndex='9999';b.onclick=fn;return b}return null};
+ byId('btnViewDatabase',()=>d.switchPage&&d.switchPage('database'));byId('btnViewSchedule',()=>d.switchPage&&d.switchPage('schedule'));byId('btnViewProfile',()=>d.switchPage&&d.switchPage('profile'));
+ const all=[...controls.querySelectorAll('.nav-tab-btn')];const news=all.filter(b=>/новости/i.test(textOf(b)));const realNews=d.getElementById('mgnBtn');
+ if(realNews){realNews.style.display='flex';realNews.style.pointerEvents='auto';realNews.style.zIndex='9999';news.filter(b=>b!==realNews).forEach(b=>b.remove());}
+ const dsp=d.getElementById('railphotoDspBtn');if(dsp){dsp.style.display='flex';dsp.style.pointerEvents='auto';dsp.style.zIndex='9999'}
+ const routes=d.getElementById('rrBtn');if(routes){routes.style.display='flex';routes.style.pointerEvents='auto';routes.style.zIndex='9999'}
+ all.forEach(b=>{b.style.pointerEvents='auto';b.style.cursor='pointer'});
+}
 function cleanup(d){
- if(!d||!d.body)return;
- d.documentElement.setAttribute('data-ui-locked','liquid-glass');
+ if(!d||!d.body)return;d.documentElement.setAttribute('data-ui-locked','liquid-glass');
  if(!d.getElementById('uzdphoto-liquid-glass')){const s=d.createElement('style');s.id='uzdphoto-liquid-glass';s.textContent=LIQUID_CSS;d.head.appendChild(s)}
  d.title='УЖДфото';
  const headerText=[...d.querySelectorAll('header span,header div')].find(e=>/Максиградская железная дорога|МЖД/.test(e.textContent||''));
- if(headerText){const logo=headerText.querySelector('.logo-box');if(logo)logo.textContent='УЖД';const all=[...headerText.childNodes];all.forEach(n=>{if(n.nodeType===3&&/Максиградская железная дорога/.test(n.textContent))n.textContent='УЖДфото — узкоколейная железная дорога и метрополитен';});}
- const controls=d.querySelector('.header-controls');
- if(controls){
-  [...controls.querySelectorAll('button')].forEach(b=>{
-   const t=(b.textContent||'').replace(/\s+/g,' ').trim();
-   if(/маршрут/i.test(t)){b.remove();return}
-   if(/табло/i.test(t)){b.id='btnViewSchedule';b.style.display='';b.style.pointerEvents='auto';b.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('schedule')}}
-  });
- }
- ['pageBuilder','pageRides','pageAnalytics','pageRoutes'].forEach(id=>{const e=d.getElementById(id);if(e)e.style.display='none'});
- const db=d.getElementById('pageDatabase');
- const dbBtn=d.getElementById('btnViewDatabase');
- if(dbBtn){dbBtn.style.display='';dbBtn.style.pointerEvents='auto';dbBtn.onclick=()=>{if(typeof d.switchPage==='function')d.switchPage('database')}}
- const schedule=d.getElementById('pageSchedule');
- if(schedule){schedule.style.display='block';const tab=d.getElementById('btnViewSchedule');if(tab){tab.onclick=()=>d.switchPage('schedule');tab.style.pointerEvents='auto';tab.style.zIndex='9999'}}
- if(!d.getElementById('urban-transit-runtime')){const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=uzdphoto';d.head.appendChild(s)}
- if(!d.getElementById('metro-single-runtime')){const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=uzdphoto';d.head.appendChild(s)}
- if(!d.getElementById('metro-station-characteristics-runtime')){const s=d.createElement('script');s.id='metro-station-characteristics-runtime';s.src='metro-station-characteristics.js?v=uzdphoto';d.head.appendChild(s)}
+ if(headerText){const logo=headerText.querySelector('.logo-box');if(logo)logo.textContent='УЖД';[...headerText.childNodes].forEach(n=>{if(n.nodeType===3&&/Максиградская железная дорога/.test(n.textContent))n.textContent='УЖДфото — узкоколейная железная дорога и метрополитен'})}
+ // Конструктор и статистику оставляем скрытыми; рабочие разделы БД, табло, ДСП, маршруты и новости не скрываем.
+ ['pageBuilder','pageAnalytics'].forEach(id=>{const e=d.getElementById(id);if(e)e.style.display='none'});
+ wireNavigation(d);
+ if(!d.getElementById('urban-transit-runtime')){const s=d.createElement('script');s.id='urban-transit-runtime';s.src='urban-transit-mode.js?v=uzdphoto2';d.head.appendChild(s)}
+ if(!d.getElementById('metro-single-runtime')){const s=d.createElement('script');s.id='metro-single-runtime';s.src='metro-single-add.js?v=uzdphoto2';d.head.appendChild(s)}
+ if(!d.getElementById('metro-station-characteristics-runtime')){const s=d.createElement('script');s.id='metro-station-characteristics-runtime';s.src='metro-station-characteristics.js?v=uzdphoto2';d.head.appendChild(s)}
 }
-function inject(){try{const d=frame.contentDocument;if(!d||!d.head||!d.body)return;cleanup(d)}catch(e){console.error('UZDphoto shell:',e)}}
-frame.addEventListener('load',()=>setTimeout(inject,80));
-setTimeout(inject,300);
+function inject(){try{const d=frame.contentDocument;if(!d||!d.head||!d.body)return;cleanup(d);wireNavigation(d)}catch(e){console.error('UZDphoto shell:',e)}}
+frame.addEventListener('load',()=>{[80,700,1500,3000,6000].forEach(ms=>setTimeout(inject,ms))});setTimeout(inject,300);
 })();
 </script>
 </body>
